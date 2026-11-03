@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Адмінка — Trend Electro</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<style>
+:root{--bg:#f1f2f3;--card:#fff;--ink:#1d2023;--mute:#62676d;--line:#dcdfe2;--acc:#e07235;--nav:#1d2023;--bad:#c0392b;--ok:#1f8a4c}
+@media (prefers-color-scheme:dark){:root{--bg:#121416;--card:#1b1e21;--ink:#eceef0;--mute:#9da3a9;--line:#2c3034;--nav:#0d0f10;--bad:#ff6b5b;--ok:#4cc27f}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:var(--nav);color:#fff;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:5}
+main{max-width:900px;margin:0 auto;padding:12px}
+button,input,select,textarea{font:inherit;color:inherit}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+button{cursor:pointer;border:0;border-radius:8px;padding:10px 14px;background:var(--acc);color:#1d2023;font-weight:700}
+button.sec{background:var(--card);color:var(--ink);border:1px solid var(--line)}button.del{background:transparent;color:var(--bad);border:1px solid var(--bad)}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px}.tabs button{background:var(--card);color:var(--ink);border:1px solid var(--line);white-space:nowrap}.tabs button.on{background:var(--acc);color:#1d2023;border-color:var(--acc)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;display:grid;gap:8px}
+.rw{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mut{color:var(--mute);font-size:13px}.msg{font-size:14px}.msg.bad{color:var(--bad)}.msg.ok{color:var(--ok)}
+label{font-size:13px;color:var(--mute);display:block;margin-bottom:3px}
+h2{margin:6px 0 10px;font-size:18px}
+</style>
+</head>
+<body>
+<header><b>Trend Electro · Адмінка</b><button class="sec" id="out" hidden>Вийти</button></header>
+<main id="app"><p>Завантаження…</p></main>
+<script>
+var CATS=["LED-освітлення","Розетки та вимикачі","Кабель та монтаж","Щитове обладнання та автоматика","Подовжувачі, вилки та колодки","Для дому та безпеки","Вентиляція та клімат","Інструменти та вимірювання"];
+var ST={new:"Нове",confirmed:"Підтверджено",shipped:"Відправлено",done:"Виконано",cancelled:"Скасовано"};
+var $=function(i){return document.getElementById(i)};
+function esc(t){return String(t==null?"":t).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function money(n){return Number(n).toLocaleString("uk-UA",{maximumFractionDigits:2})+" ₴"}
+function num(v){return v===""||v==null?null:Number(v)}
+var sb=supabase.createClient(TE.url,TE.key),cur="orders",clients=[];
+
+async function init(){
+ var s=await sb.auth.getSession();
+ if(!s.data.session)return login();
+ var p=await sb.from("profiles").select("is_admin").eq("id",s.data.session.user.id).maybeSingle();
+ if(!p.data||!p.data.is_admin){$("app").innerHTML='<div class="box"><h2>Немає доступу</h2><p class="mut">Цей акаунт не має прав адміністратора.</p><button id="x">Вийти</button></div>';$("x").onclick=logout;return}
+ $("out").hidden=false;shell();
+}
+function login(msg){
+ $("app").innerHTML='<div class="box" style="max-width:380px;margin:30px auto"><h2>Вхід для адміністратора</h2><input id="le" type="email" placeholder="Email" autocomplete="email"><input id="lp" type="password" placeholder="Пароль" autocomplete="current-password"><div class="msg bad" id="lm">'+esc(msg||"")+'</div><button id="lg">Увійти</button></div>';
+ $("lg").onclick=async function(){var r=await sb.auth.signInWithPassword({email:$("le").value.trim(),password:$("lp").value});if(r.error)return login("Невірний email або пароль.");init()};
+}
+async function logout(){await sb.auth.signOut();$("out").hidden=true;login()}
+$("out").onclick=logout;
+
+function shell(){
+ var T={orders:"Замовлення",price:"Ціни",promos:"Акції",codes:"Промокоди",clients:"Клієнти"};
+ $("app").innerHTML='<div class="tabs">'+Object.keys(T).map(function(k){return '<button data-tab="'+k+'" class="'+(k===cur?"on":"")+'">'+T[k]+'</button>'}).join("")+'</div><div id="pane"></div>';
+ ({orders:tOrders,price:tPrice,promos:tPromos,codes:tCodes,clients:tClients})[cur]();
+}
+function fail(e){$("pane").innerHTML='<div class="box"><div class="msg bad">Помилка: '+esc(e.message||e)+'</div></div>'}
+function flash(t,ok){var m=$("fm");if(m){m.className="msg "+(ok?"ok":"bad");m.textContent=t}}
+
+async function tOrders(){
+ var r=await sb.from("orders").select("*").order("created_at",{ascending:false}).limit(100);if(r.error)return fail(r.error);
+ $("pane").innerHTML=r.data.length?r.data.map(function(o){
+  return '<div class="box"><div class="rw"><b>№'+o.id+'</b><span class="mut">'+new Date(o.created_at).toLocaleString("uk-UA")+'</span></div><div>'+esc(o.customer_name)+' · <a href="tel:'+esc(o.phone)+'">'+esc(o.phone)+'</a></div><div class="mut">'+esc(o.delivery)+' · '+esc(o.address)+' · '+esc(o.payment)+(o.promo_code?' · код '+esc(o.promo_code):'')+(o.comment?' · '+esc(o.comment):'')+'</div><details><summary><b>'+money(o.total)+'</b> · товарів: '+o.items.length+'</summary>'+o.items.map(function(i){return '<div class="mut">'+esc(i.id)+' · '+esc(i.name)+' × '+i.qty+' = '+money(i.price*i.qty)+'</div>'}).join("")+'</details><select data-o="'+o.id+'">'+Object.keys(ST).map(function(k){return '<option value="'+k+'"'+(o.status===k?" selected":"")+'>'+ST[k]+'</option>'}).join("")+'</select></div>'}).join(""):'<div class="box">Замовлень ще немає.</div>';
+}
+async function tPrice(){
+ var r=await sb.from("settings").select("value").eq("key","pricing").maybeSingle();if(r.error)return fail(r.error);
+ var v=(r.data&&r.data.value)||{},bc=v.by_category||{};
+ $("pane").innerHTML='<div class="box"><h2>Загальні ціни</h2><div class="grid2"><div><label>Націнка, %</label><input id="gm" type="number" step="0.1" value="'+(v.markup_percent||0)+'"></div><div><label>Знижка на весь сайт, %</label><input id="gd" type="number" step="0.1" value="'+(v.discount_percent||0)+'"></div></div><p class="mut">Націнка додається до ціни з прайсу. Знижка показується як «було / стало».</p></div><div class="box"><h2>За категоріями</h2><p class="mut">Залиште порожнім, щоб діяло загальне значення.</p>'+CATS.map(function(c,i){var o=bc[c]||{};return '<div><label>'+esc(c)+'</label><div class="grid2"><input data-cm="'+i+'" type="number" step="0.1" placeholder="Націнка %" value="'+(o.m!=null?o.m:"")+'"><input data-cd="'+i+'" type="number" step="0.1" placeholder="Знижка %" value="'+(o.d!=null?o.d:"")+'"></div></div>'}).join("")+'<div class="msg" id="fm"></div><button data-act="saveprice">Зберегти ціни</button></div>';
+}
+async function tPromos(){
+ var r=await sb.from("promos").select("*").order("created_at",{ascending:false});if(r.error)return fail(r.error);
+ $("pane").innerHTML='<div class="box"><h2>Нова акція</h2><input id="pt" placeholder="Заголовок"><input id="pd" placeholder="Опис"><div class="grid2"><input id="pb" placeholder="Мітка (Хіт, −10%)"><input id="pp" type="number" step="0.1" placeholder="Знижка, %"></div><div><label>Діє до (необов’язково)</label><input id="pe" type="date"></div><div class="msg" id="fm"></div><button data-act="addpromo">Додати акцію</button><p class="mut">Акція показується банером на сайті. Саму знижку на товари задайте у розділі «Ціни».</p></div>'+r.data.map(function(x){return '<div class="box"><div class="rw"><b>'+esc(x.title)+(x.percent?' −'+x.percent+'%':'')+'</b><span class="mut">'+(x.active?'активна':'вимкнена')+(x.ends_at?' · до '+new Date(x.ends_at).toLocaleDateString("uk-UA"):'')+'</span></div><div class="mut">'+esc(x.description||"")+'</div><div class="rw"><button class="sec" data-act="togpromo" data-id="'+x.id+'" data-v="'+x.active+'">'+(x.active?'Вимкнути':'Увімкнути')+'</button><button class="del" data-act="delpromo" data-id="'+x.id+'">Видалити</button></div></div>'}).join("");
+}
+async function tCodes(){
+ var r=await sb.from("promo_codes").select("*").order("created_at",{ascending:false});if(r.error)return fail(r.error);
+ $("pane").innerHTML='<div class="box"><h2>Новий промокод</h2><div class="grid2"><input id="cc" placeholder="Код (SALE10)" style="text-transform:uppercase"><input id="cp" type="number" step="0.1" placeholder="Знижка, %"></div><div class="grid2"><input id="cu" type="number" placeholder="Кількість використань (порожньо = без ліміту)"><input id="ce" type="date"></div><div class="msg" id="fm"></div><button data-act="addcode">Створити код</button></div>'+r.data.map(function(x){return '<div class="box"><div class="rw"><b>'+esc(x.code)+' · −'+x.percent+'%</b><span class="mut">'+(x.active?'діє':'вимкнено')+' · залишилось: '+(x.uses_left==null?'∞':x.uses_left)+(x.expires_at?' · до '+new Date(x.expires_at).toLocaleDateString("uk-UA"):'')+'</span></div><div class="rw"><button class="sec" data-act="togcode" data-id="'+esc(x.code)+'" data-v="'+x.active+'">'+(x.active?'Вимкнути':'Увімкнути')+'</button><button class="del" data-act="delcode" data-id="'+esc(x.code)+'">Видалити</button></div></div>'}).join("");
+}
+async function tClients(){
+ var r=await sb.from("profiles").select("id,full_name,phone,card_number,discount_percent,is_admin,created_at").order("created_at",{ascending:false}).limit(300);if(r.error)return fail(r.error);
+ clients=r.data;$("pane").innerHTML='<div class="box"><input id="cs" placeholder="Пошук: ім’я, телефон, номер картки"></div><div id="cl"></div><div class="msg" id="fm"></div>';drawClients("");
+}
+function drawClients(q){
+ q=q.toLowerCase();
+ $("cl").innerHTML=clients.filter(function(c){return !q||((c.full_name||"")+(c.phone||"")+(c.card_number||"")).toLowerCase().indexOf(q)>-1}).map(function(c){return '<div class="box"><div class="rw"><b>'+esc(c.full_name||"Без імені")+'</b><span class="mut">'+esc(c.card_number||"")+(c.is_admin?" · адмін":"")+'</span></div><div class="mut">'+esc(c.phone||"—")+'</div><div class="rw"><input data-cdisc="'+c.id+'" type="number" step="0.1" min="0" max="100" value="'+(+c.discount_percent||0)+'" style="width:110px"><button data-act="setdisc" data-id="'+c.id+'">Зберегти знижку, %</button></div></div>'}).join("")||'<div class="box">Клієнтів не знайдено.</div>';
+}
+
+document.addEventListener("input",function(e){if(e.target.id==="cs")drawClients(e.target.value)});
+document.addEventListener("change",async function(e){
+ var s=e.target;
+ if(s.dataset&&s.dataset.o){var r=await sb.from("orders").update({status:s.value}).eq("id",s.dataset.o);if(r.error)alert("Не вдалося змінити статус: "+r.error.message)}
+});
+document.addEventListener("click",async function(e){
+ var t=e.target.closest("button");if(!t)return;
+ if(t.dataset.tab){cur=t.dataset.tab;shell();return}
+ var a=t.dataset.act;if(!a)return;var r;
+ if(a==="saveprice"){
+  var by={};CATS.forEach(function(c,i){var m=num(document.querySelector('[data-cm="'+i+'"]').value),d=num(document.querySelector('[data-cd="'+i+'"]').value);if(m!=null||d!=null){by[c]={};if(m!=null)by[c].m=m;if(d!=null)by[c].d=d}});
+  r=await sb.from("settings").upsert({key:"pricing",value:{markup_percent:num($("gm").value)||0,discount_percent:num($("gd").value)||0,by_category:by},updated_at:new Date().toISOString()});
+  return flash(r.error?"Помилка: "+r.error.message:"Збережено ✓ Ціни на сайті оновляться при наступному відкритті.",!r.error);
+ }
+ if(a==="addpromo"){
+  if(!$("pt").value.trim())return flash("Вкажіть заголовок.");
+  var pe=$("pe").value;
+  r=await sb.from("promos").insert({title:$("pt").value.trim(),description:$("pd").value.trim()||null,badge:$("pb").value.trim()||null,percent:num($("pp").value),ends_at:pe?new Date(pe+"T23:59:59").toISOString():null});
+  if(r.error)return flash("Помилка: "+r.error.message);return tPromos();
+ }
+ if(a==="togpromo"){await sb.from("promos").update({active:t.dataset.v!=="true"}).eq("id",t.dataset.id);return tPromos()}
+ if(a==="delpromo"){if(confirm("Видалити акцію?")){await sb.from("promos").delete().eq("id",t.dataset.id);tPromos()}return}
+ if(a==="addcode"){
+  var code=$("cc").value.trim().toUpperCase(),pc=num($("cp").value);
+  if(!code||!pc)return flash("Вкажіть код і відсоток.");
+  var ce=$("ce").value;
+  r=await sb.from("promo_codes").insert({code:code,percent:pc,uses_left:num($("cu").value),expires_at:ce?new Date(ce+"T23:59:59").toISOString():null});
+  if(r.error)return flash(r.error.code==="23505"?"Такий код уже існує.":"Помилка: "+r.error.message);return tCodes();
+ }
+ if(a==="togcode"){await sb.from("promo_codes").update({active:t.dataset.v!=="true"}).eq("code",t.dataset.id);return tCodes()}
+ if(a==="delcode"){if(confirm("Видалити код?")){await sb.from("promo_codes").delete().eq("code",t.dataset.id);tCodes()}return}
+ if(a==="setdisc"){
+  var v=num(document.querySelector('[data-cdisc="'+t.dataset.id+'"]').value)||0;
+  r=await sb.rpc("admin_set_discount",{uid:t.dataset.id,pct:v});
+  return flash(r.error?"Помилка: "+r.error.message:"Знижку збережено ✓",!r.error);
+ }
+});
+init();
+</script>
+</body>
+</html>
