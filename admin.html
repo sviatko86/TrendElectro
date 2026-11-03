@@ -6,6 +6,7 @@
 <meta name="robots" content="noindex">
 <title>Адмінка — Trend Electro</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="config.js"></script>
 <style>
 :root{--bg:#f1f2f3;--card:#fff;--ink:#1d2023;--mute:#62676d;--line:#dcdfe2;--acc:#e07235;--nav:#1d2023;--bad:#c0392b;--ok:#1f8a4c}
@@ -52,9 +53,9 @@ async function logout(){await sb.auth.signOut();$("out").hidden=true;login()}
 $("out").onclick=logout;
 
 function shell(){
- var T={orders:"Замовлення",banners:"Банери",cats:"Категорії",price:"Ціни",promos:"Акції",codes:"Промокоди",clients:"Клієнти"};
+ var T={orders:"Замовлення",products:"Товари",import:"Імпорт",banners:"Банери",cats:"Категорії",price:"Ціни",promos:"Акції",codes:"Промокоди",clients:"Клієнти"};
  $("app").innerHTML='<div class="tabs">'+Object.keys(T).map(function(k){return '<button data-tab="'+k+'" class="'+(k===cur?"on":"")+'">'+T[k]+'</button>'}).join("")+'</div><div id="pane"></div>';
- ({orders:tOrders,banners:tBanners,cats:tCats,price:tPrice,promos:tPromos,codes:tCodes,clients:tClients})[cur]();
+ ({orders:tOrders,products:tProducts,import:tImport,banners:tBanners,cats:tCats,price:tPrice,promos:tPromos,codes:tCodes,clients:tClients})[cur]();
 }
 function fail(e){$("pane").innerHTML='<div class="box"><div class="msg bad">Помилка: '+esc(e.message||e)+'</div></div>'}
 function flash(t,ok){var m=$("fm");if(m){m.className="msg "+(ok?"ok":"bad");m.textContent=t}}
@@ -95,6 +96,21 @@ document.addEventListener("click",async function(e){
  var t=e.target.closest("button");if(!t)return;
  if(t.dataset.tab){cur=t.dataset.tab;shell();return}
  var a=t.dataset.act;if(!a)return;var r;
+ if(a==="psearch"){PQ.q=$("pq").value.trim();PQ.cat=$("pc").value;PQ.hid=$("ph").checked;PQ.page=0;$("ped").innerHTML="";return loadP()}
+ if(a==="pprev"){if(PQ.page>0){PQ.page--;loadP()}return}
+ if(a==="pnext"){PQ.page++;loadP();return}
+ if(a==="pcancel"){$("ped").innerHTML="";return}
+ if(a==="pnew"){return editP(null)}
+ if(a==="pedit"){var pr0=await sb.from("products").select("*").eq("id",t.dataset.id).maybeSingle();if(pr0.error||!pr0.data)return flash("Не вдалося відкрити товар.");return editP(pr0.data)}
+ if(a==="pdel"){if(!confirm("Видалити товар назавжди? Краще просто приховати."))return;var dr=await sb.from("products").delete().eq("id",t.dataset.id);if(dr.error)return flash("Помилка: "+dr.error.message);$("ped").innerHTML="";flash("Видалено.",true);return loadP()}
+ if(a==="psave"){
+  var o={name:$("en").value.trim(),price:num($("ep").value),old_price:num($("eo").value),brand:$("eb").value.trim()||null,category:$("ec").value.trim()||"Інше",subcategory:$("es").value.trim()||"Усі",image_url:$("ei").value.trim()||null,description:$("ed").value.trim()||null,specs:$("ex").value.trim()||null,active:$("ea").checked,in_stock:$("ek").checked,is_hit:$("eh").checked,is_new:$("ew").checked,updated_at:new Date().toISOString()};
+  if(!o.name||o.price==null)return flash("Вкажіть назву й ціну.");
+  var isNew=t.dataset.new==="1";o.id=isNew?$("eid").value.trim():t.dataset.id;if(!o.id)return flash("Вкажіть артикул.");
+  try{var pf=$("ef").files[0];if(pf){flash("Завантажую фото…",true);o.image_url=await putImage(pf,900,"products")}
+   var sr=isNew?await sb.from("products").insert(o):await sb.from("products").update(o).eq("id",o.id);
+   if(sr.error)throw sr.error;$("ped").innerHTML="";flash("Збережено ✓",true);return loadP()}catch(er){return flash("Помилка: "+(er.message||er))}}
+ if(a==="doimport"){return doImport()}
  if(a==="addbanner"){var fl=$("bf").files[0];if(!fl)return flash("Оберіть фото.");flash("Завантаження…",true);
   try{var url=await putImage(fl,1600,"banners");var mx=BNS.reduce(function(m,b){return Math.max(m,b.sort)},0);
    var ib=await sb.from("banners").insert({image_url:url,title:$("bt").value.trim()||null,subtitle:$("bs").value.trim()||null,link:$("bl").value.trim()||null,sort:mx+1});
@@ -138,6 +154,56 @@ document.addEventListener("click",async function(e){
   return flash(r.error?"Помилка: "+r.error.message:"Знижку збережено ✓",!r.error);
  }
 });
+var PQ={q:"",cat:"",hid:false,page:0};
+function aThumb(u){return u?(u.indexOf(".supabase.co/")>-1?u:"https://wsrv.nl/?url="+encodeURIComponent(u)+"&w=96&h=96&fit=contain&output=webp"):""}
+async function tProducts(){
+ $("pane").innerHTML='<div class="box"><div class="grid2"><input id="pq" placeholder="Назва або артикул" value="'+esc(PQ.q)+'"><select id="pc"><option value="">Усі категорії</option>'+CATS.map(function(c){return '<option'+(PQ.cat===c?" selected":"")+'>'+esc(c)+'</option>'}).join("")+'</select></div><div class="rw"><label style="display:flex;gap:6px;align-items:center;margin:0"><input id="ph" type="checkbox" style="width:auto"'+(PQ.hid?" checked":"")+'> лише приховані</label><span><button data-act="psearch">Знайти</button> <button class="sec" data-act="pnew">+ Новий</button></span></div></div><div class="msg" id="fm"></div><div id="ped"></div><div id="plist"></div>';
+ loadP();
+}
+async function loadP(){
+ var q=sb.from("products").select("id,name,price,old_price,image_url,active,category,is_hit,is_new,in_stock").order("name").range(PQ.page*30,PQ.page*30+29);
+ var s=PQ.q.replace(/[,()%*\\]/g," ").trim();if(s)q=q.or("name.ilike.*"+s+"*,id.ilike.*"+s+"*");
+ if(PQ.cat)q=q.eq("category",PQ.cat);if(PQ.hid)q=q.eq("active",false);
+ var r=await q;if(r.error)return fail(r.error);
+ var L=r.data;
+ $("plist").innerHTML=(L.length?L.map(function(p){return '<div class="box"><div class="rw"><div style="display:flex;gap:10px;align-items:center;min-width:0"><img src="'+esc(aThumb(p.image_url))+'" alt="" style="width:48px;height:48px;object-fit:contain;background:#fff;border-radius:6px"><div style="min-width:0"><b>'+esc(p.name)+'</b><div class="mut">'+esc(p.id)+' · '+money(p.price)+(p.old_price?' (було '+money(p.old_price)+')':'')+(p.active?'':' · ПРИХОВАНО')+(p.is_hit?' · Хіт':'')+(p.is_new?' · Новинка':'')+(p.in_stock?'':' · немає в наявності')+'</div></div></div><button class="sec" data-act="pedit" data-id="'+esc(p.id)+'">Редагувати</button></div></div>'}).join(""):'<div class="box">Нічого не знайдено. Якщо база порожня, завантажте прайс у розділі «Імпорт».</div>')+'<div class="rw"><button class="sec" data-act="pprev"'+(PQ.page?"":" disabled")+'>‹ Назад</button><span class="mut">Сторінка '+(PQ.page+1)+'</span><button class="sec" data-act="pnext"'+(L.length<30?" disabled":"")+'>Далі ›</button></div>';
+}
+function editP(p){
+ var n=!p;p=p||{id:"",name:"",price:"",old_price:"",brand:"",category:"",subcategory:"",image_url:"",description:"",specs:"",active:true,in_stock:true,is_hit:false,is_new:false};
+ var ck=function(id,v,l){return '<label style="display:flex;gap:6px;align-items:center;margin:0;color:var(--ink)"><input id="'+id+'" type="checkbox" style="width:auto"'+(v?" checked":"")+'> '+l+'</label>'};
+ $("ped").innerHTML='<div class="box"><h2>'+(n?"Новий товар":"Редагування")+'</h2>'+(n?'<div><label>Артикул</label><input id="eid"></div>':'<div class="mut">Артикул: '+esc(p.id)+'</div>')+'<div><label>Назва</label><input id="en" value="'+esc(p.name)+'"></div><div class="grid2"><div><label>Ціна, ₴</label><input id="ep" type="number" step="0.01" value="'+esc(p.price)+'"></div><div><label>Стара ціна (для акції), ₴</label><input id="eo" type="number" step="0.01" value="'+esc(p.old_price||"")+'"></div></div><div class="grid2"><div><label>Категорія</label><input id="ec" list="cl" value="'+esc(p.category)+'"><datalist id="cl">'+CATS.map(function(c){return '<option value="'+esc(c)+'">'}).join("")+'</datalist></div><div><label>Підкатегорія</label><input id="es" value="'+esc(p.subcategory)+'"></div></div><div><label>Бренд</label><input id="eb" value="'+esc(p.brand||"")+'"></div><div><label>Фото: посилання або завантажити своє</label><input id="ei" value="'+esc(p.image_url||"")+'" placeholder="https://…"><input id="ef" type="file" accept="image/*" style="margin-top:6px"></div><div><label>Опис</label><textarea id="ed" rows="4">'+esc(p.description||"")+'</textarea></div><div><label>Характеристики (формат: назва: значення; назва: значення)</label><textarea id="ex" rows="3">'+esc(p.specs||"")+'</textarea></div>'+ck("ea",p.active,"Показувати на сайті")+ck("ek",p.in_stock,"Є в наявності")+ck("eh",p.is_hit,"Хіт")+ck("ew",p.is_new,"Новинка")+'<div class="rw"><button data-act="psave" data-new="'+(n?1:0)+'" data-id="'+esc(p.id)+'">Зберегти</button><button class="sec" data-act="pcancel">Скасувати</button>'+(n?'':'<button class="del" data-act="pdel" data-id="'+esc(p.id)+'">Видалити</button>')+'</div></div>';
+ $("ped").scrollIntoView({behavior:"smooth"});
+}
+function tImport(){
+ $("pane").innerHTML='<div class="box"><h2>Імпорт прайсу</h2><p class="mut">Excel-файл із колонками: Артикул, Назва, Розділ (Категорія/Підкатегорія), Ціна, Бренд, Фото, Опис, Характеристики (повні). Саме такий у вашому файлі Horoshop_Import.</p><input id="xf" type="file" accept=".xlsx,.xls,.csv"><div><label>Що зробити</label><select id="xm"><option value="full">Повний імпорт: додати нові й оновити наявні</option><option value="prices">Оновити лише ціни наявних товарів</option></select></div><div class="msg" id="fm"></div><button data-act="doimport">Імпортувати</button><p class="mut">Повний імпорт не змінює позначки Хіт/Новинка, стару ціну, приховування й наявність. Товари, яких немає у файлі, не видаляються. Для першого завантаження оберіть «Повний імпорт».</p></div>';
+}
+function plain(h){if(h==null||h==="")return null;var t=new DOMParser().parseFromString(String(h),"text/html").body.textContent||"";t=t.replace(/\s+/g," ").trim();return t?t.slice(0,3000):null}
+function toProd(r){
+ var sec=String(r["Розділ"]||"Інше/Усі"),k=sec.indexOf("/");
+ var pc=Number(String(r["Ціна"]).replace(",","."));
+ return{id:String(r["Артикул"]||"").trim(),name:String(r["Назва"]||"").trim(),category:(k>-1?sec.slice(0,k):sec).trim()||"Інше",subcategory:(k>-1?sec.slice(k+1):"Усі").trim()||"Усі",brand:r["Бренд"]?String(r["Бренд"]).trim():null,price:pc,image_url:r["Фото"]?String(r["Фото"]).trim():null,description:plain(r["Опис"]),specs:r["Характеристики (повні)"]?String(r["Характеристики (повні)"]).slice(0,3000):null}
+}
+async function doImport(){
+ var fl=$("xf").files[0];if(!fl)return flash("Оберіть файл.");
+ if(typeof XLSX==="undefined")return flash("Бібліотека читання Excel ще не завантажилась. Зачекайте секунду й спробуйте знову.");
+ flash("Читаю файл…",true);
+ try{
+  var wb=XLSX.read(await fl.arrayBuffer(),{type:"array"});
+  var ws=wb.Sheets["Імпорт"]||wb.Sheets[wb.SheetNames[0]];
+  var rows=XLSX.utils.sheet_to_json(ws,{defval:""});
+  var map={};rows.map(toProd).forEach(function(x){if(x.id&&x.name&&isFinite(x.price))map[x.id]=x});
+  var items=Object.keys(map).map(function(k){return map[k]});
+  if(!items.length)return flash("У файлі не знайдено товарів. Перевірте назви колонок.");
+  var mode=$("xm").value,done=0,size=mode==="prices"?500:200;
+  for(var i=0;i<items.length;i+=size){
+   var ch=items.slice(i,i+size);
+   if(mode==="prices"){var u=await sb.rpc("bulk_update_prices",{items:ch.map(function(x){return{id:x.id,price:x.price}})});if(u.error)throw u.error;done+=u.data||0}
+   else{var up=await sb.from("products").upsert(ch,{onConflict:"id"});if(up.error)throw up.error;done+=ch.length}
+   flash("Оброблено "+Math.min(i+size,items.length)+" з "+items.length+"…",true);
+  }
+  flash(mode==="prices"?"Готово ✓ Оновлено цін: "+done+" (з "+items.length+" у файлі).":"Готово ✓ Імпортовано товарів: "+done+".",true);
+ }catch(er){flash("Помилка: "+(er.message||er))}
+}
 var BNS=[],CI={};
 function shrink(file,max,q){return new Promise(function(res,rej){var im=new Image(),u=URL.createObjectURL(file);im.onload=function(){var s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext("2d").drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(function(b){b?res(b):rej(new Error("Не вдалося стиснути фото"))},"image/jpeg",q)};im.onerror=function(){rej(new Error("Не вдалося прочитати фото"))};im.src=u})}
 function pathOf(u){var k=u.indexOf("/site/");return k>-1?u.slice(k+6):null}

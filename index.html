@@ -95,6 +95,9 @@ footer b{color:#fff;display:block;margin-bottom:4px}
 .sl img{width:100%;height:100%;object-fit:cover;display:block}
 .slt{position:absolute;left:0;right:0;bottom:0;padding:36px 16px 16px;background:linear-gradient(transparent,rgba(0,0,0,.72));color:#fff}.slt b{font-size:20px;display:block}
 .dots{position:absolute;bottom:8px;right:12px;display:flex;gap:6px;z-index:2}.dots button{width:10px;height:10px;border-radius:50%;border:0;padding:0;background:rgba(255,255,255,.55)}.dots button.on{background:var(--acc)}
+#featured[hidden]{display:none}
+.bds{position:absolute;left:6px;top:6px;display:flex;flex-direction:column;gap:3px;align-items:flex-start;z-index:1}
+.bd{font-size:11px;font-weight:800;padding:2px 7px;border-radius:4px;color:#fff}.bd.h{background:#1f8a4c}.bd.n{background:#2b6cb0}.bd.s{background:#c0392b}
 </style>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script defer src="config.js"></script>
@@ -127,6 +130,7 @@ footer b{color:#fff;display:block;margin-bottom:4px}
 <div><b>Повернення</b>14 днів за законом</div>
 <div><b>Опт</b>спеціальні ціни від партії</div>
 </section>
+<section id="featured" hidden><h2>Хіти та новинки</h2><div class="grid" id="fgrid"></div></section>
 <section id="catsec"><h2>Категорії</h2><div class="catgrid" id="catgrid"></div></section>
 <section id="catalog">
 <h2 id="ctitle">Усі товари</h2>
@@ -329,6 +333,60 @@ function drawSlider(){
  if(BN.length>1)btm=setInterval(function(){showB((bix+1)%BN.length)},5000);
 }
 $("slider").addEventListener("click",function(e){var b=e.target.closest("[data-b]");if(b)showB(+b.dataset.b)});
+var DBP=false;
+function oldp(p){var r=rate(p),base=Math.round(p[4]*(1+r[0]/100)*100)/100;
+ if(r[1]>0)return '<s>'+money(base)+'</s>';
+ if(p[9]&&p[9]>p[4])return '<s>'+money(Math.round(p[9]*(1+r[0]/100)*100)/100)+'</s>';
+ return ''}
+function cardHtml(p){
+ var out=p[12]===false;
+ var b=(p[10]?'<span class="bd h">Хіт</span>':'')+(p[11]?'<span class="bd n">Новинка</span>':'')+(p[9]>p[4]?'<span class="bd s">−'+Math.round((1-p[4]/p[9])*100)+'%</span>':'');
+ return '<article class="card"><div class="pic" data-o="'+esc(p[0])+'" style="cursor:pointer">'+pic(p)+(b?'<div class="bds">'+b+'</div>':'')+'</div><div class="body"><div class="name" data-o="'+esc(p[0])+'" style="cursor:pointer">'+esc(p[1])+'</div><div class="sku">Арт. '+esc(p[0])+'</div>'+(out?'<div class="stock no">Немає в наявності</div>':'<div class="stock">В наявності</div>')+'<div class="price">'+money(pr(p))+oldp(p)+'</div><button class="add" data-a="'+esc(p[0])+'"'+(out?' disabled':'')+'>'+(out?'Немає':'У кошик')+'</button></div></article>'}
+function drawGrid(){
+ var l=list();
+ $("ctitle").textContent=ci<0?"Усі товари":D.cats[ci][0]+(si>=0?" / "+D.cats[ci][1][si]:"");
+ $("found").textContent="Знайдено: "+l.length;
+ $("grid").innerHTML=l.length?l.slice(0,lim).map(cardHtml).join(""):'<div class="empty">Нічого не знайдено. Спробуйте інший запит, категорію або бренд.</div>';
+ $("more").hidden=l.length<=lim;
+ $("more").textContent="Показати ще ("+Math.min(24,l.length-lim)+")";
+}
+function drawFeatured(){
+ var l=D.p.filter(function(p){return p[10]||p[11]}).slice(0,8);
+ $("featured").hidden=!l.length;$("fgrid").innerHTML=l.map(cardHtml).join("");
+}
+async function openProd(id){
+ var p=M[id];if(!p)return;
+ if(DBP&&!p[13]){p[13]=1;try{var r=await sb.from("products").select("description,specs").eq("id",id).maybeSingle();if(r.data){p[7]=r.data.description||"";p[8]=r.data.specs||""}}catch(e){}}
+ var rows=(p[8]||"").split(";").map(function(x){var k=x.indexOf(":");return k>0?'<tr><td>'+esc(x.slice(0,k).trim())+'</td><td>'+esc(x.slice(k+1).trim())+'</td></tr>':""}).join("");
+ var out=p[12]===false;
+ $("pbody").innerHTML='<div class="pic">'+pic(p,800)+'</div><div class="name">'+esc(p[1])+'</div><div class="sku">Арт. '+esc(p[0])+(p[6]>=0&&D.brands[p[6]]?" · "+esc(D.brands[p[6]]):"")+'</div><div class="price">'+money(pr(p))+oldp(p)+'</div><button class="add" data-a="'+esc(p[0])+'"'+(out?' disabled':'')+'>'+(out?'Немає в наявності':'У кошик')+'</button>'+(p[7]?'<p>'+esc(p[7])+'</p>':'')+(rows?'<table>'+rows+'</table>':'');
+ panel("pm",true);
+}
+function applyProducts(rows){
+ var cm={},bm={};
+ rows.forEach(function(r){var c=r.category||"Інше",s=r.subcategory||"Усі";var o=cm[c]=cm[c]||{n:0,s:{}};o.n++;o.s[s]=(o.s[s]||0)+1;if(r.brand)bm[r.brand]=(bm[r.brand]||0)+1});
+ var cn=Object.keys(cm).sort(function(a,b){return cm[b].n-cm[a].n});
+ D.cats=cn.map(function(c){return[c,Object.keys(cm[c].s).sort(function(a,b){return cm[c].s[b]-cm[c].s[a]})]});
+ D.brands=Object.keys(bm).sort(function(a,b){return bm[b]-bm[a]});
+ var cI={},sI={},bI={};
+ D.cats.forEach(function(c,k){cI[c[0]]=k;c[1].forEach(function(s,m){sI[c[0]+"|"+s]=m})});
+ D.brands.forEach(function(b,k){bI[b]=k});
+ D.p=rows.map(function(r){var c=r.category||"Інше",s=r.subcategory||"Усі";
+  return[r.id,r.name,cI[c],sI[c+"|"+s],+r.price||0,r.image_url||"",r.brand?bI[r.brand]:-1,"","",r.old_price!=null?+r.old_price:0,!!r.is_hit,!!r.is_new,r.in_stock!==false]});
+ M={};D.p.forEach(function(p){M[p[0]]=p});
+ TH={};D.p.forEach(function(p){if(p[5]&&!TH[p[2]])TH[p[2]]=p[5]});
+ ci=-1;si=-1;bi=-1;DBP=true;
+ drawNav();drawBrands();drawGrid();drawFeatured();drawCart();
+}
+async function loadProducts(){
+ try{
+  var all=[],from=0,step=1000;
+  for(;;){
+   var r=await sb.from("products").select("id,name,category,subcategory,brand,price,old_price,image_url,in_stock,is_hit,is_new").eq("active",true).order("id").range(from,from+step-1);
+   if(r.error)throw r.error;all=all.concat(r.data);if(r.data.length<step)break;from+=step}
+  if(all.length)applyProducts(all);
+ }catch(e){}
+}
 async function boot(){
  if(!(window.supabase&&window.TE&&TE.url&&TE.key))return;
  sb=supabase.createClient(TE.url,TE.key);
@@ -336,6 +394,7 @@ async function boot(){
  try{var g=await sb.auth.getSession();me=g.data.session?g.data.session.user:null;await loadProf()}catch(e){}
  try{var s=await sb.from("settings").select("value").eq("key","pricing").maybeSingle();
   if(s.data&&s.data.value){var v=s.data.value;PR={m:+v.markup_percent||0,d:+v.discount_percent||0,c:v.by_category||{}};drawGrid();drawCart()}}catch(e){}
+ await loadProducts();
  try{var bn=await sb.from("banners").select("*").eq("active",true).order("sort");BN=bn.data||[];drawSlider()}catch(e){}
  try{var cg=await sb.from("settings").select("value").eq("key","category_images").maybeSingle();
   if(cg.data&&cg.data.value){D.cats.forEach(function(c,i){if(cg.data.value[c[0]])TH[i]=cg.data.value[c[0]]});drawNav()}}catch(e){}
