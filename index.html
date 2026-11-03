@@ -311,14 +311,12 @@ $("order").onclick=async function(){
  var nm=$("fn").value.trim(),ph=$("fp").value.trim(),ad=$("fc").value.trim();
  if(!nm||!ph||!ad){alert("Заповніть ім’я, телефон і місто з відділенням.");return}
  var ids=Object.keys(cart).filter(function(i){return M[i]});if(!ids.length)return;
- var tt=totals(ids),btn=this;
- var items=ids.map(function(i){return{id:i,name:M[i][1],qty:cart[i],price:pr(M[i])}});
- var row={customer_name:nm,phone:ph,delivery:$("fd").value,address:ad,payment:$("fy").value,promo_code:promoCode||null,comment:tt.d?("Знижка "+tt.d+"%"):null,items:items,total:tt.t};
- btn.disabled=true;var err=null;
- if(sb){var r=await sb.from("orders").insert(row);err=r.error}else err=true;
+ if(!sb){alert("Замовлення тимчасово недоступні. Зателефонуйте нам.");return}
+ var btn=this;btn.disabled=true;
+ var r=await sb.rpc("create_order",{p_name:nm,p_phone:ph,p_delivery:$("fd").value,p_address:ad,p_payment:$("fy").value,p_comment:null,p_promo:promoCode||null,p_items:ids.map(function(i){return{id:i,qty:cart[i]}})});
  btn.disabled=false;
- if(err){alert("Не вдалося відправити замовлення. Спробуйте ще раз або зателефонуйте нам.");return}
- var t="Замовлення прийнято\n"+items.map(function(x){return x.id+" · "+x.name+" × "+x.qty+" = "+money(x.price*x.qty)}).join("\n")+"\nРазом: "+money(tt.t)+(tt.d?" (знижка "+tt.d+"%)":"")+"\nДоставка: "+row.delivery+", "+ad+"\nОплата: "+row.payment;
+ if(r.error){var em=r.error.message||"";alert(/schema cache|Could not find|function/i.test(em)?"Не вдалося оформити замовлення. Зателефонуйте нам.":em);return}
+ var o=r.data,t="Замовлення №"+o.id+"\n"+o.items.map(function(x){return x.id+" · "+x.name+" × "+x.qty+" = "+money(Math.round(x.price*x.qty*100)/100)}).join("\n")+"\nРазом: "+money(+o.total)+(+o.discount?" (знижка "+o.discount+"%)":"")+"\nДоставка: "+$("fd").value+", "+ad+"\nОплата: "+$("fy").value;
  cart={};save();promoPct=0;promoCode="";$("fpr").value="";$("pmsg").textContent="";drawCart();$("form").hidden=true;$("lines").innerHTML="";
  var d=$("done");d.hidden=false;d.innerHTML='<b>Дякуємо! Ми скоро зв’яжемося з вами.</b><pre>'+esc(t)+'</pre>';
 };
