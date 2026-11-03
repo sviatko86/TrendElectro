@@ -98,6 +98,9 @@ footer b{color:#fff;display:block;margin-bottom:4px}
 #featured[hidden]{display:none}
 .bds{position:absolute;left:6px;top:6px;display:flex;flex-direction:column;gap:3px;align-items:flex-start;z-index:1}
 .bd{font-size:11px;font-weight:800;padding:2px 7px;border-radius:4px;color:#fff}.bd.h{background:#1f8a4c}.bd.n{background:#2b6cb0}.bd.s{background:#c0392b}
+.df[hidden],.done[hidden]{display:none}
+.drawer.ordered .dl,.drawer.ordered .df{display:none}
+.drawer.ordered .done{flex:1;overflow:auto;align-content:start}
 </style>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script defer src="config.js"></script>
@@ -212,7 +215,7 @@ function drawCart(){
  $("sum").textContent=money(sum);$("cnt").textContent=n;$("form").hidden=!ids.length;
 }
 function panel(w,v){$(w).classList.toggle("on",v);$("shade").classList.toggle("on",v)}
-function openCart(){$("done").hidden=true;drawCart();panel("drawer",true)}
+function openCart(){$("drawer").classList.remove("ordered");$("done").hidden=true;drawCart();panel("drawer",true)}
 function openProd(id){
  var p=M[id];if(!p)return;
  var rows=p[8].split(";").map(function(x){var k=x.indexOf(":");return k>0?'<tr><td>'+esc(x.slice(0,k).trim())+'</td><td>'+esc(x.slice(k+1).trim())+'</td></tr>':""}).join("");
@@ -318,7 +321,7 @@ $("order").onclick=async function(){
  if(r.error){var em=r.error.message||"";alert(/schema cache|Could not find|function/i.test(em)?"Не вдалося оформити замовлення. Зателефонуйте нам.":em);return}
  var o=r.data,t="Замовлення №"+o.id+"\n"+o.items.map(function(x){return x.id+" · "+x.name+" × "+x.qty+" = "+money(Math.round(x.price*x.qty*100)/100)}).join("\n")+"\nРазом: "+money(+o.total)+(+o.discount?" (знижка "+o.discount+"%)":"")+"\nДоставка: "+$("fd").value+", "+ad+"\nОплата: "+$("fy").value;
  cart={};save();promoPct=0;promoCode="";$("fpr").value="";$("pmsg").textContent="";drawCart();$("form").hidden=true;$("lines").innerHTML="";
- var d=$("done");d.hidden=false;d.innerHTML='<b>Дякуємо! Ми скоро зв’яжемося з вами.</b><pre>'+esc(t)+'</pre>';
+ var d=$("done");d.hidden=false;$("drawer").classList.add("ordered");d.innerHTML='<b>Дякуємо! Ми скоро зв’яжемося з вами.</b><pre>'+esc(t)+'</pre><button class="go" onclick="panel(\'drawer\',false)">Закрити</button>';
 };
 var BN=[],bix=0,btm=null;
 function showB(i){bix=i;document.querySelectorAll("#slider .sl").forEach(function(e,k){e.classList.toggle("on",k===i)});document.querySelectorAll("#slider .dots button").forEach(function(e,k){e.classList.toggle("on",k===i)})}
