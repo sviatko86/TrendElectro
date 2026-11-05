@@ -162,7 +162,7 @@ function prod(r){
  const R={};Object.keys(r).forEach(k=>R[String(k).trim().toLowerCase()]=r[k]);
  const g=n=>{for(const k of A[n])if(R[k]!==undefined&&R[k]!=="")return R[k];return""};
  let path=splitPath(g("path"));if(!path.length)path=[g("c1"),g("c2"),g("c3")].map(x=>String(x).trim()).filter(Boolean);
- const pc=Number(String(g("price")).replace(",","."));
+ const pc=String(g("price")).trim()===""?NaN:Number(String(g("price")).replace(",","."));
  return{id:String(g("id")).trim(),name:String(g("name")).trim(),path,brand:g("brand")?String(g("brand")).trim():null,price:pc,image_url:g("img")?String(g("img")).trim():null,description:plain(g("desc")),specs:g("specs")?String(g("specs")).slice(0,3000):null};
 }
 async function doImport(){
@@ -173,7 +173,7 @@ async function doImport(){
   const wb=XLSX.read(await fl.arrayBuffer(),{type:"array"});
   const ws=wb.Sheets["Імпорт"]||wb.Sheets[wb.SheetNames[0]];
   const rows=XLSX.utils.sheet_to_json(ws,{defval:""});
-  const map={};rows.map(prod).forEach(x=>{if(x.id&&x.name&&isFinite(x.price))map[x.id]=x});
+  const mode0=$("xm").value;const map={};rows.map(prod).forEach(x=>{if(x.id&&x.name&&(mode0==="cats"||isFinite(x.price)))map[x.id]=x});
   const items=Object.keys(map).map(k=>map[k]);if(!items.length)return flash("У файлі не знайдено товарів. Перевірте назви колонок.");
   const mode=$("xm").value,hasPath=items.some(x=>x.path.length);let done=0;
   if(mode==="cats"&&!hasPath)return flash("У файлі немає колонок категорій.");
@@ -182,7 +182,7 @@ async function doImport(){
    const ch=items.slice(i,i+size);
    if(mode==="prices"){const u=await sb.rpc("bulk_update_prices",{items:ch.map(x=>({id:x.id,price:x.price}))});if(u.error)throw u.error;done+=u.data||0}
    else if(mode==="cats"){const u=await sb.rpc("bulk_set_categories",{items:ch.filter(x=>x.path.length).map(x=>({id:x.id,c1:x.path[0],c2:x.path[1]||"",c3:x.path[2]||""}))});if(u.error)throw u.error;done+=u.data||0}
-   else{const up=await sb.from("products").upsert(ch.map(x=>{const o={id:x.id,name:x.name,brand:x.brand,price:x.price,image_url:x.image_url,description:x.description,specs:x.specs};if(hasPath){o.category=x.path[0]||"Інше";o.subcategory=x.path[1]||null;o.subcategory2=x.path[2]||null}return o}),{onConflict:"id"});if(up.error)throw up.error;done+=ch.length}
+   else{const up=await sb.from("products").upsert(ch.map(x=>{const o={id:x.id,name:x.name,brand:x.brand,price:x.price,image_url:x.image_url,description:x.description,specs:x.specs};if(!x.image_url)delete o.image_url;if(!x.brand)delete o.brand;if(!x.description)delete o.description;if(!x.specs)delete o.specs;if(hasPath){o.category=x.path[0]||"Інше";o.subcategory=x.path[1]||null;o.subcategory2=x.path[2]||null}return o}),{onConflict:"id"});if(up.error)throw up.error;done+=ch.length}
    flash("Оброблено "+Math.min(i+size,items.length)+" з "+items.length+"…",true);
   }
   TREE=[];flash(mode==="prices"?`Готово ✓ Оновлено цін: ${done} (з ${items.length} у файлі).`:mode==="cats"?`Готово ✓ Оновлено категорій: ${done}.`:`Готово ✓ Імпортовано товарів: ${done}.`,true);
