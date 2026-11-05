@@ -18,7 +18,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
 button{cursor:pointer;border:0;border-radius:8px;padding:10px 14px;background:var(--acc);color:#1d2023;font-weight:700}button:disabled{opacity:.5}
 button.sec{background:var(--card);color:var(--ink);border:1px solid var(--line)}a.btn2{display:inline-block;padding:9px 12px;border-radius:8px;background:var(--acc);color:#1d2023;font-weight:700;text-decoration:none;font-size:14px}button.del{background:transparent;color:var(--bad);border:1px solid var(--bad)}
-.tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px}.tabs button{background:var(--card);color:var(--ink);border:1px solid var(--line);white-space:nowrap}.tabs button.on{background:var(--acc);color:#1d2023;border-color:var(--acc)}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;position:sticky;top:var(--hh,52px);z-index:4;background:var(--bg,#f4f6f8);padding:8px 0;scrollbar-width:thin}.tabs button{background:var(--card);color:var(--ink);border:1px solid var(--line);white-space:nowrap}.tabs button.on{background:var(--acc);color:#1d2023;border-color:var(--acc)}
 .box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;display:grid;gap:8px}
 .rw{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 @media (max-width:560px){.grid3{grid-template-columns:1fr}}
@@ -54,7 +54,11 @@ async function logout(){await sb.auth.signOut();$("out").hidden=true;login()}
 $("out").onclick=logout;
 const T={dash:"Огляд",orders:"Замовлення",products:"Товари",cats:"Категорії",import:"Імпорт",price:"Ціни",promos:"Акції",codes:"Промокоди",clients:"Клієнти",banners:"Банери",pages:"Сторінки",shop:"Налаштування",backup:"Резервна копія"};
 function shell(){
- $("app").innerHTML='<div class="tabs">'+Object.keys(T).map(k=>`<button data-tab="${k}" class="${k===cur?"on":""}">${T[k]}</button>`).join("")+'</div><div id="pane"></div>';
+ document.documentElement.style.setProperty("--hh",document.querySelector("header").offsetHeight+"px");
+ const tb=document.querySelector(".tabs");
+ if(tb){tb.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.tab===cur));const a=tb.querySelector(".on");if(a)a.scrollIntoView({block:"nearest",inline:"nearest"});$("pane").innerHTML="";window.scrollTo(0,0)}
+ else{ $("app").innerHTML='<div class="tabs">'+Object.keys(T).map(k=>`<button data-tab="${k}" class="${k===cur?"on":""}">${T[k]}</button>`).join("")+'</div><div id="pane"></div>';
+  const a=document.querySelector('.tabs .on');if(a)a.scrollIntoView({block:'nearest',inline:'center'})}
  ({dash:tDash,orders:tOrders,products:tProducts,cats:tCats,import:tImport,price:tPrice,promos:tPromos,codes:tCodes,clients:tClients,banners:tBanners,pages:tPages,shop:tShop,backup:tBackup})[cur]();
 }
 const fail=e=>{$("pane").innerHTML=`<div class="box"><div class="msg bad">Помилка: ${esc(e.message||e)}</div></div>`};
