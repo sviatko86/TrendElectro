@@ -1,7 +1,7 @@
 // Генерує: сторінки товарів і категорій (p/, c/), sitemap.xml, robots.txt, фото у img/ (стиснені).
 // Запускається GitHub Action щодня і вручну. Нічого не змінює в базі даних.
 import fs from "fs";
-const SITE = (process.env.SITE || "https://sviatko86.github.io/TrendElectro").replace(/\/$/, "");
+const SITE = (process.env.SITE || "https://trendelectro.com.ua").replace(/\/$/, "");
 const MAXIMG = +(process.env.MAXIMG || 500);
 const cfg = fs.readFileSync("config.js", "utf8");
 const API = cfg.match(/url:\s*["']([^"']+)["']/)[1], KEY = cfg.match(/key:\s*["']([^"']+)["']/)[1];
