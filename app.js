@@ -79,6 +79,8 @@ function shop(){
  const T=window.TE||{},c=T.chat||{},S=SHOP||{};
  return{phone:S.phone||T.phone||"",phone2:S.phone2||"",email:S.email||T.email||"",hours:S.hours||T.hours||"",address:S.address||"",telegram:S.telegram||c.telegram||"",viber:S.viber||c.viber||"",whatsapp:S.whatsapp||c.whatsapp||"",instagram:S.instagram||"",facebook:S.facebook||"",tagline:S.tagline||"",perks:Array.isArray(S.perks)?S.perks:[]};
 }
+function ordMsg(){return SHOP.orders_msg||"Замовлення тимчасово не приймаємо — сайт працює як каталог. Дякуємо за розуміння!"}
+function applyOrders(){const off=!!SHOP.orders_off;document.body.classList.toggle("noord",off);let b=$("ordbar");if(off){if(!b){b=document.createElement("div");b.id="ordbar";b.className="ordbar";const h=document.querySelector("header");h.parentNode.insertBefore(b,h.nextSibling)}b.textContent=ordMsg()}else if(b)b.remove()}
 const tel=p=>"tel:"+String(p).replace(/[^\d+]/g,"");
 function messengers(){
  const s=shop(),l=[];
@@ -262,7 +264,7 @@ async function viewProduct(id){
 <div class="meta"><span>Артикул: <b>${esc(p.id)}</b></span>${p.b?`<span>Бренд: <a href="#/c/" data-brand="${esc(p.b)}">${esc(p.b)}</a></span>`:""}</div>
 <div class="avail${p.st?"":" no"}">${p.st?ico("check")+"Є в наявності":"Немає в наявності"}</div>
 <div class="bigprice">${money(pc)}${oldHtml(p)}${disc>0?` <small style="color:var(--bad);font-size:15px">−${disc}%</small>`:""}</div>
-<div class="buyrow"><div class="qtybox"><button data-q="-1" aria-label="Менше">−</button><input id="pq" type="number" min="1" max="999" value="1" inputmode="numeric" aria-label="Кількість"><button data-q="1" aria-label="Більше">+</button></div><button class="buybtn" id="buy" data-id="${esc(p.id)}"${p.st?"":" disabled"}>${p.st?ico("cart")+"Купити":"Немає в наявності"}</button><button class="favbtn${fav[p.id]?" on":""}" data-f="${esc(p.id)}" aria-label="Обране">${ico("heart")}</button></div>
+<div class="buyrow"><div class="qtybox"><button data-q="-1" aria-label="Менше">−</button><input id="pq" type="number" min="1" max="999" value="1" inputmode="numeric" aria-label="Кількість"><button data-q="1" aria-label="Більше">+</button></div><button class="buybtn" id="buy" data-id="${esc(p.id)}"${p.st?"":" disabled"}>${p.st?ico("cart")+"Купити":"Немає в наявності"}</button><button class="favbtn${fav[p.id]?" on":""}" data-f="${esc(p.id)}" aria-label="Обране">${ico("heart")}</button></div><p class="ordoff">${esc(ordMsg())}</p>
 <div class="ptrust"><a href="#/page/delivery">${ico("truck")}<span><b>Доставка по Україні</b>Нова пошта, Укрпошта</span></a><a href="#/page/delivery">${ico("wallet")}<span><b>Оплата при отриманні</b>або карткою</span></a><a href="#/page/exchange">${ico("swap")}<span><b>Обмін та повернення</b>за законом, без зайвих питань</span></a></div>
 <div class="box" style="margin:14px 0 0"><h3>Основні характеристики</h3><div id="pkey"><div class="sku">Завантаження…</div></div></div></div></div>
 <div class="tabsb"><button data-pt="info" class="on">Опис</button><button data-pt="spec">Усі характеристики</button></div><div class="box" id="pdet"><div class="sku">Завантаження…</div></div>
@@ -307,7 +309,7 @@ function drawCart(){
  $("dinfo").textContent=t.d>0?"Знижка "+t.d+"%: −"+money(Math.round((t.s-t.t)*100)/100):"";
  const f=Object.keys(fav).length;$("fcnt").textContent=f||"";$("bfcnt").textContent=f||"";
 }
-function openCart(){$("drawer").classList.remove("ordered");$("done").hidden=true;$("omsg").textContent="";drawCart();if(prof){if(!$("fn").value)$("fn").value=prof.full_name||"";if(!$("fp").value)$("fp").value=prof.phone||""}const cu=LS("te_cust",null);if(cu){if(!$("fn").value)$("fn").value=cu.n||"";if(!$("fp").value)$("fp").value=cu.p||"";if(!$("fc").value)$("fc").value=cu.c||""}panel("drawer",true)}
+function openCart(){if(SHOP.orders_off)return;$("drawer").classList.remove("ordered");$("done").hidden=true;$("omsg").textContent="";drawCart();if(prof){if(!$("fn").value)$("fn").value=prof.full_name||"";if(!$("fp").value)$("fp").value=prof.phone||""}const cu=LS("te_cust",null);if(cu){if(!$("fn").value)$("fn").value=cu.n||"";if(!$("fp").value)$("fp").value=cu.p||"";if(!$("fc").value)$("fc").value=cu.c||""}panel("drawer",true)}
 async function applyPromo(code){
  const c=(code||"").trim().toUpperCase(),pm=$("pmsg");promoPct=0;promoCode="";pm.textContent="";$("fpr").value=c;
  if(c&&sb){const r=await sb.rpc("check_promo",{p_code:c});
@@ -315,7 +317,7 @@ async function applyPromo(code){
   else{pm.className="msg";pm.textContent="Промокод недійсний або прострочений."}}
  drawCart();
 }
-async function placeOrder(btn){
+async function placeOrder(btn){if(SHOP.orders_off)return;
  const om=$("omsg"),err=(id,t)=>{document.querySelectorAll("#form .bad").forEach(x=>x.classList.remove("bad"));om.className="msg";om.textContent=t;const i=$(id);if(i){i.classList.add("bad");i.focus()}};
  document.querySelectorAll("#form .bad").forEach(x=>x.classList.remove("bad"));
  const nm=$("fn").value.trim(),ad=$("fc").value.trim(),dg=$("fp").value.replace(/\D/g,"");
@@ -465,7 +467,7 @@ async function boot(){
  sb.auth.onAuthStateChange((_e,s)=>{me=s?s.user:null;setTimeout(loadProf,0)});
  loadBanners();loadPromos();
  try{await Promise.all([loadProducts(),loadSettings(),loadCats(),fetch(BASE+"img/map.json").then(r=>r.ok?r.json():[]).then(a=>{IMG=new Set(a)}).catch(()=>{})]);PALL.forEach(p=>{const k=safeId(p.id);if(IMG.has(k))p.img=BASE+"img/"+k+".webp"})}catch(e){$("view").innerHTML='<div class="empty">Не вдалося завантажити каталог. Перевірте інтернет і оновіть сторінку.</div>';return}
- build();ALLN=[];collectN(ROOT);initChat();drawFooter();
+ applyOrders();build();ALLN=[];collectN(ROOT);initChat();drawFooter();
  try{const g=await sb.auth.getSession();me=g.data.session?g.data.session.user:null;await loadProf()}catch(e){}
  route();
 }
