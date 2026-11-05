@@ -216,11 +216,11 @@ function viewList(path){
  const key=path.join("\u0001");if(CUR.key!==key){CUR.key=key;F={brand:"",min:"",max:"",sort:"def",q:F.q,lim:24,a:{},stock:false,fo:innerWidth>=860}}
  CUR.path=path;
  const crumbs=`<nav class="crumbs" aria-label="Навігація"><a href="#/">Головна</a>${path.map((n,i)=>`<span>›</span><a href="${href(path.slice(0,i+1))}">${esc(n)}</a>`).join("")}</nav>`;
- const chips=kids(node).map(k=>`<a class="chip" href="${href(k.path)}">${esc(k.name)} <small>${k.count}</small></a>`).join("");
+ const chips=tilesHtml(kids(node));
  const cnt={};P.forEach(p=>{for(let i=0;i<path.length;i++)if(p.c[i]!==path[i])return;if(p.b)cnt[p.b]=(cnt[p.b]||0)+1});
  const brands=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]),desc=path.length?cmeta(path).description:"";
- $("view").innerHTML=`${crumbs}<h1 class="ptitle">${esc(path.length?path[path.length-1]:(F.q?"Результати пошуку":"Усі товари"))}</h1>${desc?`<p class="cdesc">${esc(desc)}</p>`:""}${chips?`<div class="chips">${chips}</div>`:""}<div class="bar"><select id="fbrand" aria-label="Бренд"><option value="">Усі бренди</option>${brands.map(b=>`<option value="${esc(b)}"${F.brand===b?" selected":""}>${esc(b)} (${cnt[b]})</option>`).join("")}</select><input id="fmin" type="number" inputmode="decimal" placeholder="Ціна від" value="${esc(F.min)}" aria-label="Ціна від"><input id="fmax" type="number" inputmode="decimal" placeholder="до" value="${esc(F.max)}" aria-label="Ціна до"><select id="fsort" aria-label="Сортування"><option value="def">Спочатку популярні</option><option value="asc">Спочатку дешевші</option><option value="desc">Спочатку дорожчі</option><option value="name">За назвою</option></select><button class="ft" id="ftog">Фільтри</button><span class="fnd" id="found"></span></div><div class="fpan" id="fpan"${F.fo?"":" hidden"}></div><div class="grid" id="grid"></div><button class="more" id="more" hidden></button>`;
- $("fsort").value=F.sort;renderGrid();
+ $("view").innerHTML=`${crumbs}<h1 class="ptitle">${esc(path.length?path[path.length-1]:(F.q?"Результати пошуку":"Усі товари"))}</h1>${desc?`<p class="cdesc">${esc(desc)}</p>`:""}${chips}<div class="bar"><select id="fbrand" aria-label="Бренд"><option value="">Усі бренди</option>${brands.map(b=>`<option value="${esc(b)}"${F.brand===b?" selected":""}>${esc(b)} (${cnt[b]})</option>`).join("")}</select><input id="fmin" type="number" inputmode="decimal" placeholder="Ціна від" value="${esc(F.min)}" aria-label="Ціна від"><input id="fmax" type="number" inputmode="decimal" placeholder="до" value="${esc(F.max)}" aria-label="Ціна до"><select id="fsort" aria-label="Сортування"><option value="def">Спочатку популярні</option><option value="asc">Спочатку дешевші</option><option value="desc">Спочатку дорожчі</option><option value="name">За назвою</option></select><button class="ft" id="ftog">Фільтри</button><span class="fnd" id="found"></span><div class="dsw" role="group" aria-label="Вигляд товарів">${DENS.map(d=>`<button type="button" data-dn="${d[0]}" title="${d[1]}" aria-label="${d[1]}">${DICO[d[0]]}</button>`).join("")}</div></div><div class="fpan" id="fpan"${F.fo?"":" hidden"}></div><div class="grid" id="grid" data-d="${dens()}"></div><button class="more" id="more" hidden></button>`;
+ $("fsort").value=F.sort;setDens(dens());renderGrid();
 }
 function renderGrid(){
  const base=baseList(CUR.path);CUR.list=listP(CUR.path,base);const l=CUR.list;drawFacets(base);
@@ -239,6 +239,15 @@ function viewSel(k){
 }
 let ART=null;
 async function arts(){if(ART)return ART;try{const r=await fetch(BASE+"articles.json");ART=r.ok?await r.json():[]}catch(e){ART=[]}return ART}
+/* ---------- вигляд каталогу: плитки категорій і щільність сітки ---------- */
+const DENS=[["list","Список"],["l","Велика сітка"],["m","Середня сітка"],["s","Мала сітка"]];
+const DICO={list:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="3" y="4" width="18" height="3" rx="1.5"/><rect x="3" y="10.5" width="18" height="3" rx="1.5"/><rect x="3" y="17" width="18" height="3" rx="1.5"/></svg>',l:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>',m:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">'+[3,9.5,16].map(y=>[3,9.5,16].map(x=>`<rect x="${x}" y="${y}" width="5" height="5" rx="1.3"/>`).join("")).join("")+'</svg>',s:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">'+[2.5,7.5,12.5,17.5].map(y=>[2.5,7.5,12.5,17.5].map(x=>`<rect x="${x}" y="${y}" width="4" height="4" rx="1"/>`).join("")).join("")+'</svg>'};
+function dens(){let d="";try{d=localStorage.getItem("te_dens")||""}catch(e){}if(!DENS.some(x=>x[0]===d))d=DENS.some(x=>x[0]===(SHOP||{}).grid_def)?SHOP.grid_def:"l";return d}
+function setDens(d){try{localStorage.setItem("te_dens",d)}catch(e){}const g=$("grid");if(g)g.dataset.d=d;document.querySelectorAll(".dsw button").forEach(b=>b.classList.toggle("on",b.dataset.dn===d))}
+function applyLayout(){const S=SHOP||{},r=document.documentElement.style,c=Math.min(6,Math.max(2,+S.cat_cols||4)),m=Math.min(3,Math.max(2,+S.cat_cols_m||3));r.setProperty("--tc",c);r.setProperty("--tcm",m)}
+const stile=k=>`<a class="stile" href="${href(k.path)}"><span class="th pic">${img(nodeImg(k),300,300,k.name)}</span><b>${esc(k.name)}</b><small>${k.count}</small></a>`;
+function tilesHtml(list){if(!list.length)return"";const S=SHOP||{},c=innerWidth<700?Math.min(3,Math.max(2,+S.cat_cols_m||3)):Math.min(6,Math.max(2,+S.cat_cols||4)),rw=Math.min(8,Math.max(0,+S.cat_rows||0)),lim=rw?c*rw:0;
+ return `<div class="stiles">${list.map((k,i)=>lim&&i>=lim?stile(k).replace('class="stile"','class="stile xt" hidden'):stile(k)).join("")}</div>${lim&&list.length>lim?`<button class="more xtb" data-xt="1">Показати всі ${list.length} ↓</button>`:""}`}
 const ytU=q=>"https://www.youtube.com/results?search_query="+encodeURIComponent(q);
 const ytBox=a=>`<div class="box vid"><h2>Відео по темі</h2>${(a.vid||[]).map(v=>`<button class="yt" data-yt="${esc(v)}" style="background-image:url(https://i.ytimg.com/vi/${esc(v)}/hqdefault.jpg)" aria-label="Дивитись відео">▶</button>`).join("")}<p>Краще один раз побачити? Короткі відео за темою «${esc(a.title)}»:</p><div class="cta"><a class="btn" href="${esc(ytU(a.yt||a.title))}" target="_blank" rel="noopener">▶ YouTube</a><a class="btn" href="${esc("https://www.tiktok.com/search?q="+encodeURIComponent(a.yt||a.title))}" target="_blank" rel="noopener">♪ TikTok</a><a class="btn" href="${esc("https://www.google.com/search?q="+encodeURIComponent("site:instagram.com/reel "+(a.yt||a.title)))}" target="_blank" rel="noopener">◎ Instagram Reels</a></div></div>`;
 const gcard=a=>`<a class="gcard" href="#/guide/${a.slug}"><b>${esc(a.title)}</b><span>${esc(a.description)}</span><em>Читати →</em></a>`;
@@ -410,6 +419,8 @@ function drawFooter(){
 let tmr=null;const later=f=>{clearTimeout(tmr);tmr=setTimeout(f,200)};
 function setFav(id){if(fav[id])delete fav[id];else fav[id]=1;SV("te_fav",fav);document.querySelectorAll(`[data-f="${CSS.escape(id)}"]`).forEach(b=>b.classList.toggle("on",!!fav[id]));drawCart();if(curH()==="#/fav")viewFav();else toast(fav[id]?"Додано в обране":"Прибрано з обраного")}
 document.addEventListener("click",e=>{
+ const db=e.target.closest(".dsw button");if(db){setDens(db.dataset.dn);return}
+ const xb=e.target.closest("[data-xt]");if(xb){document.querySelectorAll(".stile.xt").forEach(x=>x.hidden=false);xb.remove();return}
  const yb=e.target.closest("[data-yt]");if(yb){const i=yb.dataset.yt;yb.outerHTML=`<iframe class="ytf" src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(i)}?autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="Відео"></iframe>`;return}
  const a=e.target.closest("a[href^='#/']");
  if(a){const h=a.getAttribute("href");if(h.indexOf("#/c/")===0&&!a.dataset.brand){F.q="";$("q").value="";SCR[h]=0}
@@ -476,7 +487,7 @@ async function boot(){
  sb.auth.onAuthStateChange((_e,s)=>{me=s?s.user:null;setTimeout(loadProf,0)});
  loadBanners();loadPromos();
  try{await Promise.all([loadProducts(),loadSettings(),loadCats(),fetch(BASE+"img/map.json").then(r=>r.ok?r.json():[]).then(a=>{IMG=new Set(a)}).catch(()=>{})]);PALL.forEach(p=>{const k=safeId(p.id);if(IMG.has(k))p.img=BASE+"img/"+k+".webp"})}catch(e){$("view").innerHTML='<div class="empty">Не вдалося завантажити каталог. Перевірте інтернет і оновіть сторінку.</div>';return}
- applyOrders();build();ALLN=[];collectN(ROOT);initChat();drawFooter();
+ applyOrders();applyLayout();build();ALLN=[];collectN(ROOT);initChat();drawFooter();
  try{const g=await sb.auth.getSession();me=g.data.session?g.data.session.user:null;await loadProf()}catch(e){}
  route();
 }
