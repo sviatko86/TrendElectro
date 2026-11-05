@@ -174,6 +174,7 @@ footer b{color:#fff;display:block;margin-bottom:10px;font-size:15px}footer a{dis
 .bar button.ft{height:40px;padding:0 14px;border-radius:var(--rs);border:1px solid var(--line);background:var(--bg);font-weight:700}.bar button.ft.on{border-color:var(--acc);background:var(--accl)}
 .sbuy{position:fixed;left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom,0px));z-index:18;background:var(--card);border-top:1px solid var(--line);padding:8px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:0 -6px 20px rgba(0,0,0,.06)}.sbuy[hidden]{display:none}.sbuy b{font-size:20px;display:block;line-height:1.1}.sbuy small{color:var(--ok);font-weight:600}.sbuy .buybtn{flex:0 1 190px;height:44px;min-width:0}@media (min-width:860px){.sbuy{display:none!important}}
 .df input.bad,.df select.bad{border-color:var(--bad);box-shadow:0 0 0 3px rgba(210,60,60,.15)}
+.thumbs{display:flex;gap:8px;margin-top:8px;overflow-x:auto}.thumbs:empty{display:none}.thumbs button{flex:none;width:64px;height:64px;border:2px solid var(--line);border-radius:10px;background:#fff;padding:0;position:relative;overflow:hidden}.thumbs button.on{border-color:var(--acc)}.thumbs img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:3px}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 #view>*{animation:up .35s var(--ease) both}@keyframes up{from{opacity:0;transform:translateY(8px)}}@keyframes fd{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -291,7 +292,7 @@ async function loadSettings(){
  });
 }
 async function loadCats(){try{const r=await sb.from("categories").select("path,sort,hidden,image_url,description");if(!r.error)(r.data||[]).forEach(x=>CM[x.path]=x)}catch(e){}}
-async function loadBanners(){try{const r=await sb.from("banners").select("*").eq("active",true).order("sort");BN=r.data||[];drawSlider()}catch(e){}}
+async function loadBanners(){try{const r=await sb.from("banners").select("*").eq("active",true).order("sort");const n=new Date();BN=(r.data||[]).filter(b=>(!b.starts_at||new Date(b.starts_at)<=n)&&(!b.ends_at||new Date(b.ends_at)>=n));drawSlider()}catch(e){}}
 async function loadPromos(){try{const r=await sb.from("promos").select("*").eq("active",true).order("created_at",{ascending:false});PROMOS=(r.data||[]).filter(x=>!x.ends_at||new Date(x.ends_at)>new Date());drawPromos()}catch(e){}}
 
 /* ---------- контакти магазину ---------- */
@@ -463,7 +464,7 @@ async function viewProduct(id){
  const sim=P.filter(x=>x.id!==p.id&&p.c.length&&x.c.join(SEP)===p.c.join(SEP)).slice(0,15);
  const sim2=sim.length<4?P.filter(x=>x.id!==p.id&&p.c.length&&x.c[0]===p.c[0]&&(!p.c[1]||x.c[1]===p.c[1])).slice(0,15):sim;
  $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a>${p.c.map((n,i)=>`<span>›</span><a href="${href(p.c.slice(0,i+1))}">${esc(n)}</a>`).join("")}</nav>
-<div class="pgrid"><div class="pimg">${img(p.img,900,900,p.n)}</div><div class="pinfo"><h1>${esc(p.n)}</h1>
+<div class="pgrid"><div><div class="pimg" id="pmain">${img(p.img,900,900,p.n)}</div><div class="thumbs" id="pthumbs"></div></div><div class="pinfo"><h1>${esc(p.n)}</h1>
 <div class="meta"><span>Артикул: <b>${esc(p.id)}</b></span>${p.b?`<span>Бренд: <a href="#/c/" data-brand="${esc(p.b)}">${esc(p.b)}</a></span>`:""}</div>
 <div class="avail${p.st?"":" no"}">${p.st?ico("check")+"Є в наявності":"Немає в наявності"}</div>
 <div class="bigprice">${money(pc)}${oldHtml(p)}${disc>0?` <small style="color:var(--bad);font-size:15px">−${disc}%</small>`:""}</div>
@@ -473,11 +474,12 @@ async function viewProduct(id){
 <div class="tabsb"><button data-pt="info" class="on">Опис</button><button data-pt="spec">Усі характеристики</button></div><div class="box" id="pdet"><div class="sku">Завантаження…</div></div>
 ${sim2.length?`<section class="sec"><div class="sech"><div><h2>Схожі товари</h2></div><a href="${href(p.c)}">Уся категорія →</a></div>${hsc("hsim",sim2)}</section>`:""}`;
  const sbx=$("sbuy");sbx.innerHTML=`<div><b>${money(pc)}</b><small>${p.st?"В наявності":""}</small></div><button class="buybtn" data-sb="${esc(p.id)}"${p.st?"":" disabled"}>${p.st?ico("cart")+"Купити":"Немає в наявності"}</button>`;sbx.hidden=false;
- if(p.d===null&&sb){try{const r=await sb.from("products").select("description,specs").eq("id",id).maybeSingle();p.d=(r.data&&r.data.description)||"";p.sp=(r.data&&r.data.specs)||""}catch(e){p.d="";p.sp=""}}
+ if(p.d===null&&sb){try{let r=await sb.from("products").select("description,specs,images").eq("id",id).maybeSingle();if(r.error)r=await sb.from("products").select("description,specs").eq("id",id).maybeSingle();p.d=(r.data&&r.data.description)||"";p.sp=(r.data&&r.data.specs)||"";p.ims=(r.data&&Array.isArray(r.data.images)?r.data.images:[]).filter(Boolean)}catch(e){p.d="";p.sp=""}}
  if(location.hash.indexOf("#/p/")===0&&decodeURIComponent(location.hash.slice(4))===id)fillDetails(p);
 }
 function fillDetails(p){
  const rows=specRows(p.sp),k=$("pkey");if(!k)return;
+ const th=$("pthumbs"),all=[p.img].concat(p.ims||[]).filter(Boolean);if(th&&all.length>1)th.innerHTML=all.map((u,i)=>`<button data-ph="${esc(u)}" class="${i?"":"on"}" aria-label="Фото ${i+1}">${img(u,120,120)}</button>`).join("");
  k.innerHTML=rows.length?rows.slice(0,7).map(r=>`<div class="kv"><span>${esc(r[0])}</span><span>${esc(r[1])}</span></div>`).join(""):'<div class="sku">Характеристики уточнюйте в менеджера — відповімо швидко.</div>';
  drawDet(p);
 }
@@ -623,6 +625,7 @@ document.addEventListener("click",e=>{
  if(d.fclr!==undefined){F.a={};F.stock=false;F.lim=24;renderGrid();return}
  if(d.sb){const id=d.sb;cart[id]=(cart[id]||0)+1;save();drawCart();toast("Додано в кошик",1);return}
  if(t.id==="ftog"){F.fo=!F.fo;$("fpan").hidden=!F.fo;return}
+ if(d.ph){const m=$("pmain");if(m)m.innerHTML=img(d.ph,900,900);document.querySelectorAll("#pthumbs button").forEach(b=>b.classList.toggle("on",b===t));return}
  if(d.sc){const r=$(d.sc);if(r)r.scrollBy({left:(+d.d)*r.clientWidth*.9,behavior:"smooth"});return}
  if(d.nav){const v=d.nav;if(v==="home")location.hash="#/";if(v==="cat")openCatMenu();if(v==="fav")location.hash="#/fav";if(v==="cart")openCart();if(v==="acc"){drawAcc();panel("acc",true)}return}
  if(t.id==="buy"){const n=Math.max(1,Math.min(999,+$("pq").value||1)),id=t.dataset.id;cart[id]=(cart[id]||0)+n;save();drawCart();toast(n>1?"Додано в кошик: "+n+" шт.":"Додано в кошик",1);return}
