@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: 20
       - run: npm install --no-save sharp@0.33.5
-      - run: node seo.mjs
+      - run: node --input-type=module < seo.js
         env:
           MAXIMG: "600"
       - name: Commit changes
