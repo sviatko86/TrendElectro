@@ -63,32 +63,36 @@ if (sharp) {
 /* ---------- пошук відсутніх фото на svit-bud.com за артикулом ---------- */
 if (sharp && process.env.FIND !== "0") {
   const MF = +(process.env.MAXFIND || 120), DAY = 864e5;
-  let miss = {}; try { miss = JSON.parse(fs.readFileSync("img/misses.json", "utf8")) } catch (e) { }
+  let miss = {}; try { miss = JSON.parse(fs.readFileSync("img/find-misses.json", "utf8")) } catch (e) { }
   const bad = new Set(failedIds);
   const need = P.filter(p => !fs.existsSync(`img/${safe(p.id)}.webp`) && (!p.img || bad.has(p.id)) && !(miss[p.id] && Date.now() - miss[p.id] < 30 * DAY)).slice(0, MF);
   console.log("шукаю фото на svit-bud.com для:", need.length);
   const UA = { "User-Agent": "Mozilla/5.0 TrendElectroBot" }, sleep = ms => new Promise(r => setTimeout(r, ms));
-  const html = async u => { try { const r = await fetch(u, { headers: UA, signal: AbortSignal.timeout(20000) }); return r.ok ? await r.text() : "" } catch (e) { return "" } };
+  const C = { search_fail: 0, no_links: 0, page_fail: 0, id_miss: 0, no_img: 0, save_fail: 0 }; let shown = 0;
+  const html = async u => { try { const r = await fetch(u, { headers: UA, signal: AbortSignal.timeout(20000) }); if (!r.ok && shown++ < 3) console.log("  HTTP", r.status, u.slice(0, 90)); return r.ok ? await r.text() : "" } catch (e) { if (shown++ < 3) console.log("  fetch error", String(e.message || e).slice(0, 80), u.slice(0, 90)); return "" } };
   let found = 0;
   for (const p of need) {
-    let ok = false;
+    let ok = false, hard = true;
     try {
       const sr = await html("https://svit-bud.com/search/?search=" + encodeURIComponent(p.id)); await sleep(500);
+      if (!sr) { C.search_fail++; hard = false; continue }
       const links = [...new Set([...sr.matchAll(/href="(https:\/\/svit-bud\.com\/[a-z0-9\-\/_]+-\d+)"/g)].map(m => m[1]))].slice(0, 3);
+      if (!links.length) C.no_links++;
       const idRe = new RegExp("(^|[^A-Za-z0-9])" + p.id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "([^A-Za-z0-9]|$)");
       for (const l of links) {
-        const pg = await html(l); await sleep(500); if (!pg) continue;
+        const pg = await html(l); await sleep(500); if (!pg) { C.page_fail++; continue }
         const text = pg.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<[^>]+>/g, " ");
-        if (!idRe.test(text)) continue;
+        if (!idRe.test(text)) { C.id_miss++; continue }
         let im = (pg.match(/<meta property="og:image" content="([^"]+)"/) || [])[1];
         if (!im || /oct_loader|lazy/.test(im)) im = (pg.match(/(https:\/\/svit-bud\.com\/image\/(?:cache\/)?catalog\/(?!1lazy)[^"' )]+\.(?:jpe?g|png|webp))/i) || [])[1];
-        if (im && await save(im, p.id)) { ok = true; found++; break }
+        if (!im) { C.no_img++; continue }
+        if (await save(im, p.id)) { ok = true; found++; break } else C.save_fail++
       }
     } catch (e) { }
-    if (!ok) miss[p.id] = Date.now();
+    if (!ok && hard) miss[p.id] = Date.now();
   }
-  fs.writeFileSync("img/misses.json", JSON.stringify(miss));
-  console.log("знайдено на svit-bud.com:", found, "з", need.length);
+  fs.writeFileSync("img/find-misses.json", JSON.stringify(miss));
+  console.log("знайдено на svit-bud.com:", found, "з", need.length, JSON.stringify(C));
 }
 const have = fs.readdirSync("img").filter(f => f.endsWith(".webp")).map(f => f.slice(0, -5));
 fs.writeFileSync("img/map.json", JSON.stringify(have));
