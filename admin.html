@@ -383,7 +383,7 @@ document.addEventListener("click",async e=>{
  if(a==="togb"){await sb.from("banners").update({active:t.dataset.v!=="true"}).eq("id",t.dataset.id);return tBanners()}
  if(a==="delb"){if(confirm("Видалити банер?")){await sb.from("banners").delete().eq("id",t.dataset.id);const bp=pathOf(t.dataset.u||"");if(bp)await sb.storage.from("site").remove([bp]);tBanners()}return}
  if(a==="savepages"){
-  const v={};document.querySelectorAll("[data-pt]").forEach(i=>{const k=i.dataset.pt;v[k]=v[k]||{};v[k][i.dataset.pf]=i.value.trim()});
+  const v={};document.querySelectorAll("[data-pt]").forEach(i=>{const k=i.dataset.pt;v[k]=v[k]||{};v[k][i.dataset.pf]=i.value.trim()}); 
   r=await sb.from("settings").upsert({key:"pages",value:v,updated_at:new Date().toISOString()});
   return flash(r.error?"Помилка: "+r.error.message:"Збережено ✓",!r.error);
  }
