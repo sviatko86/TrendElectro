@@ -21,6 +21,7 @@ jobs:
       - run: node --input-type=module < seo.js
         env:
           MAXIMG: "600"
+          FIND: "0"
       - name: Commit changes
         run: |
           git config user.name "trend-electro-bot"
