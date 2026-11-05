@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://sviatko86.github.io/TrendElectro/sitemap.xml
+Sitemap: https://trendelectro.com.ua/sitemap.xml
