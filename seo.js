@@ -24,7 +24,7 @@ async function all(table, sel, extra = "") {
 }
 const settings = {};
 (await get("settings?select=key,value&key=in.(pricing,shop)")).forEach(x => settings[x.key] = x.value || {});
-let cats = []; try { cats = await get("categories?select=path,hidden,description"); } catch (e) { }
+let cats = []; try { cats = await get("categories?select=path,hidden,description,seo_title"); } catch (e) { try { cats = await get("categories?select=path,hidden,description"); } catch (e2) { } }
 const CM = {}; cats.forEach(c => CM[c.path] = c);
 const hid = c => { for (let i = 1; i <= c.length; i++) { const m = CM[c.slice(0, i).join(SEP)]; if (m && m.hidden) return true } return false };
 const PR = settings.pricing || {}, shop = settings.shop || {};
@@ -35,8 +35,9 @@ function rate(c) {
 }
 const price = p => { const r = rate(p.c); return Math.round(p.price * (1 + r[0] / 100) * (1 - r[1] / 100) * 100) / 100 };
 
-const raw = await all("products", "id,name,category,subcategory,subcategory2,brand,price,image_url,in_stock,description,specs", "&active=eq.true");
-const P = raw.map(r => ({ id: r.id, name: r.name, c: [r.category, r.subcategory, r.subcategory2].filter(x => x && x !== "Усі"), brand: r.brand || "", price: +r.price || 0, img: r.image_url || "", st: r.in_stock !== false, d: r.description || "", sp: r.specs || "" })).filter(p => !hid(p.c));
+const PSEL = "id,name,category,subcategory,subcategory2,brand,price,image_url,in_stock,description,specs";
+let raw; try { raw = await all("products", PSEL + ",seo_title,seo_description", "&active=eq.true"); } catch (e) { raw = await all("products", PSEL, "&active=eq.true"); }
+const P = raw.map(r => ({ id: r.id, name: r.name, c: [r.category, r.subcategory, r.subcategory2].filter(x => x && x !== "Усі"), brand: r.brand || "", price: +r.price || 0, img: r.image_url || "", st: r.in_stock !== false, d: r.description || "", sp: r.specs || "", seo_t: r.seo_title || "", seo_d: r.seo_description || "" })).filter(p => !hid(p.c));
 console.log("products:", P.length);
 
 /* ---------- фото ---------- */
@@ -120,12 +121,12 @@ const money = n => n.toLocaleString("uk-UA") + " ₴";
 const ctitle = n => n;
 for (const p of P) {
   const rel = purl.get(p.id), url = `${SITE}/${rel}`, pr = price(p), im = imgUrl(p);
-  const desc = (p.d || `${p.name}. Купити в Trend Electro: ціна ${money(pr)}, доставка по Україні.`).replace(/\s+/g, " ").slice(0, 300);
+  const desc = (p.seo_d || p.d || `${p.name}. Купити в Trend Electro: ціна ${money(pr)}, доставка по Україні.`).replace(/\s+/g, " ").slice(0, 300);
   const ld = { "@context": "https://schema.org", "@type": "Product", name: p.name, sku: p.id, description: desc, ...(im ? { image: [im] } : {}), ...(p.brand ? { brand: { "@type": "Brand", name: p.brand } } : {}), offers: { "@type": "Offer", url, priceCurrency: "UAH", price: pr.toFixed(2), availability: p.st ? "https://schema.org/InStock" : "https://schema.org/OutOfStock", itemCondition: "https://schema.org/NewCondition" } };
   const crumbs = p.c.map((n, i) => `<a href="${SITE}/c/${p.c.slice(0, i + 1).map(x => slug(x)).join("/")}/">${esc(n)}</a>`).join(" › ");
   const body = `<nav class="crumbs">${crumbs}</nav><h1>${esc(p.name)}</h1>${im ? `<p><img src="${esc(im)}" alt="${esc(p.name)}" width="400" style="max-width:100%;height:auto"></p>` : ""}<p><b>${money(pr)}</b> · ${p.st ? "В наявності" : "Немає в наявності"} · Артикул: ${esc(p.id)}${p.brand ? " · Бренд: " + esc(p.brand) : ""}</p>${p.d ? `<p>${esc(p.d)}</p>` : ""}${specRows(p.sp).length ? `<table>${specRows(p.sp).map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join("")}</table>` : ""}`;
   fs.mkdirSync(rel, { recursive: true });
-  fs.writeFileSync(rel + "index.html", page({ title: `${p.name} — купити в Trend Electro`, desc, url, hash: "#/p/" + encodeURIComponent(p.id), body, ld, image: im }));
+  fs.writeFileSync(rel + "index.html", page({ title: p.seo_t || `${p.name} — купити в Trend Electro`, desc, url, hash: "#/p/" + encodeURIComponent(p.id), body, ld, image: im }));
   urls.push([url, 0.7]);
 }
 /* категорії */
@@ -137,9 +138,45 @@ for (const [k, n] of nodes) {
   const ld = { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: n.path.map((x, i) => ({ "@type": "ListItem", position: i + 1, name: x, item: `${SITE}/c/${n.path.slice(0, i + 1).map(y => slug(y)).join("/")}/` })) };
   const list = n.items.slice(0, 150).map(p => `<li><a href="${SITE}/${purl.get(p.id)}">${esc(p.name)}</a> — ${money(price(p))}</li>`).join("");
   fs.mkdirSync(rel, { recursive: true });
-  fs.writeFileSync(rel + "index.html", page({ title: `${ctitle(name)} — купити в Trend Electro`, desc, url, hash: "#/c/" + n.path.map(encodeURIComponent).join("/"), body: `<h1>${esc(name)}</h1><p>${esc(desc)}</p><ul>${list}</ul>`, ld }));
+  fs.writeFileSync(rel + "index.html", page({ title: meta.seo_title || `${ctitle(name)} — купити в Trend Electro`, desc, url, hash: "#/c/" + n.path.map(encodeURIComponent).join("/"), body: `<h1>${esc(name)}</h1><p>${esc(desc)}</p><ul>${list}</ul>`, ld }));
   urls.push([url, n.path.length === 1 ? 0.9 : 0.8]);
 }
+/* ---------- поради (articles.json) ---------- */
+let ART = []; try { ART = JSON.parse(fs.readFileSync("articles.json", "utf8")) } catch (e) { }
+fs.rmSync("poradu", { recursive: true, force: true });
+if (ART.length) {
+  const gl = ART.map(a => `<li><a href="${SITE}/poradu/${a.slug}/">${esc(a.title)}</a> — ${esc(a.description)}</li>`).join("");
+  fs.mkdirSync("poradu", { recursive: true });
+  fs.writeFileSync("poradu/index.html", page({ title: "Поради з вибору електротоварів — Trend Electro", desc: "Практичні статті: як вибрати лампу, кабель, розетки, автомати й світильники.", url: `${SITE}/poradu/`, hash: "#/guide/", body: `<h1>Поради з вибору електротоварів</h1><ul>${gl}</ul>`, ld: { "@context": "https://schema.org", "@type": "CollectionPage", name: "Поради", url: `${SITE}/poradu/` } }));
+  urls.push([`${SITE}/poradu/`, 0.6]);
+  for (const a of ART) {
+    const rel = `poradu/${a.slug}/`, url = `${SITE}/${rel}`;
+    fs.mkdirSync(rel, { recursive: true });
+    fs.writeFileSync(rel + "index.html", page({ title: `${a.title} — Trend Electro`, desc: a.description, url, hash: "#/guide/" + a.slug, body: `<h1>${esc(a.title)}</h1>${a.body}`, ld: { "@context": "https://schema.org", "@type": "Article", headline: a.title, description: a.description, mainEntityOfPage: url, author: { "@type": "Organization", name: "Trend Electro" }, publisher: { "@type": "Organization", name: "Trend Electro" } } }));
+    urls.push([url, 0.6]);
+  }
+}
+/* ---------- фіди: Google Merchant Center і Prom/Rozetka/Epicentr (YML) ---------- */
+fs.mkdirSync("feed", { recursive: true });
+const cdata = t => "<![CDATA[" + String(t).replace(/]]>/g, "]]]]><![CDATA[>") + "]]>";
+const dsc = p => (p.d || p.name).replace(/\s+/g, " ").slice(0, 4900);
+let g = `<?xml version="1.0" encoding="UTF-8"?>\n<rss xmlns:g="http://base.google.com/ns/1.0" version="2.0"><channel><title>Trend Electro</title><link>${SITE}/</link><description>Електротовари та LED-освітлення</description>\n`;
+let gn = 0;
+for (const p of P) {
+  const im = imgUrl(p); if (!/^https?:/.test(im) || !p.c.length) continue; gn++;
+  g += `<item><g:id>${esc(safe(p.id))}</g:id><title>${esc(p.name.slice(0, 150))}</title><description>${esc(dsc(p))}</description><link>${SITE}/${purl.get(p.id)}</link><g:image_link>${esc(im)}</g:image_link><g:availability>${p.st ? "in_stock" : "out_of_stock"}</g:availability><g:price>${price(p).toFixed(2)} UAH</g:price>${p.brand ? `<g:brand>${esc(p.brand)}</g:brand>` : ""}<g:mpn>${esc(p.id)}</g:mpn><g:condition>new</g:condition><g:product_type>${esc(p.c.join(" > "))}</g:product_type></item>\n`;
+}
+fs.writeFileSync("feed/google.xml", g + "</channel></rss>\n");
+const cid = new Map(); let cn = 0; const cxml = [];
+for (const [k, n] of nodes) { cid.set(k, ++cn); }
+for (const [k, n] of nodes) { const par = n.path.length > 1 ? cid.get(n.path.slice(0, -1).join(SEP)) : null; cxml.push(`<category id="${cid.get(k)}"${par ? ` parentId="${par}"` : ""}>${esc(n.path[n.path.length - 1])}</category>`) }
+let y = `<?xml version="1.0" encoding="UTF-8"?>\n<yml_catalog date="${new Date().toISOString().slice(0, 16).replace("T", " ")}"><shop><name>Trend Electro</name><company>Trend Electro</company><url>${SITE}/</url><currencies><currency id="UAH" rate="1"/></currencies><categories>${cxml.join("")}</categories><offers>\n`;
+for (const p of P) {
+  if (!p.c.length) continue; const im = imgUrl(p);
+  y += `<offer id="${esc(safe(p.id))}" available="${p.st ? "true" : "false"}"><url>${SITE}/${purl.get(p.id)}</url><price>${price(p).toFixed(2)}</price><currencyId>UAH</currencyId><categoryId>${cid.get(p.c.join(SEP))}</categoryId>${/^https?:/.test(im) ? `<picture>${esc(im)}</picture>` : ""}${p.brand ? `<vendor>${esc(p.brand)}</vendor>` : ""}<vendorCode>${esc(p.id)}</vendorCode><name>${esc(p.name)}</name><description>${cdata(dsc(p))}</description>${specRows(p.sp).slice(0, 30).map(r => `<param name="${esc(r[0])}">${esc(r[1])}</param>`).join("")}</offer>\n`;
+}
+fs.writeFileSync("feed/prom.yml", y + "</offers></shop></yml_catalog>\n");
+console.log("фід Google: товарів", gn);
 urls.unshift([SITE + "/", 1]);
 fs.writeFileSync("sitemap.xml", `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(u => `<url><loc>${esc(u[0])}</loc><lastmod>${today}</lastmod><priority>${u[1]}</priority></url>`).join("\n")}\n</urlset>\n`);
 fs.writeFileSync("robots.txt", `User-agent: *\nAllow: /\nSitemap: ${SITE}/sitemap.xml\n`);

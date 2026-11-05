@@ -39,12 +39,7 @@ const SEP=" › ",ST={new:"Нове",confirmed:"Підтверджено",shippe
 const AL="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 const genCode=(n=8)=>{const a=new Uint32Array(n);crypto.getRandomValues(a);let s="";a.forEach(x=>s+=AL[x%AL.length]);return s};
 const sb=supabase.createClient(TE.url,TE.key);
-let cur="dash",OL=[],OQ={q:"",st:"",days:0},TREE=[],CI={},CM={},BNS=[],clients=[],PLAN=null,PQ={q:"",cat:"",hid:false,noimg:false,page:0};
-const RULES={"rules": [["^диф\\.? ?авт|^диференційний автомат|^дифавтомат", ["Захист електромережі", "Диф. автомати"]], ["^(диф\\.? ?реле|диференційн[а-яіїєґ]* реле|пзв|узо)(?![а-яіїєґ])", ["Захист електромережі", "ПЗВ (Диференційні реле)"]], ["^(автомат[а-яіїєґ]* захисту двигуна|мпза)", ["Захист електромережі", "Автомати захисту двигуна"]], ["^(авт\\.? ?вимикач|автоматичний вимикач)[а-яіїєґ]*[^,]*силов", ["Захист електромережі", "Автоматичні вимикачі силові"]], ["^(авт\\.? ?вимикач|автоматичний вимикач|розчіплювач)", ["Захист електромережі", "Автоматичні вимикачі"]], ["^(контактор|реле теплове|теплове реле|пускач)", ["Захист електромережі", "Контактори та теплові реле"]], ["^(запобіжник|тримач запобіжник|основа запобіжник|вставка плавка)", ["Захист електромережі", "Запобіжники плавкі та тримачі"]], ["^(арматура (сигнальна|світлосигнальна)|лампа сигнальна|індикатор світлосигнальн|світлосигнальн)", ["Захист електромережі", "Індикатори світлосигнальні"]], ["^((імпульсне |проміжне )?реле|узіп|обмежувач перенапруг|таймер|трансформатор струму|фазорозподіл)", ["Захист електромережі", "Реле"]], ["^(шинопровід|з'єднувач (шинопровод|вбудован|\\(дод)|адаптер (для )?шинопровод)", ["Освітлення", "Світлодіодні світильники", "Трекові світлодіодні світильники"]], ["^(led )?(лампа|лампа світлодіодна) настільна|^led лампа настільна|^настільна", ["Освітлення", "Настільні лампи"]], ["^(led|світлодіодний) прожектор|^прожектор", ["Освітлення", "LED прожектори"]], ["^(led|світлодіодна)? ?гірлянд|^кріплення \\\"ялинка\\\"|^led (штора|бахрома|сітка)", ["Освітлення", "Світлодіодні гірлянди"]], ["^(led |світлодіодн[а-яіїєґ]* )?(ліхтар|нічник)", ["Освітлення", "Світлодіодні ліхтарі"]], ["^(датчик освітлення|фотореле|сутінков)", ["Освітлення", "Датчики освітлення"]], ["^(датчик|механізм датчика)", ["Освітлення", "Датчики руху"]], ["^(профіль|екран (для|до) профілю|кліпса.*профіл|заглушка.*профіл)", ["Освітлення", "Профіль для світлодіодної стрічки"]], ["^(світлодіодна стрічка|led ?стрічка|стрічка світлодіодна|світлодіодний модуль|led модуль|контролер|підсвітка)", ["Освітлення", "Світлодіодна стрічка та LED модулі"]], ["^(блок живлення|led драйвер|драйвер)", ["Освітлення", "Блоки живлення"]], ["^(led )?люстра", ["Освітлення", "Світлодіодні люстри"]], ["^(освітлювальний прилад|світильник (парков|garden|скло|пластик|вулич|metal))", ["Освітлення", "Світильники під лампу", "Вуличні світильники під лампу"]], ["^(світильник (для|під) |світильник-балка|плафон|патрон-світильник)", ["Освітлення", "Світильники під лампу"]], ["^корпус для світильник", ["Освітлення", "Світлодіодні світильники"]], ["^(led )?(лампа|світлодіодна лампа)", ["Освітлення", "Світлодіодні лампи"]], ["^(led |світлодіодний )?(світильник|св-к)[^,]*аварій|^аварійн", ["Освітлення", "Світлодіодні світильники", "Аварійні світильники"]], ["^(led |світлодіодний )?(світильник|св-к)[^,]*(промислов|high ?bay)", ["Освітлення", "Світлодіодні світильники", "Промислові світлодіодні світильники"]], ["^(led |світлодіодний )?(світильник|св-к)[^,]*(вулич|фасад|консольн|сонячн|садов)|^набір (світлодіодних )?світильник", ["Освітлення", "Світлодіодні світильники", "Вуличні світлодіодні світильники"]], ["^(led |світлодіодний )?(світильник|св-к)[^,]*(v-trl|трек|шинопровід)", ["Освітлення", "Світлодіодні світильники", "Трекові світлодіодні світильники"]], ["^(led |світлодіодний )?(світильник|св-к)[^,]*(лінійн|т8|l-2)", ["Освітлення", "Світлодіодні світильники", "Лінійні світлодіодні світильники"]], ["^(led )?панель|^(led |світлодіодний )?(світильник|св-к)[^,]*(панель|армстронг|595x595|600x600)", ["Освітлення", "Світлодіодні світильники", "Світлодіодні панелі"]], ["^(led |світлодіодний )?(світильник|св-к)[^,]*(датчик|sensor|мікрохвил)", ["Освітлення", "Світлодіодні світильники", "Світлодіодні світильники з датчиком руху"]], ["^(led |світлодіодний )?(світильник|св-к)[^,]*(пульт|smart|rgb)", ["Освітлення", "Світлодіодні світильники", "Світлодіодні світильники з пультом"]], ["^(led |світлодіодний )?(світильник|св-к)[^,]*(регулюван|димер|dimm)", ["Освітлення", "Світлодіодні світильники", "Світлодіодні світильники з регулюванням яскравості"]], ["^(led |світлодіодний )?(світильник|св-к)|^led набір", ["Освітлення", "Світлодіодні світильники", "Побутові світлодіодні світильники"]], ["^(механізм )?розетка (телевізійн|tv)|^розетка tv|^механізм розетки tv|^механізм розетки телевізійн", ["Кабелі та проводи електричні", "TV-кабелі та фурнітура"]], ["^(інтернет розетка|(механізм )?розетка (rj|комп|інтернет))|^механізм розетки (rj|комп)", ["Кабелі та проводи електричні", "LAN кабель кручена пара"]], ["^подовжувач.*(на котушці|котушк)|^подовжувач на котушці", ["Розетки і вимикачі", "Подовжувачі на котушці"]], ["^(подовжувач|мережевий фільтр)", ["Розетки і вимикачі", "Подовжувачі"]], ["^(розетка|вилка).*(електроплит|для плит)", ["Розетки і вимикачі", "Вилки і розетки для електроплит"]], ["^(розетка (силова|промислова|переносна)|вилка силова|вилка (3ф|промислова)|розетка 3ф)", ["Розетки і вимикачі", "Силові розетки та вилки"]], ["^блок:|^блок (розетка|вимикач)", ["Розетки і вимикачі", "Блок розетка + вимикач"]], ["^рамка", ["Розетки і вимикачі", "Рамки для розеток та вимикачів"]], ["^(трійник-розгалужувач|двійник-розгалужувач|розгалужувач|адаптер|перехідник|трійник(?! т-подібн))", ["Розетки і вимикачі", "Трійники та адаптери"]], ["^колодка", ["Розетки і вимикачі", "Колодки електричні"]], ["^вилка", ["Розетки і вимикачі", "Вилки та розетки"]], ["^(механізм )?(розетка|заглушка розетки|заглушки)|^механізм заглушки|^накладка розетки|^механізм аудіо", ["Розетки і вимикачі", "Розетки"]], ["^((механізм )?(вимикач|діммер|перемикач)|клавішний перемикач|клавіш)", ["Розетки і вимикачі", "Вимикачі"]], ["^кабель.*(\\blan\\b|utp|ftp|cat ?[56]|dialan)|^(патч|utp|ftp)", ["Кабелі та проводи електричні", "LAN кабель кручена пара"]], ["^(кабель.*(\\btv\\b|коаксіал|rg-?6)|антен)", ["Кабелі та проводи електричні", "TV-кабелі та фурнітура"]], ["^(кабель-канал|заглушка кабель|кут (внутрішній|зовнішній|плоский)|з'єднувач (кутовий|т-кут)|трійник т-подібн|заглушка кінцева|накладка на (стик|кут|з'єднан)|накладка на )", ["Електромонтажне обладнання", "Кабель-канал"]], ["^(гофр|металорукав|металлорукав|труба|патрубок|ввід|кабельний ввід|муфта|сальник)", ["Електромонтажне обладнання", "Гофра і металлорукав для кабелю"]], ["^(кабель|провід|шнур)", ["Кабелі та проводи електричні", "Кабелі та проводи"]], ["^(вентилятор|вент-р|повітровод|решітка|клапан|панель унів)", ["Електромонтажне обладнання", "Вентиляційне устаткування"]], ["^(терморегулятор|термостат)", ["Електромонтажне обладнання", "Терморегулятори"]], ["^(тепла підлога|нагрівальн)", ["Електромонтажне обладнання", "Тепла підлога"]], ["^(дзвінок|дзвоник)", ["Електромонтажне обладнання", "Дверні дзвінки"]], ["^(ізострічка|термозбіжна|термоусад|стрічка (ізоляц|двосторонн))", ["Електромонтажне обладнання", "Ізострічка і термоусадка"]], ["^(наконечник|гільза|гільзи)", ["Електромонтажне обладнання", "Клеми та клемні колодки", "Наконечники та гільзи"]], ["^(клема|клемн|з'єднувач)", ["Електромонтажне обладнання", "Клеми та клемні колодки"]], ["^(din|рейка|шина|гребінка)", ["Електромонтажне обладнання", "Din-рейки та шини"]], ["^(кнопка|кнопки|пульт|пост )", ["Електромонтажне обладнання", "Кнопки та пульти управління"]], ["^патрон", ["Електромонтажне обладнання", "Патрони електричні"]], ["^(бокс|корпус|шафа|щит|щиток)", ["Електромонтажне обладнання", "Бокси для електромонтажного устаткування"]], ["^(коробка|підрозетник)", ["Електромонтажне обладнання", "Коробки монтажні"]], ["^(площадк|хомут|скоб|кліпс|обойм|дюбель|кріплення|затискач|кабельний затискач|стяжк|гак|скріпа|трос|стрічка бандажна)", ["Електромонтажне обладнання", "Кріплення кабелю"]], ["^(кронштейн|тримач|каркас)", ["Електромонтажне обладнання", "Кронштейни та кріплення"]], ["^(викрутка|плоскогуб|ніж|детектор|мультиметр|тестер|маркер|набір (міні|інструм))", ["Електромонтажне обладнання", "Інше"]], ["^стікер", ["Електромонтажне обладнання", "Інше"]], ["^(батарейка|акумулятор|елемент живлення)", ["ТМЦ"]], ["^(пластини від|спіраль від|гель від|засіб для|рідина від|комахобійка)|некусайка", ["ТМЦ"]]], "fallback": [["led лампа|лампа led", ["Освітлення", "Світлодіодні лампи"]], ["світильник", ["Освітлення", "Світлодіодні світильники", "Побутові світлодіодні світильники"]], ["розетк", ["Розетки і вимикачі", "Розетки"]], ["вимикач", ["Розетки і вимикачі", "Вимикачі"]], ["кабел|провід", ["Кабелі та проводи електричні", "Кабелі та проводи"]]], "unk": ["Не розподілено", "Потрібно перевірити"]};
-const RX=RULES.rules.map(r=>[new RegExp(r[0]),r[1]]),FB=RULES.fallback.map(r=>[new RegExp(r[0]),r[1]]);
-const normN=n=>String(n).toLowerCase().replace(/’/g,"'").replace(/ʼ/g,"'").replace(/`/g,"'").replace(/([а-яіїєґ])i/g,"$1і").replace(/i([а-яіїєґ])/g,"і$1").replace(/\s+/g," ").trim();
-function classify(name){const n=normN(name);for(const r of RX)if(r[0].test(n))return r[1];for(const r of FB)if(r[0].test(n))return r[1];return RULES.unk}
-
+let cur="dash",OL=[],OQ={q:"",st:"",days:0},TREE=[],CI={},CM={},BNS=[],clients=[],PQ={q:"",cat:"",hid:false,noimg:false,page:0};
 async function init(){
  const s=await sb.auth.getSession();if(!s.data.session)return login();
  const p=await sb.from("profiles").select("is_admin").eq("id",s.data.session.user.id).maybeSingle();
@@ -57,10 +52,10 @@ function login(msg){
 }
 async function logout(){await sb.auth.signOut();$("out").hidden=true;login()}
 $("out").onclick=logout;
-const T={dash:"Огляд",orders:"Замовлення",products:"Товари",cats:"Категорії",import:"Імпорт",price:"Ціни",mail:"Розсилка",promos:"Акції",codes:"Промокоди",clients:"Клієнти",banners:"Банери",pages:"Сторінки",shop:"Налаштування",backup:"Резервна копія"};
+const T={dash:"Огляд",orders:"Замовлення",products:"Товари",cats:"Категорії",import:"Імпорт",price:"Ціни",promos:"Акції",codes:"Промокоди",clients:"Клієнти",banners:"Банери",pages:"Сторінки",shop:"Налаштування",backup:"Резервна копія"};
 function shell(){
  $("app").innerHTML='<div class="tabs">'+Object.keys(T).map(k=>`<button data-tab="${k}" class="${k===cur?"on":""}">${T[k]}</button>`).join("")+'</div><div id="pane"></div>';
- ({dash:tDash,orders:tOrders,products:tProducts,cats:tCats,import:tImport,price:tPrice,mail:tMail,promos:tPromos,codes:tCodes,clients:tClients,banners:tBanners,pages:tPages,shop:tShop,backup:tBackup})[cur]();
+ ({dash:tDash,orders:tOrders,products:tProducts,cats:tCats,import:tImport,price:tPrice,promos:tPromos,codes:tCodes,clients:tClients,banners:tBanners,pages:tPages,shop:tShop,backup:tBackup})[cur]();
 }
 const fail=e=>{$("pane").innerHTML=`<div class="box"><div class="msg bad">Помилка: ${esc(e.message||e)}</div></div>`};
 const flash=(t,ok)=>{const m=$("fm");if(m){m.className="msg "+(ok?"ok":"bad");m.textContent=t}};
@@ -180,7 +175,7 @@ async function loadP(){
 function editP(p){
  const n=!p;p=p||{id:"",name:"",price:"",old_price:"",brand:"",category:"",subcategory:"",subcategory2:"",image_url:"",description:"",specs:"",active:true,in_stock:true,is_hit:false,is_new:false};
  const ck=(id,v,l)=>`<label style="display:flex;gap:6px;align-items:center;margin:0;color:var(--ink)"><input id="${id}" type="checkbox" style="width:auto"${v?" checked":""}> ${l}</label>`;
- $("ped").innerHTML=`<div class="box"><h2>${n?"Новий товар":"Редагування"}</h2>${n?'<div><label>Артикул</label><input id="eid"></div>':`<div class="mut">Артикул: ${esc(p.id)}</div>`}<div><label>Назва</label><input id="en" value="${esc(p.name)}"></div><div class="grid2"><div><label>Ціна, ₴</label><input id="ep" type="number" step="0.01" value="${esc(p.price)}"></div><div><label>Стара ціна (для акції), ₴</label><input id="eo" type="number" step="0.01" value="${esc(p.old_price||"")}"></div></div><div class="grid3"><div><label>Група</label><input id="ec" list="dl1" value="${esc(p.category)}"></div><div><label>Підгрупа</label><input id="es" list="dl2" value="${esc(p.subcategory||"")}"></div><div><label>Під-підгрупа</label><input id="es2" list="dl3" value="${esc(p.subcategory2||"")}"></div></div>${dl("dl1",lvlNames(0))}${dl("dl2",lvlNames(1))}${dl("dl3",lvlNames(2))}<div><label>Бренд</label><input id="eb" value="${esc(p.brand||"")}"></div><div><label>Фото: посилання або завантажити своє</label><input id="ei" value="${esc(p.image_url||"")}" placeholder="https://…"><input id="ef" type="file" accept="image/*" style="margin-top:6px"></div><div><label>Додаткові фото (по одному посиланню в рядку) або завантажте кілька файлів</label><textarea id="eim" rows="3" data-had="${(p.images||[]).length?1:0}">${esc((p.images||[]).join("\n"))}</textarea><input id="efm" type="file" accept="image/*" multiple style="margin-top:6px"></div><div><label>Опис</label><textarea id="ed" rows="4">${esc(p.description||"")}</textarea></div><div><label>Характеристики (назва: значення; назва: значення)</label><textarea id="ex" rows="3">${esc(p.specs||"")}</textarea></div>${ck("ea",p.active,"Показувати на сайті")}${ck("ek",p.in_stock,"Є в наявності")}${ck("eh",p.is_hit,"Хіт")}${ck("ew",p.is_new,"Новинка")}<div class="rw"><button data-act="psave" data-new="${n?1:0}" data-id="${esc(p.id)}">Зберегти</button><button class="sec" data-act="pcancel">Скасувати</button>${n?"":`<button class="del" data-act="pdel" data-id="${esc(p.id)}">Видалити</button>`}</div></div>`;
+ $("ped").innerHTML=`<div class="box"><h2>${n?"Новий товар":"Редагування"}</h2>${n?'<div><label>Артикул</label><input id="eid"></div>':`<div class="mut">Артикул: ${esc(p.id)}</div>`}<div><label>Назва</label><input id="en" value="${esc(p.name)}"></div><div class="grid2"><div><label>Ціна, ₴</label><input id="ep" type="number" step="0.01" value="${esc(p.price)}"></div><div><label>Стара ціна (для акції), ₴</label><input id="eo" type="number" step="0.01" value="${esc(p.old_price||"")}"></div></div><div class="grid3"><div><label>Група</label><input id="ec" list="dl1" value="${esc(p.category)}"></div><div><label>Підгрупа</label><input id="es" list="dl2" value="${esc(p.subcategory||"")}"></div><div><label>Під-підгрупа</label><input id="es2" list="dl3" value="${esc(p.subcategory2||"")}"></div></div>${dl("dl1",lvlNames(0))}${dl("dl2",lvlNames(1))}${dl("dl3",lvlNames(2))}<div><label>Бренд</label><input id="eb" value="${esc(p.brand||"")}"></div><div><label>Фото: посилання або завантажити своє</label><input id="ei" value="${esc(p.image_url||"")}" placeholder="https://…"><input id="ef" type="file" accept="image/*" style="margin-top:6px"></div><div><label>Додаткові фото (по одному посиланню в рядку) або завантажте кілька файлів</label><textarea id="eim" rows="3" data-had="${(p.images||[]).length?1:0}">${esc((p.images||[]).join("\n"))}</textarea><input id="efm" type="file" accept="image/*" multiple style="margin-top:6px"></div><div><label>SEO: заголовок для Google (до 60 символів, необов’язково)</label><input id="esdt" data-has="${"seo_title" in p?1:0}" maxlength="90" value="${esc(p.seo_title||"")}"></div><div><label>SEO: короткий опис для Google (до 160 символів, необов’язково)</label><input id="esdd" maxlength="200" value="${esc(p.seo_description||"")}"></div><div><label>Опис</label><textarea id="ed" rows="4">${esc(p.description||"")}</textarea></div><div><label>Характеристики (назва: значення; назва: значення)</label><textarea id="ex" rows="3">${esc(p.specs||"")}</textarea></div>${ck("ea",p.active,"Показувати на сайті")}${ck("ek",p.in_stock,"Є в наявності")}${ck("eh",p.is_hit,"Хіт")}${ck("ew",p.is_new,"Новинка")}<div class="rw"><button data-act="psave" data-new="${n?1:0}" data-id="${esc(p.id)}">Зберегти</button><button class="sec" data-act="pcancel">Скасувати</button>${n?"":`<button class="del" data-act="pdel" data-id="${esc(p.id)}">Видалити</button>`}</div></div>`;
  $("ped").scrollIntoView({behavior:"smooth"});
 }
 
@@ -225,17 +220,9 @@ async function histLoad(){
 async function tCats(){
  try{await loadTree();const r=await sb.from("categories").select("*");if(r.error)throw r.error;CM={};CI={};(r.data||[]).forEach(x=>{CM[x.path]=x;if(x.image_url)CI[x.path]=x.image_url})}catch(e){return fail(e.message&&/categories/.test(e.message)?{message:"Спершу виконайте schema_v6.sql у Supabase (SQL Editor). "+e.message}:e)}
  const root=treeModel();
- const node=n=>{const key=n.path.join(SEP);return `<details class="nd"><summary><b>${esc(n.name)}</b> <span class="mut">${n.n}</span></summary><div class="ndb"><div class="rw"><button class="sec" data-act="cmove" data-p="${esc(JSON.stringify(n.path))}">Перейменувати / перенести</button><button class="sec" data-act="cimg" data-k="${esc(key)}">Фото</button><span class="cset" style="display:contents"><input data-cs type="number" placeholder="№ порядку" value="${CM[key]&&CM[key].sort!=null?CM[key].sort:""}" style="width:96px"><label style="display:flex;gap:4px;align-items:center;margin:0"><input data-ch type="checkbox" style="width:auto"${CM[key]&&CM[key].hidden?" checked":""}> сховати</label><input data-cd placeholder="Опис для сайту (необов’язково)" value="${esc(CM[key]&&CM[key].description||"")}" style="flex:1;min-width:180px"><button class="sec" data-act="csave" data-k="${esc(key)}">Зберегти</button></span>${CI[key]?`<img src="${esc(CI[key])}" alt="" style="width:40px;height:40px;object-fit:contain;background:#fff;border-radius:6px"><button class="del" data-act="cimgclr" data-k="${esc(key)}">Прибрати фото</button>`:""}</div>${sk(n).map(node).join("")}</div></details>`};
- $("pane").innerHTML=`<div class="box"><h2>Авторозподіл за назвою</h2><p class="mut">Розкладає товари за структурою svit-bud: група → підгрупа за типом товару в назві. Спочатку покаже, що зміниться, і лише після підтвердження застосує.</p><div class="msg" id="fm"></div><button data-act="plan">Запропонувати розподіл</button><div id="plan"></div></div><div class="box"><h2>Дерево категорій</h2><p class="mut">Товарів: ${root.n}. Група → підгрупа → під-підгрупа. Нову групу створюєте, переносячи товари у вкладці «Товари» чи через «Перейменувати / перенести». Фото, порядок («№ порядку» — менше число вище), «сховати» і опис зберігаються окремо від товарів і не губляться при перейменуванні.</p></div>${sk(root).map(node).join("")||'<div class="box">Каталог порожній.</div>'}`;
+ const node=n=>{const key=n.path.join(SEP);return `<details class="nd"><summary><b>${esc(n.name)}</b> <span class="mut">${n.n}</span></summary><div class="ndb"><div class="rw"><button class="sec" data-act="cimg" data-k="${esc(key)}">Фото</button><span class="cset" style="display:contents"><input data-cs type="number" placeholder="№ порядку" value="${CM[key]&&CM[key].sort!=null?CM[key].sort:""}" style="width:96px"><label style="display:flex;gap:4px;align-items:center;margin:0"><input data-ch type="checkbox" style="width:auto"${CM[key]&&CM[key].hidden?" checked":""}> сховати</label><input data-ct placeholder="SEO-заголовок (необов’язково)" value="${esc(CM[key]&&CM[key].seo_title||"")}" style="flex:1;min-width:160px"><input data-cd placeholder="Опис для сайту (необов’язково)" value="${esc(CM[key]&&CM[key].description||"")}" style="flex:1;min-width:180px"><button class="sec" data-act="csave" data-k="${esc(key)}">Зберегти</button></span>${CI[key]?`<img src="${esc(CI[key])}" alt="" style="width:40px;height:40px;object-fit:contain;background:#fff;border-radius:6px"><button class="del" data-act="cimgclr" data-k="${esc(key)}">Прибрати фото</button>`:""}</div>${sk(n).map(node).join("")}</div></details>`};
+ $("pane").innerHTML=`<div class="box"><h2>Дерево категорій</h2><p class="mut">Товарів: ${root.n}. Група → підгрупа → під-підгрупа. Нову групу створюєте, переносячи товари у вкладці «Товари». Фото, порядок («№ порядку» — менше число вище), «сховати» і опис зберігаються окремо від товарів і не губляться при перейменуванні.</p></div>${sk(root).map(node).join("")||'<div class="box">Каталог порожній.</div>'}`;
 }
-function planHtml(){
- const g={};PLAN.forEach(x=>{const k=x.to.join(SEP);g[k]=g[k]||{n:0,ch:0};g[k].n++;if(x.cur.join(SEP)!==k)g[k].ch++});
- const unk=PLAN.filter(x=>x.to.join(SEP)===RULES.unk.join(SEP));
- const keys=Object.keys(g).sort();
- return `<div class="mut" style="margin:10px 0">Усього товарів: ${PLAN.length}. Змінять категорію: ${PLAN.filter(x=>x.cur.join(SEP)!==x.to.join(SEP)).length}. Не розпізнано: ${unk.length}.</div><details><summary>Показати розподіл по підгрупах (${keys.length})</summary>${keys.map(k=>`<div class="mut">${esc(k)} — ${g[k].n} (змінюється: ${g[k].ch})</div>`).join("")}</details>${unk.length?`<details><summary>Приклади нерозпізнаних</summary>${unk.slice(0,25).map(x=>`<div class="mut">${esc(x.id)} · ${esc(x.name)}</div>`).join("")}</details>`:""}<div class="rw" style="margin-top:10px"><button data-act="planapply" data-m="known">Застосувати (крім нерозпізнаних)</button><button class="sec" data-act="planapply" data-m="all">Застосувати до всіх</button></div>`;
-}
-
-/* ---------- імпорт ---------- */
 function tImport(){
  $("pane").innerHTML=`<div class="box"><h2>Імпорт прайсу</h2><p class="mut">Excel/CSV. Колонки (назви можуть відрізнятись): Артикул, Назва, Ціна, Бренд, Фото, Опис, Характеристики та категорія: або одна колонка «Розділ» (Група › Підгрупа › Під-підгрупа, розділювач › або / або >), або окремі колонки «Група», «Підгрупа», «Під-підгрупа».</p><input id="xf" type="file" accept=".xlsx,.xls,.csv"><div><label>Що зробити</label><select id="xm"><option value="full">Повний імпорт: додати нові й оновити наявні</option><option value="prices">Оновити лише ціни наявних товарів</option><option value="cats">Оновити лише категорії наявних товарів (за артикулом)</option></select></div><div class="msg" id="fm"></div><button data-act="doimport">Імпортувати</button><p class="mut">Повний імпорт не змінює позначки Хіт/Новинка, стару ціну, приховування й наявність. Товари, яких немає у файлі, не видаляються.</p></div>`;
 }
@@ -266,6 +253,9 @@ async function doImport(){
   const items=Object.keys(map).map(k=>map[k]);if(!items.length)return flash("У файлі не знайдено товарів. Перевірте назви колонок.");
   const mode=$("xm").value,hasPath=items.some(x=>x.path.length);let done=0;
   if(mode==="cats"&&!hasPath)return flash("У файлі немає колонок категорій.");
+  const MN={full:"повний імпорт (створює й оновлює товари)",prices:"лише оновлення цін",cats:"лише зміна категорій"};
+  const zero=mode==="cats"?0:items.filter(x=>!(x.price>0)).length;
+  if(!confirm(`Режим: ${MN[mode]}.\nТоварів у файлі: ${items.length}.${zero?`\nУВАГА: у ${zero} товарів ціна 0 або порожня!`:""}\n\nПеред великим імпортом раджу зробити резервну копію (вкладка «Резервна копія»). Продовжити?`))return flash("Імпорт скасовано.");
   const size=mode==="full"?200:500;
   for(let i=0;i<items.length;i+=size){
    const ch=items.slice(i,i+size);
@@ -288,41 +278,6 @@ async function tPrice(){
  $("pane").innerHTML=`<div class="box"><h2>Загальні ціни</h2><div class="grid2"><div><label>Націнка, %</label><input id="gm" type="number" step="0.1" value="${v.markup_percent||0}"></div><div><label>Знижка на весь сайт, %</label><input id="gd" type="number" step="0.1" value="${v.discount_percent||0}"></div></div><p class="mut">Націнка додається до ціни з прайсу. Знижка показується як «було / стало».</p></div><div class="box"><h2>За групами, підгрупами і під-підгрупами</h2><p class="mut">Розкрийте потрібну категорію й задайте значення. Найточніший рівень має пріоритет (під-підгрупа → підгрупа → група → загальне). Порожнє поле = діє значення вищого рівня.</p>${sk(root).map(node).join("")}<div class="msg" id="fm"></div><button data-act="saveprice">Зберегти ціни</button></div>`;
 }
 
-/* ---------- розсилка промокодів ---------- */
-async function tMail(){
- const r=await sb.from("profiles").select("id,full_name,phone,card_number").order("created_at",{ascending:false}).limit(1000);if(r.error)return fail(r.error);clients=r.data||[];
- $("pane").innerHTML=`<div class="box"><h2>Розсилка промокодів клієнтам</h2><p class="mut">Промокод зʼявляється в кабінеті клієнта на сайті у розділі «Мої промокоди». Клієнт натискає «Використати» і знижка застосовується в кошику.</p>
-<div class="grid2"><div><label>Знижка, %</label><input id="mp" type="number" step="0.1" value="10"></div><div><label>Діє до (необов’язково)</label><input id="md" type="date"></div></div>
-<div><label>Повідомлення в кабінеті</label><input id="mt" placeholder="Наприклад: Знижка до свята" value=""></div>
-<div><label>Кому</label><label style="display:flex;gap:8px;color:var(--ink)"><input type="radio" name="mm" value="all" checked style="width:auto"> Усім клієнтам (кожному свій код, ${clients.length})</label><label style="display:flex;gap:8px;color:var(--ink)"><input type="radio" name="mm" value="pick" style="width:auto"> Вибраним клієнтам</label><label style="display:flex;gap:8px;color:var(--ink)"><input type="radio" name="mm" value="shared" style="width:auto"> Один спільний код, видимий усім у кабінеті</label></div>
-<div id="mone"><label>Скільки разів може використати кожен клієнт</label><input id="mu" type="number" min="1" value="1"></div>
-<div id="mcodebox" hidden><label>Спільний код (порожнє = створити автоматично)</label><input id="mc" placeholder="SALE10" style="text-transform:uppercase"><label style="margin-top:6px">Загальний ліміт використань (порожнє = без ліміту)</label><input id="mu2" type="number" min="1"></div>
-<div id="mpick" hidden><input id="mq" placeholder="Пошук клієнта"><div id="mlist" style="max-height:260px;overflow:auto;margin-top:6px">${clients.map(c=>`<label class="mrow" style="display:flex;gap:8px;align-items:center;margin:0;padding:6px 0;color:var(--ink)" data-t="${esc(((c.full_name||"")+(c.phone||"")+(c.card_number||"")).toLowerCase())}"><input type="checkbox" data-mc="${c.id}" style="width:auto"> ${esc(c.full_name||"Без імені")} <span class="mut">${esc(c.phone||"")} ${esc(c.card_number||"")}</span></label>`).join("")}</div></div>
-<div class="msg" id="fm"></div><button data-act="msend">Створити промокоди</button></div><div id="mres"></div>`;
-}
-async function sendMail(){
- const mode=document.querySelector('input[name="mm"]:checked').value,pct=num($("mp").value);
- if(!pct||pct<=0||pct>100)return flash("Вкажіть знижку від 0 до 100%.");
- const title=$("mt").value.trim()||"Персональна знижка",d=$("md").value,exp=d?new Date(d+"T23:59:59").toISOString():null;
- let rows=[];
- if(mode==="shared"){rows=[{code:($("mc").value.trim().toUpperCase()||genCode(6)),percent:pct,uses_left:num($("mu2").value),expires_at:exp,title,show_all:true}]}
- else{
-  const ids=mode==="all"?clients.map(c=>c.id):[...document.querySelectorAll("[data-mc]:checked")].map(x=>x.dataset.mc);
-  if(!ids.length)return flash("Оберіть хоча б одного клієнта.");
-  const uses=num($("mu").value)||1;
-  rows=ids.map(id=>({code:genCode(8),percent:pct,uses_left:uses,expires_at:exp,title,client_id:id}));
- }
- if(!confirm(`Створити промокодів: ${rows.length}?`))return;
- flash("Створюю…",true);
- for(let i=0;i<rows.length;i+=200){
-  let ch=rows.slice(i,i+200),r=await sb.from("promo_codes").insert(ch);
-  if(r.error&&r.error.code==="23505"&&mode!=="shared"){ch=ch.map(x=>({...x,code:genCode(8)}));r=await sb.from("promo_codes").insert(ch)}
-  if(r.error)return flash("Помилка: "+(r.error.code==="23505"?"такий код уже існує.":r.error.message));
- }
- flash(`Готово ✓ Створено промокодів: ${rows.length}. Клієнти бачать їх у кабінеті.`,true);renderShare(rows,pct,exp);
-}
-
-/* ---------- акції, коди, клієнти ---------- */
 async function tPromos(){
  const r=await sb.from("promos").select("*").order("created_at",{ascending:false});if(r.error)return fail(r.error);
  $("pane").innerHTML=`<div class="box"><h2>Нова акція</h2><input id="pt" placeholder="Заголовок"><input id="pd" placeholder="Опис"><div class="grid2"><input id="pb" placeholder="Мітка (Хіт, −10%)"><input id="pp" type="number" step="0.1" placeholder="Знижка, %"></div><div><label>Діє до (необов’язково)</label><input id="pe" type="date"></div><div class="msg" id="fm"></div><button data-act="addpromo">Додати акцію</button><p class="mut">Акція показується банером на головній сторінці. Саму знижку на товари задайте у розділі «Ціни».</p></div>`+r.data.map(x=>`<div class="box"><div class="rw"><b>${esc(x.title)}${x.percent?" −"+x.percent+"%":""}</b><span class="mut">${x.active?"активна":"вимкнена"}${x.ends_at?" · до "+new Date(x.ends_at).toLocaleDateString("uk-UA"):""}</span></div><div class="mut">${esc(x.description||"")}</div><div class="rw"><button class="sec" data-act="togpromo" data-id="${x.id}" data-v="${x.active}">${x.active?"Вимкнути":"Увімкнути"}</button><button class="del" data-act="delpromo" data-id="${x.id}">Видалити</button></div></div>`).join("");
@@ -362,13 +317,11 @@ async function tPages(){
 document.addEventListener("input",e=>{
  if(e.target.id==="oq"){OQ.q=e.target.value;drawOrders()}
  if(e.target.id==="cs")drawClients(e.target.value);
- if(e.target.id==="mq"){const q=e.target.value.toLowerCase();document.querySelectorAll(".mrow").forEach(r=>r.style.display=!q||r.dataset.t.indexOf(q)>-1?"flex":"none")}
 });
 document.addEventListener("change",async e=>{
  const s=e.target;
  if(s.id==="od"){OQ.days=+s.value;drawOrders()}
  if(s.dataset&&s.dataset.o){const r=await sb.from("orders").update({status:s.value}).eq("id",s.dataset.o);if(r.error)alert("Не вдалося змінити статус: "+r.error.message);else{const o=OL.find(x=>x.id==s.dataset.o);if(o)o.status=s.value;drawOrders()}}
- if(s.name==="mm"){const v=s.value;$("mpick").hidden=v!=="pick";$("mcodebox").hidden=v!=="shared";$("mone").hidden=v==="shared"}
  if(s.id==="pselall")document.querySelectorAll("[data-sel]").forEach(c=>c.checked=s.checked);
 });
 const setCat=(path,o)=>sb.from("categories").upsert(Object.assign({path:path},o,{updated_at:new Date().toISOString()}));
@@ -392,6 +345,7 @@ document.addEventListener("click",async e=>{
   if(o.subcategory2&&!o.subcategory)return flash("Спочатку вкажіть підгрупу.");
   const isNew=t.dataset.new==="1";o.id=isNew?$("eid").value.trim():t.dataset.id;if(!o.id)return flash("Вкажіть артикул.");
   try{const pf=$("ef").files[0];if(pf){flash("Завантажую фото…",true);o.image_url=await putImage(pf,900,"products")}
+   if($("esdt").value.trim()||$("esdt").dataset.has==="1"){o.seo_title=$("esdt").value.trim()||null;o.seo_description=$("esdd").value.trim()||null}
    const imgs=$("eim").value.split(/\n+/).map(x=>x.trim()).filter(Boolean);for(const f of $("efm").files){flash("Завантажую фото…",true);imgs.push(await putImage(f,900,"products"))}
    if(imgs.length||$("eim").dataset.had==="1")o.images=imgs;
    const sr=isNew?await sb.from("products").insert(o):await sb.from("products").update(o).eq("id",o.id);
@@ -399,34 +353,13 @@ document.addEventListener("click",async e=>{
  if(a==="pmove"||a==="pmoveall"){
   const path=readPath("mv");if(!path.length)return flash("Вкажіть хоча б групу (куди перемістити).");
   let ids=[];
-  if(a==="pmove"){ids=[...document.querySelectorAll("[data-sel]:checked")].map(c=>c.dataset.sel);if(!ids.length)return flash("Позначте товари у списку нижче.")}
+  if(a==="pmove"){ids=[...document.querySelectorAll("[data-sel]:checked")].map(c=>c.dataset.sel);if(!ids.length)return flash("Позначте товари у списку нижче.");if(!confirm(`Перемістити ${ids.length} вибраних товарів у «${path.join(SEP)}»?`))return}
   else{flash("Збираю товари…",true);let from=0;for(;;){const q=await pQuery("id").order("id").range(from,from+999);if(q.error)return flash("Помилка: "+q.error.message);ids.push(...q.data.map(x=>x.id));if(q.data.length<1000)break;from+=1000}
    if(!ids.length)return flash("За цим пошуком нічого не знайдено.");if(!confirm(`Перемістити ${ids.length} товарів у «${path.join(SEP)}»?`))return}
   let n=0;for(let i=0;i<ids.length;i+=500){const u=await sb.rpc("assign_products",{p_ids:ids.slice(i,i+500),p_path:path});if(u.error)return flash("Помилка: "+u.error.message);n+=u.data||0}
   TREE=[];flash(`Готово ✓ Переміщено товарів: ${n}.`,true);return loadP();
  }
  /* категорії */
- if(a==="plan"){
-  flash("Читаю товари й розкладаю…",true);PLAN=[];let from=0;
-  for(;;){const q=await sb.from("products").select("id,name,category,subcategory,subcategory2").order("id").range(from,from+999);if(q.error)return flash("Помилка: "+q.error.message);
-   q.data.forEach(x=>PLAN.push({id:x.id,name:x.name,cur:[x.category,x.subcategory,x.subcategory2].filter(Boolean),to:classify(x.name)}));
-   if(q.data.length<1000)break;from+=1000}
-  flash("",true);$("plan").innerHTML=planHtml();return;
- }
- if(a==="planapply"){
-  if(!PLAN)return;const known=t.dataset.m==="known",unk=RULES.unk.join(SEP);
-  const list=PLAN.filter(x=>x.cur.join(SEP)!==x.to.join(SEP)&&!(known&&x.to.join(SEP)===unk));
-  if(!list.length)return flash("Нічого змінювати.",true);
-  if(!confirm(`Змінити категорію у ${list.length} товарів?`))return;
-  let n=0;for(let i=0;i<list.length;i+=400){const u=await sb.rpc("bulk_set_categories",{items:list.slice(i,i+400).map(x=>({id:x.id,c1:x.to[0],c2:x.to[1]||"",c3:x.to[2]||""}))});if(u.error)return flash("Помилка: "+u.error.message);n+=u.data||0;flash(`Оброблено ${Math.min(i+400,list.length)} з ${list.length}…`,true)}
-  PLAN=null;TREE=[];flash(`Готово ✓ Змінено категорію у товарів: ${n}. Оновіть сторінку «Категорії», щоб побачити дерево.`,true);return;
- }
- if(a==="cmove"){
-  const old=JSON.parse(t.dataset.p),inp=prompt("Новий шлях (розділяйте символом ›, до 3 рівнів):",old.join(SEP));if(!inp)return;
-  const nw=inp.split("›").map(x=>x.trim()).filter(Boolean);if(!nw.length||nw.length>3)return alert("Шлях має містити від 1 до 3 частин.");
-  const u=await sb.rpc("move_category",{p_old:old,p_new:nw});if(u.error)return alert("Помилка: "+u.error.message);
-  alert("Готово. Переміщено товарів: "+u.data);TREE=[];return tCats();
- }
  if(a==="cimg"){
   const key=t.dataset.k,inp=document.createElement("input");inp.type="file";inp.accept="image/*";
   inp.onchange=async()=>{const f=inp.files[0];if(!f)return;try{const u0=await putImage(f,320,"cats");const us=await setCat(key,{image_url:u0});if(us.error)throw us.error;tCats()}catch(er){alert("Помилка: "+(er.message||er))}};
@@ -441,7 +374,7 @@ document.addEventListener("click",async e=>{
  if(a==="pdup"){const q=await sb.from("products").select("*").eq("id",t.dataset.id).maybeSingle();if(!q.data)return;let k=0,r;do{const c=Object.assign({},q.data,{id:q.data.id+"-copy"+(k||""),name:q.data.name+" (копія)",active:false,updated_at:new Date().toISOString()});r=await sb.from("products").insert(c);if(!r.error)return editP(c);k++}while(k<5&&/duplicate|unique/i.test(r.error.message));return flash("Помилка: "+r.error.message)}
  if(a==="bdates"){const id=t.dataset.id,sd=document.querySelector(`[data-bsd="${id}"]`).value,ed=document.querySelector(`[data-bed="${id}"]`).value;const r=await sb.from("banners").update({starts_at:sd?sd+"T00:00:00":null,ends_at:ed?ed+"T23:59:59":null}).eq("id",id);if(r.error)return alert("Помилка: "+r.error.message+" (чи виконано schema_v7.sql?)");t.textContent="Збережено ✓";return}
  if(a==="cimgclr"){await setCat(t.dataset.k,{image_url:null});return tCats()}
- if(a==="csave"){const k=t.dataset.k,w=t.closest(".cset"),sv=w.querySelector("[data-cs]").value.trim();const r=await setCat(k,{sort:sv===""?null:+sv,hidden:w.querySelector("[data-ch]").checked,description:w.querySelector("[data-cd]").value.trim()||null});if(r.error)return alert("Помилка: "+r.error.message);t.textContent="Збережено ✓";return}
+ if(a==="csave"){const k=t.dataset.k,w=t.closest(".cset"),sv=w.querySelector("[data-cs]").value.trim();const r=await setCat(k,{sort:sv===""?null:+sv,hidden:w.querySelector("[data-ch]").checked,description:w.querySelector("[data-cd]").value.trim()||null,...((w.querySelector("[data-ct]").value.trim()||(CM[k]&&"seo_title" in CM[k]))?{seo_title:w.querySelector("[data-ct]").value.trim()||null}:{})});if(r.error)return alert("Помилка: "+r.error.message);t.textContent="Збережено ✓";return}
  if(a==="shopsave")return shopSave(t);
  if(a==="backup")return doBackup(t);
  if(a==="histload")return histLoad();
@@ -450,11 +383,13 @@ document.addEventListener("click",async e=>{
  if(a==="doimport")return doImport();
  /* ціни */
  if(a==="saveprice"){
+  const gm0=num($("gm").value)||0,gd0=num($("gd").value)||0;
+  if(gm0<-50||gm0>300||gd0<0||gd0>90)return flash("Перевірте відсотки: націнка від −50 до 300, знижка від 0 до 90.");
+  if(!confirm(`Зберегти ціни? Націнка на весь каталог: ${gm0}%, знижка: ${gd0}%. Це змінить ціни для всіх покупців на сайті.`))return;
   const by={};document.querySelectorAll("[data-pk]").forEach(i=>{const v=num(i.value);if(v!=null){const k=i.dataset.pk;by[k]=by[k]||{};by[k][i.dataset.pf]=v}});
   r=await sb.from("settings").upsert({key:"pricing",value:{markup_percent:num($("gm").value)||0,discount_percent:num($("gd").value)||0,by_category:by},updated_at:new Date().toISOString()});
   return flash(r.error?"Помилка: "+r.error.message:"Збережено ✓ Ціни на сайті оновляться при наступному відкритті.",!r.error);
  }
- if(a==="msend")return sendMail();
  if(a==="copy"){try{await navigator.clipboard.writeText(decodeURIComponent(t.dataset.t));flash("Текст скопійовано ✓",true)}catch(er){flash("Не вдалося скопіювати.")}return}
  /* акції */
  if(a==="addpromo"){
