@@ -80,6 +80,12 @@ function shop(){
  return{phone:S.phone||T.phone||"",phone2:S.phone2||"",email:S.email||T.email||"",hours:S.hours||T.hours||"",address:S.address||"",telegram:S.telegram||c.telegram||"",viber:S.viber||c.viber||"",whatsapp:S.whatsapp||c.whatsapp||"",instagram:S.instagram||"",facebook:S.facebook||"",tagline:S.tagline||"",perks:Array.isArray(S.perks)?S.perks:[]};
 }
 function ordMsg(){return SHOP.orders_msg||"Замовлення тимчасово не приймаємо — сайт працює як каталог. Дякуємо за розуміння!"}
+function statsHtml(){
+ const S=SHOP||{};if(!S.stats_on)return"";
+ let it=(Array.isArray(S.stats)?S.stats:[]).filter(x=>x&&x.v&&x.l);
+ if(!it.length){const mn=P.reduce((m,p)=>{const v=price(p);return v>0&&v<m?v:m},1e9);it=[{v:P.length>=100?Math.floor(P.length/100)*100+"+":String(P.length),l:"товарів у каталозі"},{v:String(kids(ROOT).length),l:"категорій"}];if(mn<1e9)it.push({v:"від "+Math.ceil(mn),l:"грн — мінімальна ціна"})}
+ return `<section class="stats">${it.slice(0,4).map(x=>{const m=String(x.v).match(/^(\D*?)(\d[\d\s]*)(\D*)$/);const n=m?m[2].replace(/\s/g,""):"";return `<div><b${m?` data-cnt="${esc(n)}" data-pre="${esc(m[1])}" data-suf="${esc(m[3])}"`:""}>${esc(x.v)}</b><span>${esc(x.l)}</span></div>`}).join("")}</section>`}
+function runCounters(){document.querySelectorAll(".stats b[data-cnt]").forEach(el=>{if(el.dataset.run)return;el.dataset.run=1;const to=+el.dataset.cnt,pre=el.dataset.pre,suf=el.dataset.suf;const go=()=>{const t0=performance.now(),d=1400;(function f(t){const k=Math.min(1,(t-t0)/d),e=1-Math.pow(1-k,3);el.textContent=pre+Math.round(to*e)+suf;if(k<1)requestAnimationFrame(f)})(t0)};if(!("IntersectionObserver"in window)||matchMedia("(prefers-reduced-motion:reduce)").matches)return;const io=new IntersectionObserver(es=>{if(es[0].isIntersecting){io.disconnect();go()}});io.observe(el)})}
 function applyOrders(){const off=!!SHOP.orders_off;document.body.classList.toggle("noord",off);let b=$("ordbar");if(off){if(!b){b=document.createElement("div");b.id="ordbar";b.className="ordbar";const h=document.querySelector("header");h.parentNode.insertBefore(b,h.nextSibling)}b.textContent=ordMsg()}else if(b)b.remove()}
 const tel=p=>"tel:"+String(p).replace(/[^\d+]/g,"");
 function messengers(){
@@ -105,7 +111,7 @@ function drawPromos(){const e=$("promos");if(e)e.innerHTML=PROMOS.map(x=>`<div c
 
 /* ---------- маршрутизація ---------- */
 function route(){
- closeAll();$("sbuy").hidden=true;const h=curH();
+ closeAll();{const v=$("view");v.classList.remove("pg");void v.offsetWidth;v.classList.add("pg")}$("sbuy").hidden=true;const h=curH();
  document.body.classList.toggle("pv",h.indexOf("#/p/")===0);
  if(h.indexOf("#/p/")===0)viewProduct(decodeURIComponent(h.slice(4)));
  else if(h.indexOf("#/c")===0)viewList(h.slice(4).split("/").filter(Boolean).map(decodeURIComponent));
@@ -129,13 +135,13 @@ function viewHome(){
  $("view").innerHTML=`<section class="slider" id="slider" hidden></section>
 <section class="hero" id="home"><div><span class="eyebrow">Trend Electro · ${plural(P.length,"товар","товари","товарів")} у каталозі</span><h1>Світло й електрика <em>для дому та бізнесу</em></h1><p>${esc(s.tagline||"Світильники, LED-лампи, розетки, кабель, автоматика та все для монтажу. Допоможемо підібрати й швидко відправимо по Україні.")}</p><div class="cta"><a class="btn" href="#/c/">Перейти до каталогу ${ico("r")}</a><a class="btn ghost" href="#/page/coop">Оптовим клієнтам</a></div></div>
 <div class="hcats">${tops.slice(0,4).map(k=>`<a href="${href(k.path)}"><b>${esc(k.name)}</b><small>${plural(k.count,"товар","товари","товарів")}</small></a>`).join("")}</div></section>
-<section class="perks">${perks.map(x=>`<div>${ico(x[0])}<span><b>${esc(x[1])}</b>${esc(x[2])}</span></div>`).join("")}</section>
+${statsHtml()}<section class="perks">${perks.map(x=>`<div>${ico(x[0])}<span><b>${esc(x[1])}</b>${esc(x[2])}</span></div>`).join("")}</section>
 <section class="promos" id="promos"></section>
 <section class="sec"><div class="sech"><div><h2>Каталог</h2><p>Оберіть розділ — далі уточните підкатегорію й фільтри</p></div><a href="#/c/">Усі товари →</a></div><div class="ctiles">${tops.map(tile).join("")||'<div class="empty">Каталог порожній.</div>'}</div></section>
 ${sets}${pop}
 <section class="sec" id="hguides" hidden><div class="sech"><div><h2>Поради та статті</h2><p>Як вибрати лампу, кабель, розетки й захист</p></div><a href="#/guide/">Усі статті →</a></div><div class="gcards"></div></section>
 <section class="band"><div><h2>Електрикам, монтажникам і дизайнерам</h2><p>Оптові ціни, підбір під об’єкт і консультація з технічних питань. Напишіть — підготуємо пропозицію.</p></div><div class="cta" style="margin:0"><a class="btn" href="#/page/coop">Умови співпраці</a>${msg[0]?`<a class="btn ghost" href="${esc(msg[0][1])}" target="_blank" rel="noopener">${esc(msg[0][0])}</a>`:s.phone?`<a class="btn ghost" href="${esc(tel(s.phone))}">${esc(s.phone)}</a>`:""}</div></section>`;
- drawSlider();drawPromos();
+ drawSlider();drawPromos();runCounters();
  arts().then(L=>{const e=$("hguides");if(e&&L.length){e.hidden=false;e.querySelector(".gcards").innerHTML=L.slice(0,3).map(gcard).join("")}});
 }
 const tile=k=>{const sub=kids(k).slice(0,3).map(x=>esc(x.name)).join(" · ");return `<a class="ctile" href="${href(k.path)}"><span class="th">${img(nodeImg(k),360,270,k.name)}</span><span class="cb"><b>${esc(k.name)}</b><small>${plural(k.count,"товар","товари","товарів")}</small>${sub?`<span class="subs">${sub}</span>`:""}</span></a>`};
@@ -219,7 +225,7 @@ function viewList(path){
 function renderGrid(){
  const base=baseList(CUR.path);CUR.list=listP(CUR.path,base);const l=CUR.list;drawFacets(base);
  $("found").textContent="Знайдено: "+l.length;
- $("grid").innerHTML=l.length?l.slice(0,F.lim).map(card).join(""):`<div class="empty" style="grid-column:1/-1">Нічого не знайдено${F.q?` за запитом «${esc(F.q)}»`:""}. Спробуйте інше слово, артикул або приберіть фільтри.</div>`;
+ $("grid").innerHTML=l.length?l.slice(0,F.lim).map(card).join(""):`<div class="empty" style="grid-column:1/-1">Нічого не знайдено${F.q?` за запитом «${esc(F.q)}»`:""}. Спробуйте інше слово, артикул або приберіть фільтри.${F.q?`<p><a class="btn" href="${esc(ytU(F.q+" електрика"))}" target="_blank" rel="noopener">▶ YouTube</a> <a class="btn" href="${esc("https://www.tiktok.com/search?q="+encodeURIComponent(F.q+" електрика"))}" target="_blank" rel="noopener">♪ TikTok</a> <a class="btn" href="#/guide/">Поради</a></p>`:""}</div>`;
  moreBtn();
 }
 function moreBtn(){const rest=CUR.list.length-F.lim,b=$("more");if(!b)return;b.hidden=rest<=0;b.textContent="Показати ще "+Math.min(24,Math.max(rest,0))}
@@ -233,11 +239,13 @@ function viewSel(k){
 }
 let ART=null;
 async function arts(){if(ART)return ART;try{const r=await fetch(BASE+"articles.json");ART=r.ok?await r.json():[]}catch(e){ART=[]}return ART}
+const ytU=q=>"https://www.youtube.com/results?search_query="+encodeURIComponent(q);
+const ytBox=a=>`<div class="box vid"><h2>Відео по темі</h2>${(a.vid||[]).map(v=>`<button class="yt" data-yt="${esc(v)}" style="background-image:url(https://i.ytimg.com/vi/${esc(v)}/hqdefault.jpg)" aria-label="Дивитись відео">▶</button>`).join("")}<p>Краще один раз побачити? Короткі відео за темою «${esc(a.title)}»:</p><div class="cta"><a class="btn" href="${esc(ytU(a.yt||a.title))}" target="_blank" rel="noopener">▶ YouTube</a><a class="btn" href="${esc("https://www.tiktok.com/search?q="+encodeURIComponent(a.yt||a.title))}" target="_blank" rel="noopener">♪ TikTok</a><a class="btn" href="${esc("https://www.google.com/search?q="+encodeURIComponent("site:instagram.com/reel "+(a.yt||a.title)))}" target="_blank" rel="noopener">◎ Instagram Reels</a></div></div>`;
 const gcard=a=>`<a class="gcard" href="#/guide/${a.slug}"><b>${esc(a.title)}</b><span>${esc(a.description)}</span><em>Читати →</em></a>`;
 async function viewGuide(slug){
  const L=await arts(),a=slug?L.find(x=>x.slug===slug):null;
  if(a){document.title=a.title+" — Trend Electro";
-  $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a><span>›</span><a href="#/guide/">Поради</a><span>›</span>${esc(a.title)}</nav><article class="art"><h1 class="ptitle">${esc(a.title)}</h1><p class="cdesc">${esc(a.description)}</p><div class="box txt">${a.body}</div></article><section class="sec"><div class="sech"><h2>Читайте також</h2></div><div class="gcards">${L.filter(x=>x.slug!==slug).slice(0,3).map(gcard).join("")}</div></section>`;return}
+  $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a><span>›</span><a href="#/guide/">Поради</a><span>›</span>${esc(a.title)}</nav><article class="art"><h1 class="ptitle">${esc(a.title)}</h1><p class="cdesc">${esc(a.description)}</p><div class="box txt">${a.body}</div>${ytBox(a)}</article><section class="sec"><div class="sech"><h2>Читайте також</h2></div><div class="gcards">${L.filter(x=>x.slug!==slug).sort((x,y)=>(y.category===a.category)-(x.category===a.category)).slice(0,3).map(gcard).join("")}</div></section>`;return}
  document.title="Поради з вибору електротоварів — Trend Electro";
  $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a><span>›</span>Поради</nav><h1 class="ptitle">Поради з вибору електротоварів</h1><p class="cdesc">Короткі практичні статті: як вибрати лампу, кабель, розетки й захист.</p>${L.length?`<div class="gcards">${L.map(gcard).join("")}</div>`:'<div class="empty">Статті з’являться незабаром.</div>'}`;
 }
@@ -402,6 +410,7 @@ function drawFooter(){
 let tmr=null;const later=f=>{clearTimeout(tmr);tmr=setTimeout(f,200)};
 function setFav(id){if(fav[id])delete fav[id];else fav[id]=1;SV("te_fav",fav);document.querySelectorAll(`[data-f="${CSS.escape(id)}"]`).forEach(b=>b.classList.toggle("on",!!fav[id]));drawCart();if(curH()==="#/fav")viewFav();else toast(fav[id]?"Додано в обране":"Прибрано з обраного")}
 document.addEventListener("click",e=>{
+ const yb=e.target.closest("[data-yt]");if(yb){const i=yb.dataset.yt;yb.outerHTML=`<iframe class="ytf" src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(i)}?autoplay=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="Відео"></iframe>`;return}
  const a=e.target.closest("a[href^='#/']");
  if(a){const h=a.getAttribute("href");if(h.indexOf("#/c/")===0&&!a.dataset.brand){F.q="";$("q").value="";SCR[h]=0}
   if(a.dataset.brand){e.preventDefault();F={brand:a.dataset.brand,min:"",max:"",sort:"def",q:"",lim:24,a:{},stock:false,fo:innerWidth>=860};CUR.key="";if(curH()==="#/c/")route();else location.hash="#/c/";return}
@@ -461,7 +470,7 @@ window.addEventListener("hashchange",()=>{route()});
 
 /* ---------- запуск ---------- */
 async function boot(){
- $("view").innerHTML='<div class="empty">Завантажуємо каталог…</div>';drawCart();
+ $("view").innerHTML='<div class="grid sk-grid" aria-label="Завантаження">'+'<div class="card sk"><div class="pic"></div><i></i><i></i><i></i></div>'.repeat(8)+'</div>';drawCart();
  if(!(window.supabase&&window.TE&&TE.url&&TE.key)){$("view").innerHTML='<div class="empty">Каталог тимчасово недоступний. Оновіть сторінку трохи пізніше.</div>';return}
  sb=supabase.createClient(TE.url,TE.key);
  sb.auth.onAuthStateChange((_e,s)=>{me=s?s.user:null;setTimeout(loadProf,0)});
@@ -472,3 +481,21 @@ async function boot(){
  route();
 }
 document.addEventListener("DOMContentLoaded",boot);
+
+/* ---------- анімації (легкі) ---------- */
+(function(){
+ const RV=".card,.gcard,.sec,.perk,.box.txt,.art,.cats a,.cat",io="IntersectionObserver"in window?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}}),{rootMargin:"0px 0px -6% 0px",threshold:.05}):null;
+ function scan(root){if(!io)return;let i=0;root.querySelectorAll(RV).forEach(el=>{if(el.dataset.rv||el.closest("#drawer,#acc"))return;el.dataset.rv=1;if(el.getBoundingClientRect().top>innerHeight*1.5){el.classList.add("in");return}el.style.setProperty("--d",Math.min(i++,8)*45+"ms");el.classList.add("rv");io.observe(el)})}
+ document.addEventListener("DOMContentLoaded",()=>{const v=document.getElementById("view");if(!v)return;let t=null;new MutationObserver(()=>{clearTimeout(t);t=setTimeout(()=>scan(v),30)}).observe(v,{childList:true,subtree:true});
+  const c=document.getElementById("cnt");if(c){let last=0;new MutationObserver(()=>{const n=parseInt(c.textContent)||0;if(n>last){const b=document.getElementById("cartBtn");b.classList.remove("bump");void b.offsetWidth;b.classList.add("bump")}last=n}).observe(c,{childList:true,characterData:true,subtree:true})}});
+ /* «летить у кошик» + пульс серця */
+ document.addEventListener("click",e=>{
+  const f=e.target.closest(".fv,.favbtn");if(f){f.classList.remove("pop");void f.offsetWidth;f.classList.add("pop")}
+  const b=e.target.closest(".add,#buy,.buybtn[data-sb]");if(!b||b.disabled||!b.animate)return;
+  const t=document.getElementById("cartBtn"),mob=t&&!t.offsetParent?document.querySelector('[data-nav="cart"]'):t;if(!mob||!mob.offsetParent)return;
+  const a=b.getBoundingClientRect(),z=mob.getBoundingClientRect(),d=document.createElement("div");d.className="fly";
+  d.style.left=a.left+a.width/2-9+"px";d.style.top=a.top+a.height/2-9+"px";document.body.appendChild(d);
+  const x=z.left+z.width/2-(a.left+a.width/2),y=z.top+z.height/2-(a.top+a.height/2);
+  d.animate([{transform:"translate(0,0) scale(1)",opacity:1},{transform:`translate(${x*.5}px,${y*.5-60}px) scale(.8)`,opacity:1,offset:.5},{transform:`translate(${x}px,${y}px) scale(.2)`,opacity:.4}],{duration:650,easing:"cubic-bezier(.4,0,.2,1)"}).onfinish=()=>d.remove();
+ },true);
+})();

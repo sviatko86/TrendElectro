@@ -167,3 +167,23 @@ footer b{color:#fff;display:block;margin-bottom:10px;font-size:15px}footer a{dis
 .ordoff{display:none}.ordbar{background:#fff7e0;color:#6b4b00;text-align:center;font-size:14px;padding:9px 16px;border-bottom:1px solid #f0dca0}
 .noord .ordoff{display:block;margin:12px 0 0;padding:12px 14px;border-radius:12px;background:#fff7e0;color:#6b4b00;font-size:14px}
 .noord .add,.noord .buyrow .qtybox,.noord #buy,.noord #sbuy,.noord #cartBtn,.noord [data-nav="cart"],.noord #toast{display:none!important}
+.vid .yt{display:block;width:100%;max-width:560px;aspect-ratio:16/9;border:0;border-radius:14px;background:#111 center/cover;color:#fff;font-size:44px;cursor:pointer;margin:0 0 12px;text-shadow:0 2px 12px #000}.vid .ytf{display:block;width:100%;max-width:560px;aspect-ratio:16/9;border:0;border-radius:14px;margin:0 0 12px}.vid p{margin:8px 0}
+
+/* ---- анімації ---- */
+.rv{opacity:0;transform:translateY(18px);transition:opacity .5s ease var(--d,0ms),transform .5s cubic-bezier(.2,.7,.2,1) var(--d,0ms)}.rv.in{opacity:1;transform:none}
+.card.rv.in{transition:opacity .5s ease var(--d,0ms),transform .5s cubic-bezier(.2,.7,.2,1) var(--d,0ms),box-shadow .2s,border-color .2s}
+#view.pg{animation:pgin .35s ease both}@keyframes pgin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.btn,.go,.add,.buybtn,.ib{transition:transform .15s,box-shadow .2s,filter .2s,background .2s}
+@media (hover:hover){.btn:hover,.go:hover,.add:hover,.buybtn:hover{transform:translateY(-2px)}}
+.btn:active,.go:active,.add:active,.buybtn:active,.ib:active{transform:scale(.96)}
+#cartBtn.bump{animation:bump .5s cubic-bezier(.3,1.6,.5,1)}@keyframes bump{0%{transform:scale(1)}35%{transform:scale(1.22) rotate(-6deg)}70%{transform:scale(.95)}100%{transform:none}}
+#cnt{transition:transform .3s}
+.fv.pop,.favbtn.pop{animation:pop .45s cubic-bezier(.3,1.7,.5,1)}@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+.fly{position:fixed;width:18px;height:18px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 4px rgba(10,186,181,.3);z-index:60;pointer-events:none}
+.sl.on img{animation:kb 9s ease-out both}@keyframes kb{from{transform:scale(1)}to{transform:scale(1.07)}}
+.sk{pointer-events:none}.sk>i,.sk .pic{display:block;border-radius:10px;background:linear-gradient(90deg,var(--line) 25%,rgba(255,255,255,.35) 50%,var(--line) 75%);background-size:200% 100%;animation:shim 1.2s linear infinite}
+.sk .pic{aspect-ratio:1;margin:10px}.sk>i{height:12px;margin:8px 12px}.sk>i:nth-of-type(2){width:70%}.sk>i:nth-of-type(3){width:40%;height:16px}
+@keyframes shim{to{background-position:-200% 0}}
+.logo img{animation:glow 1.6s ease-out .2s both}@keyframes glow{0%{filter:drop-shadow(0 0 0 rgba(10,186,181,0))}40%{filter:drop-shadow(0 0 12px rgba(10,186,181,.9))}100%{filter:none}}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0 0;text-align:center}@media (min-width:900px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stats div{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 10px;box-shadow:var(--sh1)}.stats b{display:block;font-size:clamp(26px,5vw,38px);font-weight:800;color:var(--acc);letter-spacing:-.5px;font-variant-numeric:tabular-nums}.stats span{display:block;margin-top:4px;font-size:13px;color:var(--mute)}
