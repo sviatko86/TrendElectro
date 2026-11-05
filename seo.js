@@ -42,7 +42,7 @@ console.log("products:", P.length);
 /* ---------- фото ---------- */
 fs.mkdirSync("img", { recursive: true });
 let sharp = null; try { sharp = (await import("sharp")).default } catch (e) { console.log("sharp не встановлено — фото пропущено") }
-let got = 0, fail = 0;
+let got = 0, fail = 0; const failedIds = [];
 if (sharp) {
   const todo = P.filter(p => /^https?:/.test(p.img) && p.img.indexOf(SITE) !== 0 && p.img.indexOf(".supabase.co/") < 0 && !fs.existsSync(`img/${safe(p.id)}.webp`));
   console.log("фото до завантаження:", todo.length, "(за запуск не більше " + MAXIMG + ")");
@@ -56,7 +56,6 @@ if (sharp) {
       await sharp(buf).rotate().resize(800, 800, { fit: "inside", withoutEnlargement: true }).webp({ quality: 78 }).toFile(`img/${safe(id)}.webp`); return true;
     } catch (e) { return false } finally { clearTimeout(t) }
   }
-  const failedIds = [];
   async function one(p) { if (await save(p.img, p.id)) got++; else { fail++; failedIds.push(p.id) } }
   let i = 0; await Promise.all(Array.from({ length: 8 }, async () => { while (i < q.length) await one(q[i++]) }));
 }
