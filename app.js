@@ -496,7 +496,10 @@ window.addEventListener("hashchange",()=>{route()});
 /* ---------- запуск ---------- */
 async function boot(){
  $("view").innerHTML='<div class="grid sk-grid" aria-label="Завантаження">'+'<div class="card sk"><div class="pic"></div><i></i><i></i><i></i></div>'.repeat(8)+'</div>';drawCart();
- if(!(window.supabase&&window.TE&&TE.url&&TE.key)){$("view").innerHTML='<div class="empty">Каталог тимчасово недоступний. Оновіть сторінку трохи пізніше.</div>';return}
+ if(!window.supabase){for(const u of["https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js","https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.45.4/umd/supabase.min.js","https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"]){
+  await new Promise(res=>{const e=document.createElement("script");e.src=u;e.onload=e.onerror=()=>res();document.head.appendChild(e);setTimeout(res,6000)});
+  if(window.supabase)break}}
+ if(!(window.supabase&&window.TE&&TE.url&&TE.key)){$("view").innerHTML='<div class="empty">Каталог тимчасово недоступний.<br><br><button class="btn" onclick="location.reload()">Спробувати ще раз</button></div>';return}
  sb=supabase.createClient(TE.url,TE.key);
  sb.auth.onAuthStateChange((_e,s)=>{me=s?s.user:null;setTimeout(loadProf,0)});
  loadBanners();loadPromos();
