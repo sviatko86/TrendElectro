@@ -43,13 +43,16 @@ function rate(p){
 }
 const price=p=>{const r=rate(p);return Math.round(p.pr0*(1+r[0]/100)*(1-r[1]/100)*100)/100};
 function oldPrice(p){const r=rate(p);if(r[1]>0)return Math.round(p.pr0*(1+r[0]/100)*100)/100;if(p.old>p.pr0)return Math.round(p.old*(1+r[0]/100)*100)/100;return 0}
+function priceInfo(p){const pc0=price(p),o=oldPrice(p),pd=prof?(+prof.discount_percent||0):0,pc=pd>0?Math.round(pc0*(100-pd))/100:pc0,base=o||(pd>0?pc0:0),disc=base?Math.round((1-pc/base)*100):0;return{pc,base,disc,sale:o>0,pers:pd>0}}
+const saleBadges=i=>(i.disc>0||i.sale?`<span class="bd s">${i.sale?"Розпродаж":"Ваша знижка"}</span>`:"")+(i.disc>0?`<span class="bd s2">−${i.disc}%</span>`:"");
+const priceHtml=i=>`<div class="price${i.disc>0?" sale":""}">${money(i.pc)}${i.base>i.pc?`<s>${money(i.base)}</s>`:""}</div>`;
 const oldHtml=p=>{const o=oldPrice(p);return o?`<s>${money(o)}</s>`:""};
 
 /* ---------- картка товару ---------- */
 function card(p){
- const out=!p.st,o=oldPrice(p),pc=price(p),disc=o?Math.round((1-pc/o)*100):0,u="#/p/"+encodeURIComponent(p.id);
- const b=(p.hit?'<span class="bd h">Хіт</span>':"")+(p.nw?'<span class="bd n">Новинка</span>':"")+(disc>0?`<span class="bd s">−${disc}%</span>`:"");
- return `<article class="card"><a class="pic" href="${u}" aria-label="${esc(p.n)}">${img(p.img,400,400,p.n)}${b?`<div class="bds">${b}</div>`:""}</a><button class="fv${fav[p.id]?" on":""}" data-f="${esc(p.id)}" aria-label="Додати в обране">${ico("heart")}</button><div class="body"><a class="name" href="${u}">${esc(p.n)}</a><div class="m2"><span class="sku">Арт. ${esc(p.id)}</span>${out?'<span class="stock no">Немає</span>':'<span class="stock">В наявності</span>'}</div><div class="price">${money(pc)}${oldHtml(p)}</div><button class="add" data-a="${esc(p.id)}"${out?" disabled":""}>${out?"Немає в наявності":ico("cart")+"У кошик"}</button></div></article>`;
+ const out=!p.st,pi=priceInfo(p),u="#/p/"+encodeURIComponent(p.id);
+ const b=(p.hit?'<span class="bd h">Хіт продажу</span>':"")+(p.nw?'<span class="bd n">Новинка</span>':"")+saleBadges(pi);
+ return `<article class="card"><a class="pic" href="${u}" aria-label="${esc(p.n)}">${img(p.img,400,400,p.n)}${b?`<div class="bds">${b}</div>`:""}</a><button class="fv${fav[p.id]?" on":""}" data-f="${esc(p.id)}" aria-label="Додати в обране">${ico("heart")}</button><div class="body"><a class="name" href="${u}">${esc(p.n)}</a><div class="m2"><span class="sku">Арт. ${esc(p.id)}</span>${out?'<span class="stock no">Немає</span>':'<span class="stock">В наявності</span>'}</div>${priceHtml(pi)}<button class="add" data-a="${esc(p.id)}"${out?" disabled":""}>${out?"Немає в наявності":ico("cart")+"У кошик"}</button></div></article>`;
 }
 
 /* ---------- дані ---------- */
@@ -99,13 +102,17 @@ function messengers(){
 }
 
 /* ---------- слайдер і акції ---------- */
-function showB(i){bix=i;document.querySelectorAll("#slider .sl").forEach((e,k)=>e.classList.toggle("on",k===i));document.querySelectorAll("#slider .dots button").forEach((e,k)=>e.classList.toggle("on",k===i))}
+let lastTouch=0;
+function setBcls(i){bix=i;document.querySelectorAll("#slider .sl").forEach((e,k)=>e.classList.toggle("on",k===i));document.querySelectorAll("#slider .dots button").forEach((e,k)=>e.classList.toggle("on",k===i))}
+function showB(i,smooth){setBcls(i);const t=document.getElementById("strack");if(t)t.scrollTo({left:i*t.clientWidth,behavior:smooth===false?"auto":"smooth"})}
 function drawSlider(){
  clearInterval(btm);const s=$("slider"),h=$("home");if(!s)return;
  if(!BN.length){s.hidden=true;if(h)h.hidden=false;return}
  if(h)h.hidden=true;s.hidden=false;
- s.innerHTML=BN.map((b,i)=>{const t=(b.title||b.subtitle)?`<div class="slt">${b.title?`<b>${esc(b.title)}</b>`:""}${esc(b.subtitle||"")}</div>`:"";const im=`<img src="${esc(b.image_url)}" alt="${esc(b.title||"")}"${i?' loading="lazy"':""}>`;return b.link?`<a class="sl" href="${esc(b.link)}">${im}${t}</a>`:`<div class="sl">${im}${t}</div>`}).join("")+(BN.length>1?`<div class="dots">${BN.map((_,i)=>`<button data-b="${i}" aria-label="Банер ${i+1}"></button>`).join("")}</div>`:"");
- showB(0);if(BN.length>1)btm=setInterval(()=>showB((bix+1)%BN.length),6000);
+ s.innerHTML='<div class="strack" id="strack">'+BN.map((b,i)=>{const t=(b.title||b.subtitle)?`<div class="slt">${b.title?`<b>${esc(b.title)}</b>`:""}${esc(b.subtitle||"")}</div>`:"";const im=`<img src="${esc(b.image_url)}" alt="${esc(b.title||"")}"${i?' loading="lazy"':""}>`;return b.link?`<a class="sl" href="${esc(b.link)}" draggable="false">${im}${t}</a>`:`<div class="sl">${im}${t}</div>`}).join("")+'</div>'+(BN.length>1?`<button type="button" class="sarr l" data-sa="-1" aria-label="Попередній банер">‹</button><button type="button" class="sarr r" data-sa="1" aria-label="Наступний банер">›</button><div class="dots">${BN.map((_,i)=>`<button data-b="${i}" aria-label="Банер ${i+1}"></button>`).join("")}</div>`:"");
+ showB(0,false);const tr=$("strack");
+ if(BN.length>1&&tr){let st=null;tr.addEventListener("scroll",()=>{clearTimeout(st);st=setTimeout(()=>{const k=Math.round(tr.scrollLeft/Math.max(1,tr.clientWidth));if(k!==bix)setBcls(k)},80)},{passive:true});["touchstart","pointerdown","wheel"].forEach(ev=>tr.addEventListener(ev,()=>{lastTouch=Date.now()},{passive:true}));
+  btm=setInterval(()=>{if(Date.now()-lastTouch>9000&&document.visibilityState==="visible")showB((bix+1)%BN.length)},6000)}
 }
 function drawPromos(){const e=$("promos");if(e)e.innerHTML=PROMOS.map(x=>`<div class="promo"><div><b>${x.badge?esc(x.badge)+" · ":""}${esc(x.title)}${x.percent?" −"+x.percent+"%":""}</b><small>${esc(x.description||"")}</small></div></div>`).join("")}
 
@@ -113,7 +120,8 @@ function drawPromos(){const e=$("promos");if(e)e.innerHTML=PROMOS.map(x=>`<div c
 function route(){
  closeAll();{const v=$("view");v.classList.remove("pg");void v.offsetWidth;v.classList.add("pg")}$("sbuy").hidden=true;const h=curH();
  document.body.classList.toggle("pv",h.indexOf("#/p/")===0);
- if(h.indexOf("#/p/")===0)viewProduct(decodeURIComponent(h.slice(4)));
+ if(h==="#/calc")viewCalc();
+ else if(h.indexOf("#/p/")===0)viewProduct(decodeURIComponent(h.slice(4)));
  else if(h.indexOf("#/c")===0)viewList(h.slice(4).split("/").filter(Boolean).map(decodeURIComponent));
  else if(h==="#/fav")viewFav();
  else if(h.indexOf("#/sel/")===0)viewSel(h.slice(6));
@@ -129,17 +137,18 @@ const hsc=(id,list)=>`<div class="hsc"><button class="scb l" data-sc="${id}" dat
 function viewHome(){
  document.title="Trend Electro — електротовари та LED-освітлення";
  const tops=kids(ROOT),s=shop(),perks=(s.perks.filter(x=>x&&x.t).length?s.perks.filter(x=>x&&x.t).map((x,i)=>[PERKS[i%4][0],x.t,x.d||""]):PERKS);
- const sets=Object.keys(SELS).map(k=>{const l=P.filter(SELS[k][2]);return l.length?`<section class="sec"><div class="sech"><div><h2>${SELS[k][0]}</h2><p>${SELS[k][1]}</p></div>${l.length>5?`<a href="#/sel/${k}">Усі ${l.length} →</a>`:""}</div>${hsc("h"+k,l.slice(0,15))}</section>`:""}).join("");
+ const TN={new:"Новинки",sale:"Розпродаж",hit:"Хіти продажу"},tsets=["new","sale","hit"].map(k=>({k,l:P.filter(SELS[k][2])})).filter(x=>x.l.length);
+ const sets=tsets.length?`<section class="sec tabsec"><div class="htabs" role="tablist">${tsets.map((x,i)=>`<button type="button" role="tab" class="htab${i?"":" on"}" data-ht="${x.k}">${TN[x.k]}</button>`).join("")}</div>${tsets.map((x,i)=>`<div class="hpane" data-pane="${x.k}"${i?" hidden":""}>${hsc("h"+x.k,x.l.slice(0,15))}${x.l.length>5?`<div class="allrow"><a href="#/sel/${x.k}">Усі ${x.l.length} →</a></div>`:""}</div>`).join("")}</section>`:"";
  const pop=sets?"":(P.length?`<section class="sec"><div class="sech"><div><h2>Популярне в каталозі</h2><p>По одному товару з кожного розділу — для натхнення</p></div><a href="#/c/">Весь каталог →</a></div>${hsc("hpop",pick())}</section>`:"");
  const msg=messengers();
  $("view").innerHTML=`<section class="slider" id="slider" hidden></section>
 <section class="hero" id="home"><div><span class="eyebrow">Trend Electro · ${plural(P.length,"товар","товари","товарів")} у каталозі</span><h1>Світло й електрика <em>для дому та бізнесу</em></h1><p>${esc(s.tagline||"Світильники, LED-лампи, розетки, кабель, автоматика та все для монтажу. Допоможемо підібрати й швидко відправимо по Україні.")}</p><div class="cta"><a class="btn" href="#/c/">Перейти до каталогу ${ico("r")}</a><a class="btn ghost" href="#/page/coop">Оптовим клієнтам</a></div></div>
 <div class="hcats">${tops.slice(0,4).map(k=>`<a href="${href(k.path)}"><b>${esc(k.name)}</b><small>${plural(k.count,"товар","товари","товарів")}</small></a>`).join("")}</div></section>
 ${statsHtml()}<section class="perks">${perks.map(x=>`<div>${ico(x[0])}<span><b>${esc(x[1])}</b>${esc(x[2])}</span></div>`).join("")}</section>
-<section class="promos" id="promos"></section>
+${calcCta()}<section class="promos" id="promos"></section>
 <section class="sec"><div class="sech"><div><h2>Каталог</h2></div><a href="#/c/">Усі товари →</a></div><div class="ctiles">${tops.map(tile).join("")||'<div class="empty">Каталог порожній.</div>'}</div></section>
-${sets}${pop}
-<section class="sec" id="hguides" hidden><div class="sech"><div><h2>Поради та статті</h2><p>Як вибрати лампу, кабель, розетки й захист</p></div><a href="#/guide/">Усі статті →</a></div><div class="gcards"></div></section>
+${sets}${pop}${rvHtml()}
+${promoForm()}<section class="sec" id="hguides" hidden><div class="sech"><div><h2>Поради та статті</h2><p>Як вибрати лампу, кабель, розетки й захист</p></div><a href="#/guide/">Усі статті →</a></div><div class="gcards"></div></section>
 <section class="band"><div><h2>Електрикам, монтажникам і дизайнерам</h2><p>Оптові ціни, підбір під об’єкт і консультація з технічних питань. Напишіть — підготуємо пропозицію.</p></div><div class="cta" style="margin:0"><a class="btn" href="#/page/coop">Умови співпраці</a>${msg[0]?`<a class="btn ghost" href="${esc(msg[0][1])}" target="_blank" rel="noopener">${esc(msg[0][0])}</a>`:s.phone?`<a class="btn ghost" href="${esc(tel(s.phone))}">${esc(s.phone)}</a>`:""}</div></section>`;
  drawSlider();drawPromos();runCounters();
  arts().then(L=>{const e=$("hguides");if(e&&L.length){e.hidden=false;e.querySelector(".gcards").innerHTML=L.slice(0,3).map(gcard).join("")}});
@@ -244,9 +253,9 @@ const DENS=[["list","Список"],["l","Велика сітка"],["m","Сер
 const DICO={list:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="3" y="4" width="18" height="3" rx="1.5"/><rect x="3" y="10.5" width="18" height="3" rx="1.5"/><rect x="3" y="17" width="18" height="3" rx="1.5"/></svg>',l:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>',m:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">'+[3,9.5,16].map(y=>[3,9.5,16].map(x=>`<rect x="${x}" y="${y}" width="5" height="5" rx="1.3"/>`).join("")).join("")+'</svg>',s:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">'+[2.5,7.5,12.5,17.5].map(y=>[2.5,7.5,12.5,17.5].map(x=>`<rect x="${x}" y="${y}" width="4" height="4" rx="1"/>`).join("")).join("")+'</svg>'};
 function dens(){let d="";try{d=localStorage.getItem("te_dens")||""}catch(e){}if(!DENS.some(x=>x[0]===d))d=DENS.some(x=>x[0]===(SHOP||{}).grid_def)?SHOP.grid_def:"l";return d}
 function setDens(d){try{localStorage.setItem("te_dens",d)}catch(e){}const g=$("grid");if(g)g.dataset.d=d;document.querySelectorAll(".dsw button").forEach(b=>b.classList.toggle("on",b.dataset.dn===d))}
-function applyLayout(){const S=SHOP||{},r=document.documentElement.style,c=Math.min(6,Math.max(2,+S.cat_cols||4)),m=Math.min(3,Math.max(2,+S.cat_cols_m||3));r.setProperty("--tc",c);r.setProperty("--tcm",m)}
+function applyLayout(){const S=SHOP||{},r=document.documentElement.style,c=Math.min(6,Math.max(2,+S.cat_cols||4)),m=Math.min(3,Math.max(2,+S.cat_cols_m||2));r.setProperty("--tc",c);r.setProperty("--tcm",m)}
 const stile=k=>`<a class="stile" href="${href(k.path)}"><span class="th pic">${img(nodeImg(k),300,300,k.name)}</span><b>${esc(k.name)}</b><small>${k.count}</small></a>`;
-function tilesHtml(list){if(!list.length)return"";const S=SHOP||{},c=innerWidth<700?Math.min(3,Math.max(2,+S.cat_cols_m||3)):Math.min(6,Math.max(2,+S.cat_cols||4)),rw=Math.min(8,Math.max(0,+S.cat_rows||0)),lim=rw?c*rw:0;
+function tilesHtml(list){if(!list.length)return"";const S=SHOP||{},c=innerWidth<700?Math.min(3,Math.max(2,+S.cat_cols_m||2)):Math.min(6,Math.max(2,+S.cat_cols||4)),rw=Math.min(8,Math.max(0,+S.cat_rows||0)),lim=rw?c*rw:0;
  return `<div class="stiles">${list.map((k,i)=>lim&&i>=lim?stile(k).replace('class="stile"','class="stile xt" hidden'):stile(k)).join("")}</div>${lim&&list.length>lim?`<button class="more xtb" data-xt="1">Показати всі ${list.length} ↓</button>`:""}`}
 const ytU=q=>"https://www.youtube.com/results?search_query="+encodeURIComponent(q);
 const ytBox=a=>`<div class="box vid"><h2>Відео по темі</h2>${(a.vid||[]).map(v=>`<button class="yt" data-yt="${esc(v)}" style="background-image:url(https://i.ytimg.com/vi/${esc(v)}/hqdefault.jpg)" aria-label="Дивитись відео">▶</button>`).join("")}<p>Краще один раз побачити? Короткі відео за темою «${esc(a.title)}»:</p><div class="cta"><a class="btn" href="${esc(ytU(a.yt||a.title))}" target="_blank" rel="noopener">▶ YouTube</a><a class="btn" href="${esc("https://www.tiktok.com/search?q="+encodeURIComponent(a.yt||a.title))}" target="_blank" rel="noopener">♪ TikTok</a><a class="btn" href="${esc("https://www.google.com/search?q="+encodeURIComponent("site:instagram.com/reel "+(a.yt||a.title)))}" target="_blank" rel="noopener">◎ Instagram Reels</a></div></div>`;
@@ -254,7 +263,7 @@ const gcard=a=>`<a class="gcard" href="#/guide/${a.slug}"><b>${esc(a.title)}</b>
 async function viewGuide(slug){
  const L=await arts(),a=slug?L.find(x=>x.slug===slug):null;
  if(a){document.title=a.title+" — Trend Electro";
-  $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a><span>›</span><a href="#/guide/">Поради</a><span>›</span>${esc(a.title)}</nav><article class="art"><h1 class="ptitle">${esc(a.title)}</h1><p class="cdesc">${esc(a.description)}</p><div class="box txt">${a.body}</div>${ytBox(a)}</article><section class="sec"><div class="sech"><h2>Читайте також</h2></div><div class="gcards">${L.filter(x=>x.slug!==slug).sort((x,y)=>(y.category===a.category)-(x.category===a.category)).slice(0,3).map(gcard).join("")}</div></section>`;return}
+  $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a><span>›</span><a href="#/guide/">Поради</a><span>›</span>${esc(a.title)}</nav><article class="art"><h1 class="ptitle">${esc(a.title)}</h1><p class="cdesc">${esc(a.description)}</p><div class="box txt">${a.body}</div>${ytBox(a)}${shareBox(a)}</article><section class="sec"><div class="sech"><h2>Читайте також</h2></div><div class="gcards">${L.filter(x=>x.slug!==slug).sort((x,y)=>(y.category===a.category)-(x.category===a.category)).slice(0,3).map(gcard).join("")}</div></section>`;return}
  document.title="Поради з вибору електротоварів — Trend Electro";
  $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a><span>›</span>Поради</nav><h1 class="ptitle">Поради з вибору електротоварів</h1><p class="cdesc">Короткі практичні статті: як вибрати лампу, кабель, розетки й захист.</p>${L.length?`<div class="gcards">${L.map(gcard).join("")}</div>`:'<div class="empty">Статті з’являться незабаром.</div>'}`;
 }
@@ -273,19 +282,20 @@ async function viewProduct(id){
  const p=M[id];
  if(!p){$("view").innerHTML='<div class="empty">Товар не знайдено або він прихований. <a href="#/c/">До каталогу</a></div>';return}
  QTY=1;PTAB="info";document.title=p.n+" — Trend Electro";
- const o=oldPrice(p),pc=price(p),disc=o?Math.round((1-pc/o)*100):0;
+ const pi=priceInfo(p),o=pi.base,pc=pi.pc,disc=pi.disc;
  const sim=P.filter(x=>x.id!==p.id&&p.c.length&&x.c.join(SEP)===p.c.join(SEP)).slice(0,15);
  const sim2=sim.length<4?P.filter(x=>x.id!==p.id&&p.c.length&&x.c[0]===p.c[0]&&(!p.c[1]||x.c[1]===p.c[1])).slice(0,15):sim;
  $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a>${p.c.map((n,i)=>`<span>›</span><a href="${href(p.c.slice(0,i+1))}">${esc(n)}</a>`).join("")}</nav>
 <div class="pgrid"><div><div class="pimg" id="pmain">${img(p.img,900,900,p.n)}</div><div class="thumbs" id="pthumbs"></div></div><div class="pinfo"><h1>${esc(p.n)}</h1>
 <div class="meta"><span>Артикул: <b>${esc(p.id)}</b></span>${p.b?`<span>Бренд: <a href="#/c/" data-brand="${esc(p.b)}">${esc(p.b)}</a></span>`:""}</div>
 <div class="avail${p.st?"":" no"}">${p.st?ico("check")+"Є в наявності":"Немає в наявності"}</div>
-<div class="bigprice">${money(pc)}${oldHtml(p)}${disc>0?` <small style="color:var(--bad);font-size:15px">−${disc}%</small>`:""}</div>
+<div class="bigprice${disc>0?" sale":""}">${money(pc)}${pi.base>pc?`<s>${money(pi.base)}</s>`:""}${disc>0?`<span class="bds2">${saleBadges(pi)}</span>`:""}</div>
 <div class="buyrow"><div class="qtybox"><button data-q="-1" aria-label="Менше">−</button><input id="pq" type="number" min="1" max="999" value="1" inputmode="numeric" aria-label="Кількість"><button data-q="1" aria-label="Більше">+</button></div><button class="buybtn" id="buy" data-id="${esc(p.id)}"${p.st?"":" disabled"}>${p.st?ico("cart")+"Купити":"Немає в наявності"}</button><button class="favbtn${fav[p.id]?" on":""}" data-f="${esc(p.id)}" aria-label="Обране">${ico("heart")}</button></div><p class="ordoff">${esc(ordMsg())}</p>
 <div class="ptrust"><a href="#/page/delivery">${ico("truck")}<span><b>Доставка по Україні</b>Нова пошта, Укрпошта</span></a><a href="#/page/delivery">${ico("wallet")}<span><b>Оплата при отриманні</b>або карткою</span></a><a href="#/page/exchange">${ico("swap")}<span><b>Обмін та повернення</b>за законом, без зайвих питань</span></a></div>
 <div class="box" style="margin:14px 0 0"><h3>Основні характеристики</h3><div id="pkey"><div class="sku">Завантаження…</div></div></div></div></div>
 <div class="tabsb"><button data-pt="info" class="on">Опис</button><button data-pt="spec">Усі характеристики</button></div><div class="box" id="pdet"><div class="sku">Завантаження…</div></div>
-${sim2.length?`<section class="sec"><div class="sech"><div><h2>Схожі товари</h2></div><a href="${href(p.c)}">Уся категорія →</a></div>${hsc("hsim",sim2)}</section>`:""}`;
+${sim2.length?`<section class="sec"><div class="sech"><div><h2>Схожі товари</h2></div><a href="${href(p.c)}">Уся категорія →</a></div>${hsc("hsim",sim2)}</section>`:""}${rvHtml(p.id)}<section class="sec" id="btog" hidden></section>`;
+ rvPush(p.id);loadBT(p.id);
  const sbx=$("sbuy");sbx.innerHTML=`<div><b>${money(pc)}</b><small>${p.st?"В наявності":""}</small></div><button class="buybtn" data-sb="${esc(p.id)}"${p.st?"":" disabled"}>${p.st?ico("cart")+"Купити":"Немає в наявності"}</button>`;sbx.hidden=false;
  if(p.d===null&&sb){try{let r=await sb.from("products").select("description,specs,images").eq("id",id).maybeSingle();if(r.error)r=await sb.from("products").select("description,specs").eq("id",id).maybeSingle();p.d=(r.data&&r.data.description)||"";p.sp=(r.data&&r.data.specs)||"";p.ims=(r.data&&Array.isArray(r.data.images)?r.data.images:[]).filter(Boolean)}catch(e){p.d="";p.sp=""}}
  if(curH().indexOf("#/p/")===0&&decodeURIComponent(curH().slice(4))===id)fillDetails(p);
@@ -410,7 +420,7 @@ function drawFooter(){
  if(s.address)c.push(`<span style="display:block;padding:3px 0">${esc(s.address)}</span>`);
  $("foot").innerHTML=`<div><img src="logo2.webp" alt="Trend Electro — Professional Electrical Solutions" width="180" height="91" loading="lazy">${esc(s.tagline||"Електротовари, LED-освітлення та електрофурнітура для дому, офісу й об’єктів.")}${m.length?`<div class="fmsg">${m.map(x=>`<a href="${esc(x[1])}" target="_blank" rel="noopener">${esc(x[0])}</a>`).join("")}</div>`:""}</div>
 <div><b>Каталог</b>${tops.map(k=>`<a href="${href(k.path)}">${esc(k.name)}</a>`).join("")}</div>
-<div><b>Покупцям</b><a href="#/page/delivery">Оплата і доставка</a><a href="#/page/exchange">Обмін та повернення</a><a href="#/page/coop">Співпраця та опт</a><a href="#/guide/">Поради та статті</a><a href="#/page/about">Про нас</a><a href="#/page/contacts">Контакти</a></div>
+<div><b>Покупцям</b><a href="#/page/delivery">Оплата і доставка</a><a href="#/page/exchange">Обмін та повернення</a><a href="#/page/coop">Співпраця та опт</a><a href="#/guide/">Поради та статті</a><a href="#/calc">Калькулятор комплекту</a><a href="#" data-install="1">Встановити додаток</a><a href="#/page/about">Про нас</a><a href="#/page/contacts">Контакти</a></div>
 <div><b>${c.length?"Зв’язатися з нами":"Допомога"}</b>${c.join("")||`<a href="#/page/contacts">Контакти та підтримка</a>`}</div>`;
  $("fbot").textContent="© "+new Date().getFullYear()+" Trend Electro. Ціни на сайті вказані в гривнях з ПДВ.";
 }
@@ -446,7 +456,9 @@ document.addEventListener("click",e=>{
  if(d.nav){const v=d.nav;if(v==="home")location.hash="#/";if(v==="cat")openCatMenu();if(v==="fav")location.hash="#/fav";if(v==="cart")openCart();if(v==="acc"){drawAcc();panel("acc",true)}return}
  if(t.id==="buy"){const n=Math.max(1,Math.min(999,+$("pq").value||1)),id=t.dataset.id;cart[id]=(cart[id]||0)+n;save();drawCart();toast(n>1?"Додано в кошик: "+n+" шт.":"Додано в кошик",1);return}
  if(d.pt){PTAB=d.pt;document.querySelectorAll(".tabsb button").forEach(b=>b.classList.toggle("on",b===t));const id=decodeURIComponent(curH().slice(4));if(M[id])drawDet(M[id]);return}
- if(d.b!==undefined){showB(+d.b);return}
+ if(d.b!==undefined){lastTouch=Date.now();showB(+d.b);return}
+ if(d.sa){lastTouch=Date.now();showB((bix+ +d.sa+BN.length)%BN.length);return}
+ if(d.ht){document.querySelectorAll(".htab").forEach(b=>b.classList.toggle("on",b.dataset.ht===d.ht));document.querySelectorAll(".hpane").forEach(x=>x.hidden=x.dataset.pane!==d.ht);return}
  if(d.tg!==undefined){const s=t.parentNode.nextElementSibling;if(s){s.classList.toggle("open");t.textContent=s.classList.contains("open")?"−":"+"}return}
  if(t.id==="more"){const from=F.lim;F.lim+=24;$("grid").insertAdjacentHTML("beforeend",CUR.list.slice(from,F.lim).map(card).join(""));moreBtn();return}
  if(t.id==="toastB"){$("toast").classList.remove("on");openCart();return}
@@ -509,4 +521,75 @@ document.addEventListener("DOMContentLoaded",boot);
   const x=z.left+z.width/2-(a.left+a.width/2),y=z.top+z.height/2-(a.top+a.height/2);
   d.animate([{transform:"translate(0,0) scale(1)",opacity:1},{transform:`translate(${x*.5}px,${y*.5-60}px) scale(.8)`,opacity:1,offset:.5},{transform:`translate(${x}px,${y}px) scale(.2)`,opacity:.4}],{duration:650,easing:"cubic-bezier(.4,0,.2,1)"}).onfinish=()=>d.remove();
  },true);
+})();
+
+/* ================= Додатково: тема, голос, PWA, калькулятор, промокод, нещодавні, поділитися ================= */
+(function(){
+ const D=document;
+ /* --- тема --- */
+ function curTheme(){return D.documentElement.dataset.theme||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light")}
+ function setTheme(t){D.documentElement.dataset.theme=t;try{localStorage.setItem("te_theme",t)}catch(e){}const m=D.querySelector('meta[name="theme-color"]');if(m)m.content=t==="dark"?"#0a0c0e":"#15191c"}
+ /* --- голосовий пошук --- */
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null;
+ function mic(){const b=$("micBtn");if(!SR||!b)return;if(rec){try{rec.stop()}catch(e){}return}
+  rec=new SR();rec.lang="uk-UA";rec.interimResults=false;rec.maxAlternatives=1;b.classList.add("rec");
+  rec.onresult=e=>{const t=(e.results[0]&&e.results[0][0]&&e.results[0][0].transcript||"").replace(/[.!?]+$/,"").trim();if(t){$("q").value=t;goSearch()}};
+  rec.onerror=()=>{};rec.onend=()=>{rec=null;b.classList.remove("rec")};try{rec.start()}catch(e){rec=null;b.classList.remove("rec")}}
+ /* --- нещодавно переглянуті --- */
+ window.rvPush=id=>{let l=LS("te_rv",[]);l=[id].concat(l.filter(x=>x!==id)).slice(0,14);SV("te_rv",l)};
+ window.rvHtml=ex=>{const l=LS("te_rv",[]).filter(i=>i!==ex&&M[i]).map(i=>M[i]).slice(0,12);return l.length?`<section class="sec"><div class="sech"><div><h2>Нещодавно переглянуті</h2></div></div>${hsc("hrv"+(ex?"p":"h"),l)}</section>`:""};
+ /* --- З цим купують (за історією замовлень) --- */
+ window.loadBT=async id=>{if(!sb)return;try{const r=await sb.rpc("bought_together",{p_id:id});const ids=(r.data||[]).filter(x=>M[x]&&x!==id).slice(0,10);const e=$("btog");if(!e||!ids.length||curH().indexOf("#/p/")!==0)return;e.innerHTML=`<div class="sech"><div><h2>З цим товаром купують</h2></div></div>${hsc("hbt",ids.map(x=>M[x]))}`;e.hidden=false}catch(e){}};
+ /* --- поділитися статтею --- */
+ window.shareBox=a=>{const u=BASE+"poradu/"+a.slug+"/",t=a.title,q=encodeURIComponent;return `<div class="box share"><b>Поділитися статтею:</b><div class="cta"><a class="btn" href="https://t.me/share/url?url=${q(u)}&text=${q(t)}" target="_blank" rel="noopener">Telegram</a><a class="btn" href="viber://forward?text=${q(t+" "+u)}">Viber</a><a class="btn" href="https://www.facebook.com/sharer/sharer.php?u=${q(u)}" target="_blank" rel="noopener">Facebook</a><button class="btn" type="button" data-copy="${esc(u)}">Копіювати посилання</button>${navigator.share?`<button class="btn" type="button" data-nshare="${esc(u)}" data-t="${esc(t)}">Ще…</button>`:""}</div></div>`};
+ /* --- промокод за підписку --- */
+ window.promoForm=()=>{const S=SHOP||{};if(!S.promo_on||!S.promo_code)return"";const done=LS("te_sub",null);
+  return `<section class="band subs" id="subs"><div><h2>${esc(S.promo_title||"Знижка на перше замовлення")}</h2><p>${esc(S.promo_text||"Залиште email або телефон і отримайте промокод. Ми не розсилаємо спам.")}</p></div>${done?`<div class="subok"><span>Ваш промокод:</span> <b>${esc(S.promo_code)}</b> <button class="btn" type="button" data-usepromo="${esc(S.promo_code)}">Застосувати</button></div>`:`<form id="subForm" novalidate><input id="subC" type="text" inputmode="email" placeholder="Email або телефон" autocomplete="email" aria-label="Email або телефон"><label class="cons"><input type="checkbox" id="subOk"> <span>Погоджуюсь на обробку персональних даних та отримання повідомлень. Відписатись можна будь-коли.</span></label><button class="btn" type="submit" id="subBtn">Отримати промокод</button><div class="msg" id="subM"></div></form>`}</section>`};
+ async function subSend(){const c=$("subC").value.trim(),m=$("subM"),S=SHOP||{};m.className="msg";
+  const em=/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(c),ph=c.replace(/\D/g,"").length>=10&&/^[+\d\s()-]+$/.test(c);
+  if(!em&&!ph){m.textContent="Вкажіть правильний email або телефон.";return}
+  if(!$("subOk").checked){m.textContent="Потрібна згода на обробку даних.";return}
+  const b=$("subBtn");b.disabled=true;const r=sb?await sb.from("leads").insert({contact:c.slice(0,200),source:"promo"}):{error:{message:"no"}};b.disabled=false;
+  if(r.error){m.textContent="Не вдалося зберегти. Спробуйте пізніше або напишіть нам.";return}
+  SV("te_sub",{c:1});const e=$("subs");if(e)e.outerHTML=promoForm();toast("Промокод "+S.promo_code+" збережено")}
+ /* --- калькулятор комплекту --- */
+ window.calcCta=()=>`<section class="calccta"><div><b>Калькулятор комплекту</b><span>Вкажіть площу кімнати — підкажемо, що купити для освітлення й електрики</span></div><a class="btn" href="#/calc">Розрахувати</a></section>`;
+ const ROOMS={"Спальня":150,"Вітальня":150,"Дитяча":300,"Кухня":250,"Ванна":200,"Коридор":150,"Кабінет / робоча зона":400};
+ window.viewCalc=()=>{document.title="Калькулятор комплекту для електрики — Trend Electro";
+  $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a><span>›</span>Калькулятор комплекту</nav><h1 class="ptitle">Калькулятор комплекту</h1><p class="cdesc">Орієнтовний розрахунок освітлення й матеріалів для кімнати.</p><div class="box calc"><div class="rw2"><div><label for="cRoom">Тип кімнати</label><select id="cRoom">${Object.keys(ROOMS).map(k=>`<option>${k}</option>`).join("")}</select></div><div><label for="cArea">Площа, м²</label><input id="cArea" type="number" min="1" max="500" value="15" inputmode="decimal"></div></div></div><div id="cOut"></div>`;calcDraw()};
+ function calcDraw(){const a=Math.max(1,Math.min(500,+($("cArea")||{}).value||0)),room=$("cRoom").value,lm=a*ROOMS[room],lamps=Math.ceil(lm/800),panels=Math.ceil(lm/1600);
+  const soc=Math.max(2,Math.round(a/(room==="Кухня"?2.2:3.5))),sw=room==="Коридор"||a>25?2:1,cab15=Math.ceil(a*2*1.15),cab25=Math.ceil((soc*4+a*0.6)*1.15),box=soc+sw;
+  const row=(t,d,q)=>`<div class="crow"><div><b>${t}</b><span>${d}</span></div>${q?`<button class="btn" type="button" data-gq="${esc(q)}">Дивитися в каталозі</button>`:""}</div>`;
+  $("cOut").innerHTML=`<div class="box calc"><h2>Що потрібно</h2>
+  ${row("Освітлення: ≈ "+Math.round(lm)+" лм","≈ "+lamps+" LED-ламп по 800 лм (8–10 Вт) або ≈ "+panels+" світильників-панелей по 1600 лм (≈ 18–20 Вт)","led лампа")}
+  ${row("Розетки: "+soc+" шт.","Орієнтовно для "+room.toLowerCase()+" "+a+" м²","розетка")}
+  ${row("Вимикачі: "+sw+" шт.","Для керування світлом","вимикач")}
+  ${row("Підрозетники / коробки: "+box+" шт.","Під розетки й вимикачі","підрозетник")}
+  ${row("Кабель 3×1,5 мм² для освітлення: ≈ "+cab15+" м","З запасом 15%. Автомат групи освітлення — 10 А","кабель 3х1,5")}
+  ${row("Кабель 3×2,5 мм² для розеток: ≈ "+cab25+" м","З запасом 15%. Автомат групи розеток — 16 А","кабель 3х2,5")}
+  ${row("Автомати захисту","10 А на освітлення, 16 А на розетки, УЗО 30 мА для вологих приміщень","автомат")}
+  ${row("Гофра / кабель-канал","Для захисту кабелю в штробі або відкритої прокладки","гофра")}
+  <p class="mut">Це орієнтовний розрахунок для типової кімнати. Точний склад залежить від проєкту й навантаження, тому перед монтажем проконсультуйтеся з електриком.</p></div>`}
+ /* --- підгонка тексту плиток: максимум 2 рядки, без переносів --- */
+ function fit(root){(root||D).querySelectorAll(".ctile b,.stile b,.hcats b").forEach(el=>{el.style.fontSize="";const cs=getComputedStyle(el);let fs=parseFloat(cs.fontSize);const lh=parseFloat(cs.lineHeight)||fs*1.25,ratio=lh/fs;let g=0;
+   while(g++<30&&fs>9&&(el.scrollHeight>fs*ratio*2+2||el.scrollWidth>el.clientWidth+1)){fs-=.5;el.style.fontSize=fs+"px";el.style.lineHeight=ratio}})}
+ let ft=null;const later=()=>{clearTimeout(ft);ft=setTimeout(()=>fit(),60)};
+ D.addEventListener("DOMContentLoaded",()=>{
+  const v=$("view");if(v)new MutationObserver(later).observe(v,{childList:true,subtree:true});addEventListener("resize",later);
+  if(SR&&$("micBtn"))$("micBtn").hidden=false;
+  if(D.fonts&&D.fonts.ready)D.fonts.ready.then(later)});
+ /* --- події --- */
+ let dip=null;addEventListener("beforeinstallprompt",e=>{e.preventDefault();dip=e});
+ D.addEventListener("click",e=>{const t=e.target;let x;
+  if(t.closest("#thBtn")){setTheme(curTheme()==="dark"?"light":"dark");return}
+  if(t.closest("#micBtn")){mic();return}
+  if(x=t.closest("[data-install]")){e.preventDefault();if(dip){dip.prompt();dip=null}else toast("На iPhone: «Поділитися» → «На початковий екран». На Android: меню ⋮ → «Встановити додаток».");return}
+  if(x=t.closest("[data-copy]")){const u=x.dataset.copy;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast("Посилання скопійовано"),()=>toast(u));return}
+  if(x=t.closest("[data-nshare]")){navigator.share({title:x.dataset.t,url:x.dataset.nshare}).catch(()=>{});return}
+  if(x=t.closest("[data-gq]")){$("q").value=x.dataset.gq;goSearch();return}
+  if(x=t.closest("[data-usepromo]")){openCart();applyPromo(x.dataset.usepromo);return}
+ });
+ D.addEventListener("submit",e=>{if(e.target.id==="subForm"){e.preventDefault();subSend()}});
+ D.addEventListener("input",e=>{if(e.target.id==="cArea"||e.target.id==="cRoom")calcDraw()});
+ addEventListener("load",()=>{if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register(BASE+"sw.js").catch(()=>{})});
 })();

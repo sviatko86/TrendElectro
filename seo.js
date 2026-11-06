@@ -102,7 +102,7 @@ const imgUrl = p => HAVE.has(safe(p.id)) ? `${SITE}/img/${safe(p.id)}.webp` : p.
 
 /* ---------- сторінки ---------- */
 const TPL = fs.readFileSync("index.html", "utf8");
-const abs = h => h.replace(/(href|src)="(app\.css|app\.js|config\.js|logo\d\.webp)([^"]*)"/g, `$1="${SITE}/$2$3"`);
+const abs = h => h.replace(/(href|src)="(app\.css|app\.js|config\.js|logo\d\.webp|manifest\.webmanifest|apple-touch-icon\.png)([^"]*)"/g, `$1="${SITE}/$2$3"`);
 function page({ title, desc, url, hash, body, ld, image }) {
   let h = abs(TPL).replace(/<link rel="canonical"[^>]*>\n?/, "");
   h = h.replace(/<title>.*?<\/title>/, `<title>${esc(title)}</title>`);
