@@ -51,18 +51,20 @@ const oldHtml=p=>{const o=oldPrice(p);return o?`<s>${money(o)}</s>`:""};
 /* ---------- картка товару ---------- */
 function card(p){
  const out=!p.st,pi=priceInfo(p),u="#/p/"+encodeURIComponent(p.id);
- const b=(p.hit?'<span class="bd h">Хіт продажу</span>':"")+(p.nw?'<span class="bd n">Новинка</span>':"")+saleBadges(pi);
+ const b=(p.hit?'<span class="bd h">Хіт продажу</span>':"")+(p.nw?'<span class="bd n">Новинка</span>':"")+(p.ofr?'<span class="bd p">Спецпропозиція</span>':"")+saleBadges(pi);
  return `<article class="card"><a class="pic" href="${u}" aria-label="${esc(p.n)}">${img(p.img,400,400,p.n)}${b?`<div class="bds">${b}</div>`:""}</a><button class="fv${fav[p.id]?" on":""}" data-f="${esc(p.id)}" aria-label="Додати в обране">${ico("heart")}</button><div class="body"><a class="name" href="${u}">${esc(p.n)}</a><div class="m2"><span class="sku">Арт. ${esc(p.id)}</span>${out?'<span class="stock no">Немає</span>':'<span class="stock">В наявності</span>'}</div>${priceHtml(pi)}<button class="add" data-a="${esc(p.id)}"${out?" disabled":""}>${out?"Немає в наявності":ico("cart")+"У кошик"}</button></div></article>`;
 }
 
 /* ---------- дані ---------- */
+let NOSP=false;
 async function loadProducts(){
  const all=[];let from=0;const step=1000;
  for(;;){
-  const r=await sb.from("products").select("id,name,category,subcategory,subcategory2,brand,price,old_price,image_url,in_stock,is_hit,is_new").eq("active",true).order("id").range(from,from+step-1);
+  const cols="id,name,category,subcategory,subcategory2,brand,price,old_price,image_url,in_stock,is_hit,is_new";let r=NOSP?null:await sb.from("products").select(cols+",special").eq("active",true).order("id").range(from,from+step-1);
+  if(!r||r.error){NOSP=true;r=await sb.from("products").select(cols).eq("active",true).order("id").range(from,from+step-1)}
   if(r.error)throw r.error;all.push(...r.data);if(r.data.length<step)break;from+=step;
  }
- PALL=all.map(r=>({id:r.id,n:r.name,c:[r.category,r.subcategory,r.subcategory2].filter(x=>x&&x!=="Усі"),b:r.brand||"",pr0:+r.price||0,old:r.old_price!=null?+r.old_price:0,img:r.image_url||"",hit:!!r.is_hit,nw:!!r.is_new,st:r.in_stock!==false,d:null,sp:null}));
+ PALL=all.map(r=>({id:r.id,n:r.name,c:[r.category,r.subcategory,r.subcategory2].filter(x=>x&&x!=="Усі"),b:r.brand||"",pr0:+r.price||0,old:r.old_price!=null?+r.old_price:0,img:r.image_url||"",hit:!!r.is_hit,nw:!!r.is_new,ofr:r.special||"",st:r.in_stock!==false,d:null,sp:null}));
 }
 async function loadSettings(){
  const r=await sb.from("settings").select("key,value").in("key",["pricing","category_images","pages","shop"]);
@@ -120,8 +122,7 @@ function drawPromos(){const e=$("promos");if(e)e.innerHTML=PROMOS.map(x=>`<div c
 function route(){
  closeAll();{const v=$("view");v.classList.remove("pg");void v.offsetWidth;v.classList.add("pg")}$("sbuy").hidden=true;const h=curH();
  document.body.classList.toggle("pv",h.indexOf("#/p/")===0);
- if(h==="#/calc")viewCalc();
- else if(h.indexOf("#/p/")===0)viewProduct(decodeURIComponent(h.slice(4)));
+ if(h.indexOf("#/p/")===0)viewProduct(decodeURIComponent(h.slice(4)));
  else if(h.indexOf("#/c")===0)viewList(h.slice(4).split("/").filter(Boolean).map(decodeURIComponent));
  else if(h==="#/fav")viewFav();
  else if(h.indexOf("#/sel/")===0)viewSel(h.slice(6));
@@ -131,23 +132,24 @@ function route(){
  document.querySelectorAll(".bnav button").forEach(b=>b.classList.toggle("on",(b.dataset.nav==="home"&&(h==="#/"||h===""))||(b.dataset.nav==="fav"&&h==="#/fav")||(b.dataset.nav==="cat"&&h.indexOf("#/c")===0)));
  window.scrollTo(0,SCR[h]||0);
 }
-const SELS={hit:["Хіти продажу","Те, що найчастіше обирають наші клієнти",p=>p.hit],new:["Новинки","Свіжі надходження в асортименті",p=>p.nw],sale:["Зі знижкою","Вигідні пропозиції — поки є в наявності",p=>oldPrice(p)>0]};
+const SELS={hit:["Хіти продажу","Те, що найчастіше обирають наші клієнти",p=>p.hit],new:["Новинки","Свіжі надходження в асортименті",p=>p.nw],sale:["Розпродаж","Вигідні пропозиції — поки є в наявності",p=>oldPrice(p)>0],special:["Спеціальні пропозиції","Товари з особливими умовами",p=>!!p.ofr]};
 function pick(){const seen={},l=[];P.forEach(p=>{const k=p.c.join(SEP);if(p.img&&p.st&&!seen[k]){seen[k]=1;l.push(p)}});return l.slice(0,15)}
 const hsc=(id,list)=>`<div class="hsc"><button class="scb l" data-sc="${id}" data-d="-1" aria-label="Гортати ліворуч">${ico("l")}</button><div class="hrow" id="${id}">${list.map(card).join("")}</div><button class="scb r" data-sc="${id}" data-d="1" aria-label="Гортати праворуч">${ico("r")}</button></div>`;
 function viewHome(){
  document.title="Trend Electro — електротовари та LED-освітлення";
  const tops=kids(ROOT),s=shop(),perks=(s.perks.filter(x=>x&&x.t).length?s.perks.filter(x=>x&&x.t).map((x,i)=>[PERKS[i%4][0],x.t,x.d||""]):PERKS);
- const TN={new:"Новинки",sale:"Розпродаж",hit:"Хіти продажу"},tsets=["new","sale","hit"].map(k=>({k,l:P.filter(SELS[k][2])})).filter(x=>x.l.length);
- const sets=tsets.length?`<section class="sec tabsec"><div class="htabs" role="tablist">${tsets.map((x,i)=>`<button type="button" role="tab" class="htab${i?"":" on"}" data-ht="${x.k}">${TN[x.k]}</button>`).join("")}</div>${tsets.map((x,i)=>`<div class="hpane" data-pane="${x.k}"${i?" hidden":""}>${hsc("h"+x.k,x.l.slice(0,15))}${x.l.length>5?`<div class="allrow"><a href="#/sel/${x.k}">Усі ${x.l.length} →</a></div>`:""}</div>`).join("")}</section>`:"";
+ const TN={new:"Новинки",sale:"Розпродаж",special:"Спец. пропозиції"},tsets=["new","sale","special"].map(k=>({k,l:P.filter(SELS[k][2])})).filter(x=>x.l.length),hits=P.filter(SELS.hit[2]);
+ const hitSec=hits.length?`<section class="sec tabsec"><div class="sech"><div><h2>Хіти продажу</h2></div>${hits.length>5?`<a href="#/sel/hit">Усі ${hits.length} →</a>`:""}</div>${hsc("hhit",hits.slice(0,15))}</section>`:"";
+ const sets=(hitSec||tsets.length)?hitSec+(tsets.length?`<section class="sec tabsec"><div class="htabs" role="tablist">${tsets.map((x,i)=>`<button type="button" role="tab" class="htab${i?"":" on"}" data-ht="${x.k}">${TN[x.k]}</button>`).join("")}</div>${tsets.map((x,i)=>`<div class="hpane" data-pane="${x.k}"${i?" hidden":""}>${hsc("h"+x.k,x.l.slice(0,15))}${x.l.length>5?`<div class="allrow"><a href="#/sel/${x.k}">Усі ${x.l.length} →</a></div>`:""}</div>`).join("")}</section>`:""):"";
  const pop=sets?"":(P.length?`<section class="sec"><div class="sech"><div><h2>Популярне в каталозі</h2><p>По одному товару з кожного розділу — для натхнення</p></div><a href="#/c/">Весь каталог →</a></div>${hsc("hpop",pick())}</section>`:"");
  const msg=messengers();
  $("view").innerHTML=`<section class="slider" id="slider" hidden></section>
 <section class="hero" id="home"><div><span class="eyebrow">Trend Electro · ${plural(P.length,"товар","товари","товарів")} у каталозі</span><h1>Світло й електрика <em>для дому та бізнесу</em></h1><p>${esc(s.tagline||"Світильники, LED-лампи, розетки, кабель, автоматика та все для монтажу. Допоможемо підібрати й швидко відправимо по Україні.")}</p><div class="cta"><a class="btn" href="#/c/">Перейти до каталогу ${ico("r")}</a><a class="btn ghost" href="#/page/coop">Оптовим клієнтам</a></div></div>
 <div class="hcats">${tops.slice(0,4).map(k=>`<a href="${href(k.path)}"><b>${esc(k.name)}</b><small>${plural(k.count,"товар","товари","товарів")}</small></a>`).join("")}</div></section>
-${statsHtml()}<section class="perks">${perks.map(x=>`<div>${ico(x[0])}<span><b>${esc(x[1])}</b>${esc(x[2])}</span></div>`).join("")}</section>
-${calcCta()}<section class="promos" id="promos"></section>
+${sets}${statsHtml()}<section class="perks">${perks.map(x=>`<div>${ico(x[0])}<span><b>${esc(x[1])}</b>${esc(x[2])}</span></div>`).join("")}</section>
+<section class="promos" id="promos"></section>
 <section class="sec"><div class="sech"><div><h2>Каталог</h2></div><a href="#/c/">Усі товари →</a></div><div class="ctiles">${tops.map(tile).join("")||'<div class="empty">Каталог порожній.</div>'}</div></section>
-${sets}${pop}${rvHtml()}
+${pop}${rvHtml()}
 ${promoForm()}<section class="sec" id="hguides" hidden><div class="sech"><div><h2>Поради та статті</h2><p>Як вибрати лампу, кабель, розетки й захист</p></div><a href="#/guide/">Усі статті →</a></div><div class="gcards"></div></section>
 <section class="band"><div><h2>Електрикам, монтажникам і дизайнерам</h2><p>Оптові ціни, підбір під об’єкт і консультація з технічних питань. Напишіть — підготуємо пропозицію.</p></div><div class="cta" style="margin:0"><a class="btn" href="#/page/coop">Умови співпраці</a>${msg[0]?`<a class="btn ghost" href="${esc(msg[0][1])}" target="_blank" rel="noopener">${esc(msg[0][0])}</a>`:s.phone?`<a class="btn ghost" href="${esc(tel(s.phone))}">${esc(s.phone)}</a>`:""}</div></section>`;
  drawSlider();drawPromos();runCounters();
@@ -289,7 +291,7 @@ async function viewProduct(id){
 <div class="pgrid"><div><div class="pimg" id="pmain">${img(p.img,900,900,p.n)}</div><div class="thumbs" id="pthumbs"></div></div><div class="pinfo"><h1>${esc(p.n)}</h1>
 <div class="meta"><span>Артикул: <b>${esc(p.id)}</b></span>${p.b?`<span>Бренд: <a href="#/c/" data-brand="${esc(p.b)}">${esc(p.b)}</a></span>`:""}</div>
 <div class="avail${p.st?"":" no"}">${p.st?ico("check")+"Є в наявності":"Немає в наявності"}</div>
-<div class="bigprice${disc>0?" sale":""}">${money(pc)}${pi.base>pc?`<s>${money(pi.base)}</s>`:""}${disc>0?`<span class="bds2">${saleBadges(pi)}</span>`:""}</div>
+<div class="bigprice${disc>0?" sale":""}">${money(pc)}${pi.base>pc?`<s>${money(pi.base)}</s>`:""}${disc>0?`<span class="bds2">${saleBadges(pi)}</span>`:""}</div>${p.ofr?`<div class="spbox"><span class="bd p">Спеціальна пропозиція</span><div>${esc(p.ofr)}</div></div>`:""}
 <div class="buyrow"><div class="qtybox"><button data-q="-1" aria-label="Менше">−</button><input id="pq" type="number" min="1" max="999" value="1" inputmode="numeric" aria-label="Кількість"><button data-q="1" aria-label="Більше">+</button></div><button class="buybtn" id="buy" data-id="${esc(p.id)}"${p.st?"":" disabled"}>${p.st?ico("cart")+"Купити":"Немає в наявності"}</button><button class="favbtn${fav[p.id]?" on":""}" data-f="${esc(p.id)}" aria-label="Обране">${ico("heart")}</button></div><p class="ordoff">${esc(ordMsg())}</p>
 <div class="ptrust"><a href="#/page/delivery">${ico("truck")}<span><b>Доставка по Україні</b>Нова пошта, Укрпошта</span></a><a href="#/page/delivery">${ico("wallet")}<span><b>Оплата при отриманні</b>або карткою</span></a><a href="#/page/exchange">${ico("swap")}<span><b>Обмін та повернення</b>за законом, без зайвих питань</span></a></div>
 <div class="box" style="margin:14px 0 0"><h3>Основні характеристики</h3><div id="pkey"><div class="sku">Завантаження…</div></div></div></div></div>
@@ -420,7 +422,7 @@ function drawFooter(){
  if(s.address)c.push(`<span style="display:block;padding:3px 0">${esc(s.address)}</span>`);
  $("foot").innerHTML=`<div><img src="logo2.webp" alt="Trend Electro — Professional Electrical Solutions" width="180" height="91" loading="lazy">${esc(s.tagline||"Електротовари, LED-освітлення та електрофурнітура для дому, офісу й об’єктів.")}${m.length?`<div class="fmsg">${m.map(x=>`<a href="${esc(x[1])}" target="_blank" rel="noopener">${esc(x[0])}</a>`).join("")}</div>`:""}</div>
 <div><b>Каталог</b>${tops.map(k=>`<a href="${href(k.path)}">${esc(k.name)}</a>`).join("")}</div>
-<div><b>Покупцям</b><a href="#/page/delivery">Оплата і доставка</a><a href="#/page/exchange">Обмін та повернення</a><a href="#/page/coop">Співпраця та опт</a><a href="#/guide/">Поради та статті</a><a href="#/calc">Калькулятор комплекту</a><a href="#" data-install="1">Встановити додаток</a><a href="#/page/about">Про нас</a><a href="#/page/contacts">Контакти</a></div>
+<div><b>Покупцям</b><a href="#/page/delivery">Оплата і доставка</a><a href="#/page/exchange">Обмін та повернення</a><a href="#/page/coop">Співпраця та опт</a><a href="#/guide/">Поради та статті</a><a href="#" data-install="1">Встановити додаток</a><a href="#/page/about">Про нас</a><a href="#/page/contacts">Контакти</a></div>
 <div><b>${c.length?"Зв’язатися з нами":"Допомога"}</b>${c.join("")||`<a href="#/page/contacts">Контакти та підтримка</a>`}</div>`;
  $("fbot").textContent="© "+new Date().getFullYear()+" Trend Electro. Ціни на сайті вказані в гривнях з ПДВ.";
 }
@@ -552,24 +554,6 @@ document.addEventListener("DOMContentLoaded",boot);
   const b=$("subBtn");b.disabled=true;const r=sb?await sb.from("leads").insert({contact:c.slice(0,200),source:"promo"}):{error:{message:"no"}};b.disabled=false;
   if(r.error){m.textContent="Не вдалося зберегти. Спробуйте пізніше або напишіть нам.";return}
   SV("te_sub",{c:1});const e=$("subs");if(e)e.outerHTML=promoForm();toast("Промокод "+S.promo_code+" збережено")}
- /* --- калькулятор комплекту --- */
- window.calcCta=()=>`<section class="calccta"><div><b>Калькулятор комплекту</b><span>Вкажіть площу кімнати — підкажемо, що купити для освітлення й електрики</span></div><a class="btn" href="#/calc">Розрахувати</a></section>`;
- const ROOMS={"Спальня":150,"Вітальня":150,"Дитяча":300,"Кухня":250,"Ванна":200,"Коридор":150,"Кабінет / робоча зона":400};
- window.viewCalc=()=>{document.title="Калькулятор комплекту для електрики — Trend Electro";
-  $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a><span>›</span>Калькулятор комплекту</nav><h1 class="ptitle">Калькулятор комплекту</h1><p class="cdesc">Орієнтовний розрахунок освітлення й матеріалів для кімнати.</p><div class="box calc"><div class="rw2"><div><label for="cRoom">Тип кімнати</label><select id="cRoom">${Object.keys(ROOMS).map(k=>`<option>${k}</option>`).join("")}</select></div><div><label for="cArea">Площа, м²</label><input id="cArea" type="number" min="1" max="500" value="15" inputmode="decimal"></div></div></div><div id="cOut"></div>`;calcDraw()};
- function calcDraw(){const a=Math.max(1,Math.min(500,+($("cArea")||{}).value||0)),room=$("cRoom").value,lm=a*ROOMS[room],lamps=Math.ceil(lm/800),panels=Math.ceil(lm/1600);
-  const soc=Math.max(2,Math.round(a/(room==="Кухня"?2.2:3.5))),sw=room==="Коридор"||a>25?2:1,cab15=Math.ceil(a*2*1.15),cab25=Math.ceil((soc*4+a*0.6)*1.15),box=soc+sw;
-  const row=(t,d,q)=>`<div class="crow"><div><b>${t}</b><span>${d}</span></div>${q?`<button class="btn" type="button" data-gq="${esc(q)}">Дивитися в каталозі</button>`:""}</div>`;
-  $("cOut").innerHTML=`<div class="box calc"><h2>Що потрібно</h2>
-  ${row("Освітлення: ≈ "+Math.round(lm)+" лм","≈ "+lamps+" LED-ламп по 800 лм (8–10 Вт) або ≈ "+panels+" світильників-панелей по 1600 лм (≈ 18–20 Вт)","led лампа")}
-  ${row("Розетки: "+soc+" шт.","Орієнтовно для "+room.toLowerCase()+" "+a+" м²","розетка")}
-  ${row("Вимикачі: "+sw+" шт.","Для керування світлом","вимикач")}
-  ${row("Підрозетники / коробки: "+box+" шт.","Під розетки й вимикачі","підрозетник")}
-  ${row("Кабель 3×1,5 мм² для освітлення: ≈ "+cab15+" м","З запасом 15%. Автомат групи освітлення — 10 А","кабель 3х1,5")}
-  ${row("Кабель 3×2,5 мм² для розеток: ≈ "+cab25+" м","З запасом 15%. Автомат групи розеток — 16 А","кабель 3х2,5")}
-  ${row("Автомати захисту","10 А на освітлення, 16 А на розетки, УЗО 30 мА для вологих приміщень","автомат")}
-  ${row("Гофра / кабель-канал","Для захисту кабелю в штробі або відкритої прокладки","гофра")}
-  <p class="mut">Це орієнтовний розрахунок для типової кімнати. Точний склад залежить від проєкту й навантаження, тому перед монтажем проконсультуйтеся з електриком.</p></div>`}
  /* --- підгонка тексту плиток: максимум 2 рядки, без переносів --- */
  function fit(root){(root||D).querySelectorAll(".ctile b,.stile b,.hcats b").forEach(el=>{el.style.fontSize="";const cs=getComputedStyle(el);let fs=parseFloat(cs.fontSize);const lh=parseFloat(cs.lineHeight)||fs*1.25,ratio=lh/fs;let g=0;
    while(g++<30&&fs>9&&(el.scrollHeight>fs*ratio*2+2||el.scrollWidth>el.clientWidth+1)){fs-=.5;el.style.fontSize=fs+"px";el.style.lineHeight=ratio}})}
@@ -586,10 +570,8 @@ document.addEventListener("DOMContentLoaded",boot);
   if(x=t.closest("[data-install]")){e.preventDefault();if(dip){dip.prompt();dip=null}else toast("На iPhone: «Поділитися» → «На початковий екран». На Android: меню ⋮ → «Встановити додаток».");return}
   if(x=t.closest("[data-copy]")){const u=x.dataset.copy;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast("Посилання скопійовано"),()=>toast(u));return}
   if(x=t.closest("[data-nshare]")){navigator.share({title:x.dataset.t,url:x.dataset.nshare}).catch(()=>{});return}
-  if(x=t.closest("[data-gq]")){$("q").value=x.dataset.gq;goSearch();return}
   if(x=t.closest("[data-usepromo]")){openCart();applyPromo(x.dataset.usepromo);return}
  });
  D.addEventListener("submit",e=>{if(e.target.id==="subForm"){e.preventDefault();subSend()}});
- D.addEventListener("input",e=>{if(e.target.id==="cArea"||e.target.id==="cRoom")calcDraw()});
  addEventListener("load",()=>{if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register(BASE+"sw.js").catch(()=>{})});
 })();

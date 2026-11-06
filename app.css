@@ -241,3 +241,7 @@ footer b{color:#fff;display:block;margin-bottom:10px;font-size:15px}footer a{dis
 .price.sale,.bigprice.sale{color:#d6341c}.price s{display:block;margin:2px 0 0;font-size:13px}
 .bigprice s{font-size:18px;font-weight:500;color:var(--mute);margin-left:10px}.bds2{display:inline-flex;gap:8px;margin-left:12px;vertical-align:middle;font-size:0}.bds2 .bd{margin:0}
 @media (max-width:699px){.bd{font-size:11px;padding:4px 8px}}
+.bd.p{background:#8a1fe0}
+.spbox{margin:10px 0 0;padding:12px 14px;border-radius:12px;background:var(--card);border:1px dashed #8a1fe0;display:grid;gap:8px;font-size:14px;line-height:1.45}.spbox .bd{justify-self:start;margin:0}
+.htabs{gap:18px}.htab{font-size:clamp(15px,4.1vw,24px)}@media (min-width:700px){.htabs{gap:30px}}
+.bds{max-width:calc(100% - 52px)}.bds .bd{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
