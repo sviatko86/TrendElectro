@@ -132,6 +132,7 @@ function route(){
  else if(h.indexOf("#/sel/")===0)viewSel(h.slice(6));
  else if(h.indexOf("#/guide")===0)viewGuide(decodeURIComponent(h.slice(8)).split("?")[0]);
  else if(h.indexOf("#/page/")===0)viewPage(h.slice(7));
+ else if(h==="#/birthday")viewBday();
  else viewHome();
  document.querySelectorAll(".bnav button").forEach(b=>b.classList.toggle("on",(b.dataset.nav==="home"&&(h==="#/"||h===""))||(b.dataset.nav==="fav"&&h==="#/fav")||(b.dataset.nav==="cat"&&h.indexOf("#/c")===0)));
  window.scrollTo(0,SCR[h]||0);
@@ -139,6 +140,24 @@ function route(){
 const SELS={hit:["Хіти продажу","Те, що найчастіше обирають наші клієнти",p=>p.hit],new:["Новинки","Свіжі надходження в асортименті",p=>p.nw],sale:["Розпродаж","Вигідні пропозиції — поки є в наявності",p=>oldPrice(p)>0],special:["Спеціальні пропозиції","Товари з особливими умовами",p=>!!p.ofr]};
 function pick(){const seen={},l=[];P.forEach(p=>{const k=p.c.join(SEP);if(p.img&&p.st&&!seen[k]){seen[k]=1;l.push(p)}});return l.slice(0,15)}
 const hsc=(id,list)=>`<div class="hsc"><button class="scb l" data-sc="${id}" data-d="-1" aria-label="Гортати ліворуч">${ico("l")}</button><div class="hrow" id="${id}">${list.map(card).join("")}</div><button class="scb r" data-sc="${id}" data-d="1" aria-label="Гортати праворуч">${ico("r")}</button></div>`;
+const bdOn=()=>!!(SHOP&&SHOP.bday_on&&(+SHOP.bday_percent||0)>0);
+function bdHome(){
+ if(!bdOn())return"";const bi=bdayInfo(),pct=Math.min(90,+SHOP.bday_percent||0);
+ if(bi){try{if(!sessionStorage.bdc){sessionStorage.bdc=1;setTimeout(confetti,700)}}catch(e){}const nm=(prof&&prof.full_name||"").split(" ")[0];return`<section class="bdhero"><div class="bdem">🎂</div><div><h2>${nm?esc(nm)+", з":"З"} днем народження!</h2><p>Вітаємо вас від усієї команди Trend Electro! Дарунок для вас: знижка −${bi.pct}% на все, що є на сайті. Діє до ${bi.end.toLocaleDateString("uk-UA",{timeZone:"UTC"})} включно, застосовується автоматично.</p></div></section>`}
+ return`<a class="bdhero bdlink" href="#/birthday"><div class="bdem">🎁</div><div><h2>Ваш день народження — наше свято</h2><p>Даруємо знижку −${pct}% на тиждень у честь вашого дня народження. Без реєстрації, за хвилину.</p></div><span class="bdgo">Отримати подарунок</span></a>`}
+function confetti(){if(matchMedia("(prefers-reduced-motion:reduce)").matches)return;const w=document.createElement("div");w.className="cfw";const c=["#0ABAB5","#ffd23f","#ff5d73","#7c5cff","#4cd964"];for(let i=0;i<46;i++){const e=document.createElement("i");e.style.cssText=`left:${Math.random()*100}%;background:${c[i%5]};animation-delay:${Math.random()*1.2}s;animation-duration:${2.4+Math.random()*1.8}s;transform:rotate(${Math.random()*360}deg)`;w.appendChild(e)}document.body.appendChild(w);setTimeout(()=>w.remove(),5200)}
+function bdResult(r,pct){
+ const el=$("bdres");if(!el)return;
+ if(r.state==="off"){el.innerHTML='<div class="msg">Акція зараз не діє. Зазирніть пізніше.</div>';return}
+ if(r.state==="later"){el.innerHTML=`<div class="bdcard"><h3>Дякуємо! 🎈</h3><p>Ми запам’ятали ваш день народження. Коли він настане, завітайте на цю сторінку — і ви отримаєте подарунок −${pct}% на 7 днів. Ми вас обов’язково привітаємо!</p></div>`;return}
+ const u=new Date(r.until+"T00:00:00Z").toLocaleDateString("uk-UA",{timeZone:"UTC"});
+ el.innerHTML=`<div class="bdcard"><h3>🎉 З днем народження!</h3><p>Ваш особистий подарунок: знижка <b>−${r.percent}%</b> на все замовлення. Діє до ${u} включно, один раз.</p><div class="bdcode">${esc(r.code)}</div><div class="bdbtns"><button class="go" data-bduse="${esc(r.code)}">Використати в кошику</button><button class="sec" data-bdcp="${esc(r.code)}">Скопіювати код</button></div><p class="sku">Збережіть код: він діє лише для вас.</p></div>`;confetti()}
+function viewBday(){
+ const on=bdOn(),pct=on?Math.min(90,+SHOP.bday_percent||0):0;
+ $("view").innerHTML=`<section class="bdpage"><div class="bdem big">🎂</div><h1>Ваш день народження — наше свято</h1><p class="lead">Ми щиро вітаємо кожного клієнта! У тиждень вашого дня народження (7 днів, включно з самим днем) даруємо ${on?`<b>знижку −${pct}%</b>`:"особливу знижку"} на все, що є на сайті.</p>
+ ${on?`<form id="bdForm" class="bdform"><input id="bdn" placeholder="Ваше ім’я" autocomplete="given-name"><input id="bdc" placeholder="Телефон або email" autocomplete="email" required><label class="bdl">Дата народження<input id="bdd" type="date" min="1900-01-01" max="${new Date().toISOString().slice(0,10)}" required></label><label class="ck"><input type="checkbox" id="bdk"> <span>Погоджуюсь на обробку моїх даних для привітання й подарунка</span></label><div class="msg" id="bdm"></div><button class="go" id="bdgo">Отримати подарунок</button></form><div id="bdres"></div>`:'<div class="empty">Акція зараз не діє. Зазирніть пізніше.</div>'}
+ <ul class="bdlist"><li>🎁 Подарунок один раз на рік для кожного</li><li>⏳ Діє 7 календарних днів поспіль</li><li>🔒 Дані використовуємо лише для привітання</li></ul></section>`;
+ window.scrollTo(0,0)}
 function viewHome(){
  document.title="Trend Electro — електротовари та LED-освітлення";
  const tops=kids(ROOT),s=shop(),perks=(s.perks.filter(x=>x&&x.t).length?s.perks.filter(x=>x&&x.t).map((x,i)=>[PERKS[i%4][0],x.t,x.d||""]):PERKS);
@@ -150,7 +169,7 @@ function viewHome(){
  $("view").innerHTML=`<section class="slider" id="slider" hidden></section>
 <section class="hero" id="home"><div><span class="eyebrow">Trend Electro · ${plural(P.length,"товар","товари","товарів")} у каталозі</span><h1>Світло й електрика <em>для дому та бізнесу</em></h1><p>${esc(s.tagline||"Світильники, LED-лампи, розетки, кабель, автоматика та все для монтажу. Допоможемо підібрати й швидко відправимо по Україні.")}</p><div class="cta"><a class="btn" href="#/c/">Перейти до каталогу ${ico("r")}</a><a class="btn ghost" href="#/page/coop">Оптовим клієнтам</a></div></div>
 <div class="hcats">${tops.slice(0,4).map(k=>`<a href="${href(k.path)}"><b>${esc(k.name)}</b><small>${plural(k.count,"товар","товари","товарів")}</small></a>`).join("")}</div></section>
-${sets}${statsHtml()}<section class="perks">${perks.map(x=>`<div>${ico(x[0])}<span><b>${esc(x[1])}</b>${esc(x[2])}</span></div>`).join("")}</section>
+${bdHome()}${sets}${statsHtml()}<section class="perks">${perks.map(x=>`<div>${ico(x[0])}<span><b>${esc(x[1])}</b>${esc(x[2])}</span></div>`).join("")}</section>
 <section class="promos" id="promos"></section>
 <section class="sec"><div class="sech"><div><h2>Каталог</h2></div><a href="#/c/">Усі товари →</a></div><div class="ctiles">${tops.map(tile).join("")||'<div class="empty">Каталог порожній.</div>'}</div></section>
 ${pop}${rvHtml()}
@@ -583,8 +602,15 @@ document.addEventListener("DOMContentLoaded",boot);
   if(x=t.closest("[data-install]")){e.preventDefault();if(dip){dip.prompt();dip=null}else toast("На iPhone: «Поділитися» → «На початковий екран». На Android: меню ⋮ → «Встановити додаток».");return}
   if(x=t.closest("[data-copy]")){const u=x.dataset.copy;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast("Посилання скопійовано"),()=>toast(u));return}
   if(x=t.closest("[data-nshare]")){navigator.share({title:x.dataset.t,url:x.dataset.nshare}).catch(()=>{});return}
+  if(x=t.closest("[data-bduse]")){openCart();applyPromo(x.dataset.bduse);return}
+  if(x=t.closest("[data-bdcp]")){const u=x.dataset.bdcp;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast("Код скопійовано"),()=>toast(u));return}
   if(x=t.closest("[data-usepromo]")){openCart();applyPromo(x.dataset.usepromo);return}
  });
- D.addEventListener("submit",e=>{if(e.target.id==="subForm"){e.preventDefault();subSend()}});
+ D.addEventListener("submit",e=>{if(e.target.id==="subForm"){e.preventDefault();subSend()}
+  if(e.target.id==="bdForm"){e.preventDefault();bdSend()}});
+ async function bdSend(){const m=$("bdm"),b=$("bdgo");m.className="msg";if(!$("bdk").checked){m.textContent="Потрібна згода на обробку даних.";return}if(!sb){m.textContent="Тимчасово недоступно.";return}
+  b.disabled=true;const r=await sb.rpc("claim_birthday_gift",{p_name:$("bdn").value.trim(),p_contact:$("bdc").value.trim(),p_birthday:$("bdd").value,p_consent:true});b.disabled=false;
+  if(r.error){m.textContent=/email|телефон/i.test(r.error.message)?"Перевірте телефон або email.":/дат/i.test(r.error.message)?"Перевірте дату народження.":"Не вдалося. Спробуйте пізніше.";return}
+  m.textContent="";bdResult(r.data,Math.min(90,+SHOP.bday_percent||0))}
  addEventListener("load",()=>{if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register(BASE+"sw.js").catch(()=>{})});
 })();
