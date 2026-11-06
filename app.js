@@ -140,6 +140,12 @@ function route(){
 const SELS={hit:["Хіти продажу","Те, що найчастіше обирають наші клієнти",p=>p.hit],new:["Новинки","Свіжі надходження в асортименті",p=>p.nw],sale:["Розпродаж","Вигідні пропозиції — поки є в наявності",p=>oldPrice(p)>0],special:["Спеціальні пропозиції","Товари з особливими умовами",p=>!!p.ofr]};
 function pick(){const seen={},l=[];P.forEach(p=>{const k=p.c.join(SEP);if(p.img&&p.st&&!seen[k]){seen[k]=1;l.push(p)}});return l.slice(0,15)}
 const hsc=(id,list)=>`<div class="hsc"><button class="scb l" data-sc="${id}" data-d="-1" aria-label="Гортати ліворуч">${ico("l")}</button><div class="hrow" id="${id}">${list.map(card).join("")}</div><button class="scb r" data-sc="${id}" data-d="1" aria-label="Гортати праворуч">${ico("r")}</button></div>`;
+const MON=["Січень","Лютий","Березень","Квітень","Травень","Червень","Липень","Серпень","Вересень","Жовтень","Листопад","Грудень"];
+function bdSel(id){const y0=new Date().getFullYear()-16;let d='<option value="">День</option>',m='<option value="">Місяць</option>',y='<option value="">Рік</option>';
+ for(let i=1;i<=31;i++)d+=`<option value="${i}">${i}</option>`;MON.forEach((n,i)=>m+=`<option value="${i+1}">${n}</option>`);for(let i=y0;i>=1930;i--)y+=`<option value="${i}">${i}</option>`;
+ return`<div class="bdsel" id="${id}"><select data-bd="d" aria-label="День" required>${d}</select><select data-bd="m" aria-label="Місяць" required>${m}</select><select data-bd="y" aria-label="Рік" required>${y}</select></div>`}
+function bdVal(id){const w=$(id);if(!w)return"";const g=k=>+w.querySelector(`[data-bd="${k}"]`).value;const d=g("d"),m=g("m"),y=g("y");if(!d||!m||!y)return"";const dt=new Date(Date.UTC(y,m-1,d));if(dt.getUTCMonth()!==m-1||dt.getUTCDate()!==d)return"";return y+"-"+String(m).padStart(2,"0")+"-"+String(d).padStart(2,"0")}
+function bdFix(w){const g=k=>+w.querySelector(`[data-bd="${k}"]`).value,m=g("m"),y=g("y")||2000,ds=w.querySelector('[data-bd="d"]');const n=m?new Date(Date.UTC(y,m,0)).getUTCDate():31;[...ds.options].forEach(o=>{if(o.value)o.hidden=o.disabled=+o.value>n});if(+ds.value>n)ds.value=String(n)}
 const bdOn=()=>!!(SHOP&&SHOP.bday_on&&(+SHOP.bday_percent||0)>0);
 function bdHome(){
  if(!bdOn())return"";const bi=bdayInfo(),pct=Math.min(90,+SHOP.bday_percent||0);
@@ -155,7 +161,7 @@ function bdResult(r,pct){
 function viewBday(){
  const on=bdOn(),pct=on?Math.min(90,+SHOP.bday_percent||0):0;
  $("view").innerHTML=`<section class="bdpage"><div class="bdem big">🎂</div><h1>Ваш день народження — наше свято</h1><p class="lead">Ми щиро вітаємо кожного клієнта! У тиждень вашого дня народження (7 днів, включно з самим днем) даруємо ${on?`<b>знижку −${pct}%</b>`:"особливу знижку"} на все, що є на сайті.</p>
- ${on?`<form id="bdForm" class="bdform"><input id="bdn" placeholder="Ваше ім’я" autocomplete="given-name"><input id="bdc" placeholder="Телефон або email" autocomplete="email" required><label class="bdl">Дата народження<input id="bdd" type="date" min="1900-01-01" max="${new Date().toISOString().slice(0,10)}" required></label><label class="ck"><input type="checkbox" id="bdk"> <span>Погоджуюсь на обробку моїх даних для привітання й подарунка</span></label><div class="msg" id="bdm"></div><button class="go" id="bdgo">Отримати подарунок</button></form><div id="bdres"></div>`:'<div class="empty">Акція зараз не діє. Зазирніть пізніше.</div>'}
+ ${on?`<form id="bdForm" class="bdform"><input id="bdn" placeholder="Ваше ім’я" autocomplete="given-name"><input id="bdc" placeholder="Телефон або email" autocomplete="email" required><div class="bdl">Дата народження${bdSel("bdd")}</div><label class="ck"><input type="checkbox" id="bdk"> <span>Погоджуюсь на обробку моїх даних для привітання й подарунка</span></label><div class="msg" id="bdm"></div><button class="go" id="bdgo">Отримати подарунок</button></form><div id="bdres"></div>`:'<div class="empty">Акція зараз не діє. Зазирніть пізніше.</div>'}
  <ul class="bdlist"><li>🎁 Подарунок один раз на рік для кожного</li><li>⏳ Діє 7 календарних днів поспіль</li><li>🔒 Дані використовуємо лише для привітання</li></ul></section>`;
  window.scrollTo(0,0)}
 function viewHome(){
@@ -400,7 +406,7 @@ function drawAcc(msg){
  const b=$("abody");
  if(!sb){b.innerHTML='<div class="empty">Кабінет тимчасово недоступний.</div>';return}
  if(!me){
-  b.innerHTML=`<p class="sku" style="font-size:14px;margin:12px 0">Увійдіть, щоб отримати дисконтну картку, бачити свої замовлення й персональні промокоди.</p><div class="tabs"><button data-t="in" class="${tab==="in"?"on":""}">Вхід</button><button data-t="up" class="${tab==="up"?"on":""}">Реєстрація</button></div><div class="df" style="border:0;padding:12px 0">${tab==="up"?'<input id="rn" placeholder="Ім’я та прізвище" autocomplete="name"><input id="rp" placeholder="Телефон" inputmode="tel" autocomplete="tel"><label class="bdl">Дата народження (необов’язково)<input id="rb" type="date" max="'+new Date().toISOString().slice(0,10)+'" min="1900-01-01"></label><div class="sku">У тиждень дня народження — особлива знижка. Дату можна вказати лише один раз.</div>':""}<input id="re" type="email" placeholder="Email" autocomplete="email"><input id="rw" type="password" placeholder="Пароль (мінімум 6 символів)" autocomplete="${tab==="up"?"new-password":"current-password"}"><div class="msg" id="rm">${esc(msg||"")}</div><button class="go" id="rgo">${tab==="up"?"Зареєструватися":"Увійти"}</button></div>`;return}
+  b.innerHTML=`<p class="sku" style="font-size:14px;margin:12px 0">Увійдіть, щоб отримати дисконтну картку, бачити свої замовлення й персональні промокоди.</p><div class="tabs"><button data-t="in" class="${tab==="in"?"on":""}">Вхід</button><button data-t="up" class="${tab==="up"?"on":""}">Реєстрація</button></div><div class="df" style="border:0;padding:12px 0">${tab==="up"?'<input id="rn" placeholder="Ім’я та прізвище" autocomplete="name"><input id="rp" placeholder="Телефон" inputmode="tel" autocomplete="tel"><div class="bdl">Дата народження (обов’язково)'+bdSel("rb")+'</div><div class="sku">У тиждень дня народження — особлива знижка. Дату можна вказати лише один раз.</div>':""}<input id="re" type="email" placeholder="Email" autocomplete="email"><input id="rw" type="password" placeholder="Пароль (мінімум 6 символів)" autocomplete="${tab==="up"?"new-password":"current-password"}"><div class="msg" id="rm">${esc(msg||"")}</div><button class="go" id="rgo">${tab==="up"?"Зареєструватися":"Увійти"}</button></div>`;return}
  b.innerHTML=`<div class="bigcard" style="margin-top:12px"><small>Дисконтна картка</small><b>${esc(prof?prof.card_number||"—":"…")}</b><small>Ваша знижка: ${prof?(+prof.discount_percent||0):0}%</small></div><h3 style="margin:6px 0">Мої промокоди</h3><div id="pcodes"><div class="sku">Завантаження…</div></div><div class="df" style="border:0;padding:12px 0"><input id="rn" placeholder="Ім’я та прізвище" value="${esc(prof&&prof.full_name||"")}"><input id="rp" placeholder="Телефон" inputmode="tel" value="${esc(prof&&prof.phone||"")}">${bdayBlock()}<div class="msg" id="rm"></div><button class="go" id="rsave">Зберегти дані</button></div><div class="sku">${esc(me.email||"")}</div><h3 style="margin:14px 0 6px">Мої замовлення</h3><div id="ords"><div class="empty">Завантаження…</div></div><button class="more" id="rout">Вийти</button>`;
  sb.from("promo_codes").select("code,percent,title,expires_at,uses_left").or("client_id.eq."+me.id+",show_all.eq.true").order("created_at",{ascending:false}).then(r=>{
   const l=r.data||[],e=$("pcodes");if(!e)return;
@@ -413,7 +419,7 @@ function bdayBlock(){
  if(!prof)return"";const bi=bdayInfo();
  const gift=bi?`<div class="bdgift">🎂 З днем народження! Ваша знижка −${bi.pct}% діє до ${bi.end.toLocaleDateString("uk-UA",{timeZone:"UTC"})} включно.</div>`:"";
  if(prof.birthday){return gift+`<div class="sku">Дата народження: ${esc(new Date(prof.birthday+"T00:00:00Z").toLocaleDateString("uk-UA",{timeZone:"UTC"}))}</div>`}
- return gift+`<label class="bdl">Дата народження<input id="rb" type="date" min="1900-01-01" max="${new Date().toISOString().slice(0,10)}"></label><button type="button" class="go" id="rbsave">Зберегти дату народження</button><div class="sku">${SHOP&&SHOP.bday_on?`У тиждень дня народження — знижка ${+SHOP.bday_percent||0}%. `:""}Дату можна вказати лише один раз.</div>`}
+ return gift+`<div class="bdl">Дата народження${bdSel("rb")}</div><button type="button" class="go" id="rbsave">Зберегти дату народження</button><div class="sku">${SHOP&&SHOP.bday_on?`У тиждень дня народження — знижка ${+SHOP.bday_percent||0}%. `:""}Дату можна вказати лише один раз.</div>`}
 async function accClick(t){
  const m=(x,ok)=>{const el=$("rm");if(el){el.className="msg"+(ok?" ok":"");el.textContent=x}};
  if(t.dataset.t){tab=t.dataset.t;drawAcc();return}
@@ -423,7 +429,8 @@ async function accClick(t){
   if(!em||pw.length<6){m("Введіть email і пароль (мінімум 6 символів).");return}
   t.disabled=true;
   if(tab==="up"){
-   const r=await sb.auth.signUp({email:em,password:pw,options:{data:{full_name:$("rn").value.trim(),phone:$("rp").value.trim(),birthday:($("rb")&&$("rb").value)||""}}});t.disabled=false;
+   if(!bdVal("rb")){t.disabled=false;m("Оберіть дату народження: день, місяць і рік.");return}
+   const r=await sb.auth.signUp({email:em,password:pw,options:{data:{full_name:$("rn").value.trim(),phone:$("rp").value.trim(),birthday:bdVal("rb")}}});t.disabled=false;
    if(r.error){m(r.error.message.indexOf("already")>-1?"Цей email уже зареєстровано. Увійдіть.":"Не вдалося зареєструватися: "+r.error.message);return}
    if(!r.data.session)m("Перевірте пошту й підтвердіть email, потім увійдіть.",true);
   }else{
@@ -431,7 +438,7 @@ async function accClick(t){
    if(r.error){m(r.error.message==="Invalid login credentials"?"Невірний email або пароль.":"Помилка: "+r.error.message);return}
   }
  }
- if(t.id==="rbsave"){const v=$("rb").value;if(!v){m("Оберіть дату.");return}t.disabled=true;const r=await sb.rpc("set_birthday",{p_date:v});t.disabled=false;if(r.error){m("Не вдалося зберегти дату.");return}m("Дату збережено ✓",true);setTimeout(loadProf,0);return}
+ if(t.id==="rbsave"){const v=bdVal("rb");if(!v){m("Оберіть день, місяць і рік народження.");return}t.disabled=true;const r=await sb.rpc("set_birthday",{p_date:v});t.disabled=false;if(r.error){m("Не вдалося зберегти дату.");return}m("Дату збережено ✓",true);setTimeout(loadProf,0);return}
  if(t.id==="rsave"){const u=await sb.from("profiles").update({full_name:$("rn").value.trim(),phone:$("rp").value.trim()}).eq("id",me.id);if(u.error){m("Не вдалося зберегти.");return}m("Збережено ✓",true);setTimeout(loadProf,0)}
  if(t.id==="rout"){await sb.auth.signOut();me=null;prof=null;promoPct=0;promoCode="";$("accL").textContent="Увійти";drawCart();drawAcc()}
 }
@@ -606,10 +613,11 @@ document.addEventListener("DOMContentLoaded",boot);
   if(x=t.closest("[data-bdcp]")){const u=x.dataset.bdcp;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast("Код скопійовано"),()=>toast(u));return}
   if(x=t.closest("[data-usepromo]")){openCart();applyPromo(x.dataset.usepromo);return}
  });
+ D.addEventListener("change",e=>{const w=e.target.closest&&e.target.closest(".bdsel");if(w)bdFix(w)});
  D.addEventListener("submit",e=>{if(e.target.id==="subForm"){e.preventDefault();subSend()}
   if(e.target.id==="bdForm"){e.preventDefault();bdSend()}});
- async function bdSend(){const m=$("bdm"),b=$("bdgo");m.className="msg";if(!$("bdk").checked){m.textContent="Потрібна згода на обробку даних.";return}if(!sb){m.textContent="Тимчасово недоступно.";return}
-  b.disabled=true;const r=await sb.rpc("claim_birthday_gift",{p_name:$("bdn").value.trim(),p_contact:$("bdc").value.trim(),p_birthday:$("bdd").value,p_consent:true});b.disabled=false;
+ async function bdSend(){const m=$("bdm"),b=$("bdgo");m.className="msg";if(!bdVal("bdd")){m.textContent="Оберіть день, місяць і рік народження.";return}if(!$("bdk").checked){m.textContent="Потрібна згода на обробку даних.";return}if(!sb){m.textContent="Тимчасово недоступно.";return}
+  b.disabled=true;const r=await sb.rpc("claim_birthday_gift",{p_name:$("bdn").value.trim(),p_contact:$("bdc").value.trim(),p_birthday:bdVal("bdd"),p_consent:true});b.disabled=false;
   if(r.error){m.textContent=/email|телефон/i.test(r.error.message)?"Перевірте телефон або email.":/дат/i.test(r.error.message)?"Перевірте дату народження.":"Не вдалося. Спробуйте пізніше.";return}
   m.textContent="";bdResult(r.data,Math.min(90,+SHOP.bday_percent||0))}
  addEventListener("load",()=>{if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register(BASE+"sw.js").catch(()=>{})});

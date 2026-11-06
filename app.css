@@ -256,3 +256,4 @@ footer b{color:#fff;display:block;margin-bottom:10px;font-size:15px}footer a{dis
 .bdcode{font-size:28px;font-weight:800;letter-spacing:3px;margin:10px 0;color:var(--accd,#078a86)}.bdbtns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
 .cfw{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:90}.cfw i{position:absolute;top:-14px;width:8px;height:14px;border-radius:2px;animation:cff linear forwards}
 @keyframes cff{to{top:105%;margin-left:40px;opacity:.9}}
+.bdsel{display:grid;grid-template-columns:.8fr 1.5fr 1fr;gap:8px}.bdsel select{width:100%;min-height:46px;font-size:16px;border-radius:12px;padding:0 8px}
