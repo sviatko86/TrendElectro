@@ -245,3 +245,5 @@ footer b{color:#fff;display:block;margin-bottom:10px;font-size:15px}footer a{dis
 .spbox{margin:10px 0 0;padding:12px 14px;border-radius:12px;background:var(--card);border:1px dashed #8a1fe0;display:grid;gap:8px;font-size:14px;line-height:1.45}.spbox .bd{justify-self:start;margin:0}
 .htabs{gap:18px}.htab{font-size:clamp(15px,4.1vw,24px)}@media (min-width:700px){.htabs{gap:30px}}
 .bds{max-width:calc(100% - 52px)}.bds .bd{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bdl{display:grid;gap:4px;font-size:13px;color:var(--mute)}.bdl input{width:100%}
+.bdgift{background:rgba(10,186,181,.14);border:1px solid rgba(10,186,181,.5);border-radius:12px;padding:10px 12px;font-weight:600;font-size:14px}
