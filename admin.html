@@ -18,6 +18,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 input,select,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
 button{cursor:pointer;border:0;border-radius:8px;padding:10px 14px;background:var(--acc);color:#1d2023;font-weight:700}button:disabled{opacity:.5}
 button.sec{background:var(--card);color:var(--ink);border:1px solid var(--line)}a.btn2{display:inline-block;padding:9px 12px;border-radius:8px;background:var(--acc);color:#1d2023;font-weight:700;text-decoration:none;font-size:14px}button.del{background:transparent;color:var(--bad);border:1px solid var(--bad)}
+.subt{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px}.subt button{background:var(--card);color:var(--ink);border:1px solid var(--line);white-space:nowrap;padding:6px 12px;font-size:13px;border-radius:999px}.subt button.on{background:#0ABAB5;color:#fff;border-color:#0ABAB5}
 .tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;position:sticky;top:var(--hh,52px);z-index:4;background:var(--bg,#f4f6f8);padding:8px 0;scrollbar-width:thin}.tabs button{background:var(--card);color:var(--ink);border:1px solid var(--line);white-space:nowrap}.tabs button.on{background:var(--acc);color:#1d2023;border-color:var(--acc)}
 .box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;display:grid;gap:8px}
 .rw{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
@@ -25,6 +26,15 @@ button.sec{background:var(--card);color:var(--ink);border:1px solid var(--line)}
 .mut{color:var(--mute);font-size:13px}.msg{font-size:14px}.msg.bad{color:var(--bad)}.msg.ok{color:var(--ok)}
 label{font-size:13px;color:var(--mute);display:block;margin-bottom:3px}h2{margin:6px 0 4px;font-size:18px}
 .nd{background:var(--card);border:1px solid var(--line);border-radius:8px;margin-bottom:6px;padding:0 10px}.nd summary{padding:10px 0;cursor:pointer}.ndb{display:grid;gap:6px;padding:0 0 10px 8px;border-left:3px solid var(--acc);margin-left:2px}
+.psrch{display:grid;grid-template-columns:1fr auto auto;gap:8px}@media (max-width:600px){.psrch{grid-template-columns:1fr 1fr}.psrch input{grid-column:1/-1}}
+.pfl{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}.chip2{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-weight:600;font-size:13px;white-space:nowrap}.chip2.on{background:var(--acc);border-color:var(--acc);color:#1d2023}
+.ck{display:flex;gap:8px;align-items:center;margin:0;color:var(--ink);font-size:14px}.ck input{width:auto}.selall{margin:4px 2px 8px}
+.prow{display:grid;grid-template-columns:auto 48px 1fr auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:6px}.prow input{width:auto}.prow img{width:48px;height:48px;object-fit:contain;background:#fff;border-radius:6px}
+.pinf{min-width:0;display:grid;gap:2px;cursor:pointer}.pinf b{font-size:14px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}.pinf .mut{font-size:12px}.pinf s{opacity:.7}
+.tgs{display:flex;flex-wrap:wrap;gap:4px}.tg{font-style:normal;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;color:#fff;background:#888}.tg.h{background:#15191c}.tg.n{background:#2f6fd6}.tg.p{background:#8a1fe0}.tg.s{background:#e23b1c}.tg.g{background:#9aa0a6}
+.pact{position:sticky;bottom:0;z-index:5;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:10px;margin-top:10px;display:grid;gap:8px;box-shadow:0 -6px 20px rgba(0,0,0,.08)}.pact[hidden]{display:none}.pact.on{border-color:var(--acc)}.pact .psrch{grid-template-columns:1fr auto}.pager{margin:6px 0}
+@media (max-width:600px){.prow{grid-template-columns:auto 44px 1fr 14px}.prow>button{display:none}.prow:after{content:"›";font-size:22px;color:var(--mute)}.prow img{width:44px;height:44px}}
+.pact:not(.on) .psrch,.pact:not(.on) #pax{display:none}.pact:not(.on){box-shadow:none;padding:8px 10px}
 .tbl{width:100%;border-collapse:collapse}.tbl td,.tbl th{padding:8px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}
 </style>
 </head>
@@ -40,7 +50,7 @@ const SEP=" › ",ST={new:"Нове",confirmed:"Підтверджено",shippe
 const AL="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 const genCode=(n=8)=>{const a=new Uint32Array(n);crypto.getRandomValues(a);let s="";a.forEach(x=>s+=AL[x%AL.length]);return s};
 const sb=supabase.createClient(TE.url,TE.key);
-let cur="dash",OL=[],OQ={q:"",st:"",days:0},TREE=[],CI={},CM={},BNS=[],clients=[],PQ={q:"",cat:"",hid:false,noimg:false,page:0};
+let cur="dash",OL=[],OQ={q:"",st:"",days:0},TREE=[],CI={},CM={},BNS=[],clients=[],PQ={q:"",cat:"",f:"",page:0,total:0};
 async function init(){
  const s=await sb.auth.getSession();if(!s.data.session)return login();
  const p=await sb.from("profiles").select("is_admin").eq("id",s.data.session.user.id).maybeSingle();
@@ -53,14 +63,19 @@ function login(msg){
 }
 async function logout(){await sb.auth.signOut();$("out").hidden=true;login()}
 $("out").onclick=logout;
-const T={dash:"Огляд",orders:"Замовлення",products:"Товари",cats:"Категорії",import:"Імпорт",price:"Ціни",promos:"Акції",codes:"Промокоди",clients:"Клієнти",leads:"Підписники",banners:"Банери",pages:"Сторінки",shop:"Налаштування",backup:"Резервна копія"};
+const T={dash:"Огляд",orders:"Замовлення",products:"Товари",cats:"Категорії",price:"Ціни",clients:"Клієнти",mkt:"Маркетинг",shop:"Налаштування"};
+const GR={mkt:{promos:"Акції",codes:"Промокоди",banners:"Банери",leads:"Підписники"},shop:{shop:"Магазин",pages:"Сторінки",import:"Імпорт",backup:"Резервна копія"}};
+const SUB={mkt:"promos",shop:"shop"},LEAFG={};Object.keys(GR).forEach(g=>Object.keys(GR[g]).forEach(k=>LEAFG[k]=g));
+const setCur=k=>{if(LEAFG[k]&&k!=="shop"){SUB[LEAFG[k]]=k;cur=LEAFG[k]}else cur=k};
 function shell(){
  document.documentElement.style.setProperty("--hh",document.querySelector("header").offsetHeight+"px");
  const tb=document.querySelector(".tabs");
  if(tb){tb.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.tab===cur));const a=tb.querySelector(".on");if(a)a.scrollIntoView({block:"nearest",inline:"nearest"});$("pane").innerHTML="";window.scrollTo(0,0)}
- else{ $("app").innerHTML='<div class="tabs">'+Object.keys(T).map(k=>`<button data-tab="${k}" class="${k===cur?"on":""}">${T[k]}</button>`).join("")+'</div><div id="pane"></div>';
+ else{ $("app").innerHTML='<div class="tabs">'+Object.keys(T).map(k=>`<button data-tab="${k}" class="${k===cur?"on":""}">${T[k]}</button>`).join("")+'</div><div id="subt"></div><div id="pane"></div>';
   const a=document.querySelector('.tabs .on');if(a)a.scrollIntoView({block:'nearest',inline:'center'})}
- ({dash:tDash,orders:tOrders,products:tProducts,cats:tCats,import:tImport,price:tPrice,promos:tPromos,codes:tCodes,clients:tClients,leads:tLeads,banners:tBanners,pages:tPages,shop:tShop,backup:tBackup})[cur]();
+ const g=GR[cur],leaf=g?SUB[cur]:cur;
+ $("subt").innerHTML=g?'<div class="subt">'+Object.keys(g).map(k=>`<button data-sub="${k}" class="${k===leaf?"on":""}">${g[k]}</button>`).join("")+'</div>':"";
+ ({dash:tDash,orders:tOrders,products:tProducts,cats:tCats,import:tImport,price:tPrice,promos:tPromos,codes:tCodes,clients:tClients,leads:tLeads,banners:tBanners,pages:tPages,shop:tShop,backup:tBackup})[leaf]();
 }
 const fail=e=>{$("pane").innerHTML=`<div class="box"><div class="msg bad">Помилка: ${esc(e.message||e)}</div></div>`};
 const flash=(t,ok)=>{const m=$("fm");if(m){m.className="msg "+(ok?"ok":"bad");m.textContent=t}};
@@ -148,8 +163,7 @@ async function ohist(id,btn){
 }
 function oprint(o){
  const w=window.open("","_blank");if(!w)return alert("Дозвольте спливаючі вікна для друку.");
- w.document.write(`<meta charset="utf-8"><title>Замовлення №${o.id}</title><style>body{font:14px Arial;margin:24px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:6px;text-align:left}h2{margin:0 0 8px}.tbl{width:100%;border-collapse:collapse}.tbl td,.tbl th{padding:8px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}
-</style><h2>Trend Electro · Замовлення №${o.id}</h2><p>${new Date(o.created_at).toLocaleString("uk-UA")}<br><b>${esc(o.customer_name)}</b>, ${esc(o.phone)}<br>${esc(o.delivery||"")}: ${esc(o.address||"")}<br>Оплата: ${esc(o.payment||"")}${o.ttn?"<br>ТТН: "+esc(o.ttn):""}${o.comment?"<br>Коментар: "+esc(o.comment):""}</p><table><tr><th>Артикул</th><th>Назва</th><th>К-сть</th><th>Ціна</th><th>Сума</th></tr>${(o.items||[]).map(i=>`<tr><td>${esc(i.id)}</td><td>${esc(i.name)}</td><td>${i.qty}</td><td>${money(i.price)}</td><td>${money(i.price*i.qty)}</td></tr>`).join("")}</table><h3>Разом: ${money(o.total)}${+o.discount?" (знижка "+o.discount+"%)":""}</h3>`);
+ w.document.write(`<meta charset="utf-8"><title>Замовлення №${o.id}</title><style>body{font:14px Arial;margin:24px}table{border-collapse:collapse;width:100%}td,th{border:1px solid #999;padding:6px;text-align:left}h2{margin:0 0 8px}</style><h2>Trend Electro · Замовлення №${o.id}</h2><p>${new Date(o.created_at).toLocaleString("uk-UA")}<br><b>${esc(o.customer_name)}</b>, ${esc(o.phone)}<br>${esc(o.delivery||"")}: ${esc(o.address||"")}<br>Оплата: ${esc(o.payment||"")}${o.ttn?"<br>ТТН: "+esc(o.ttn):""}${o.comment?"<br>Коментар: "+esc(o.comment):""}</p><table><tr><th>Артикул</th><th>Назва</th><th>К-сть</th><th>Ціна</th><th>Сума</th></tr>${(o.items||[]).map(i=>`<tr><td>${esc(i.id)}</td><td>${esc(i.name)}</td><td>${i.qty}</td><td>${money(i.price)}</td><td>${money(i.price*i.qty)}</td></tr>`).join("")}</table><h3>Разом: ${money(o.total)}${+o.discount?" (знижка "+o.discount+"%)":""}</h3>`);
  w.document.close();w.focus();setTimeout(()=>w.print(),300);
 }
 function ocsv(){
@@ -161,28 +175,40 @@ function ocsv(){
 async function tProducts(){
  if(!TREE.length){try{await loadTree()}catch(e){return fail(e)}}
  const tops=sk(treeModel()).map(n=>n.name);
- $("pane").innerHTML=`<div class="box"><div class="grid2"><input id="pq" placeholder="Назва або артикул" value="${esc(PQ.q)}"><select id="pc"><option value="">Усі групи</option>${tops.map(c=>`<option${PQ.cat===c?" selected":""}>${esc(c)}</option>`).join("")}</select></div><div class="rw"><label style="display:flex;gap:6px;align-items:center;margin:0"><input id="ph" type="checkbox" style="width:auto"${PQ.hid?" checked":""}> лише приховані</label><label style="display:flex;gap:6px;align-items:center;margin:0"><input id="pn" type="checkbox" style="width:auto"${PQ.noimg?" checked":""}> лише без фото</label><span><button data-act="psearch">Знайти</button> <button class="sec" data-act="pnew">+ Новий</button></span></div></div>
-<div class="box"><h2>Позначки: Хіт продажу, Новинка, Спеціальна пропозиція</h2><p class="mut">Застосуйте до вибраних галочками товарів або до всіх знайдених (оберіть категорію чи введіть пошук, і натисніть «Усім знайденим»). Ці товари з'являться на головній у блоках «Хіти продажу», «Новинки», «Спеціальні пропозиції». «Розпродаж» задається ціною «було» в товарі або знижкою на категорію у вкладці «Ціни».</p><div class="grid2"><select id="mk"><option value="is_hit">Хіт продажу</option><option value="is_new">Новинка</option><option value="special">Спеціальна пропозиція</option></select><select id="mkv"><option value="1">Увімкнути</option><option value="0">Вимкнути</option></select></div><div><label>Умови спеціальної пропозиції (для пункту «Спеціальна пропозиція»)</label><input id="mkt" placeholder="Напр.: При купівлі від 5 шт. — знижка 10%"></div><div class="rw"><button class="sec" data-act="pmark">Вибраним на сторінці</button><button class="sec" data-act="pmarkall">Усім знайденим</button></div></div>
-<div class="box"><h2>Перемістити вибрані товари</h2>${pathInputs("mv")}<div class="rw"><button class="sec" data-act="pmove">Вибрані на сторінці</button><button class="sec" data-act="pmoveall">Усі знайдені за пошуком</button></div></div>
-<div class="msg" id="fm"></div><div id="ped"></div><div id="plist"></div>`;
+ $("pane").innerHTML=`<div class="box"><div class="psrch"><input id="pq" type="search" placeholder="Пошук: назва або артикул" value="${esc(PQ.q)}"><select id="pc"><option value="">Усі категорії</option>${tops.map(c=>`<option${PQ.cat===c?" selected":""}>${esc(c)}</option>`).join("")}</select><button data-act="psearch">Знайти</button></div>
+<div class="pfl">${PFL.map(f=>`<button type="button" class="chip2${PQ.f===f[0]?" on":""}" data-pfl="${f[0]}">${f[1]}</button>`).join("")}</div>
+<div class="rw"><span class="mut" id="pfound"></span><button class="sec" data-act="pnew">+ Новий товар</button></div></div>
+<div class="msg" id="fm"></div><div id="ped"></div><div id="plist"></div>
+<div class="pact" id="pact" hidden><div class="rw"><b id="pselN">Вибрано: 0</b><label class="ck"><input type="checkbox" id="pall"> <span id="pallL">усі знайдені</span></label></div><div class="psrch"><select id="pa"><option value="">Що зробити з вибраними?</option>${PACT.map(x=>x[0]==="-"?`<option disabled>──────────</option>`:`<option value="${x[0]}">${x[1]}</option>`).join("")}</select><button data-act="pbulk">Застосувати</button></div><div id="pax"></div></div>`;
  loadP();
 }
-function pQuery(sel){
- let q=sb.from("products").select(sel);
+const PFL=[["","Усі"],["hit","Хіти"],["new","Новинки"],["spec","Спецпропозиції"],["sale","Зі старою ціною"],["noimg","Без фото"],["out","Немає в наявності"],["hid","Приховані"]];
+const PACT=[["hit1","✓ Позначити «Хіт продажу»"],["hit0","✕ Зняти «Хіт продажу»"],["new1","✓ Позначити «Новинка»"],["new0","✕ Зняти «Новинка»"],["spec1","✓ Спецпропозиція (з умовами)…"],["spec0","✕ Зняти спецпропозицію"],["sale0","✕ Прибрати стару ціну (зняти розпродаж)"],["-"],["in1","Є в наявності"],["in0","Немає в наявності"],["act1","Показувати на сайті"],["act0","Сховати з сайту"],["-"],["move","Перемістити в категорію…"]];
+const PUPD={hit1:{is_hit:true},hit0:{is_hit:false},new1:{is_new:true},new0:{is_new:false},spec0:{special:null},sale0:{old_price:null},in1:{in_stock:true},in0:{in_stock:false},act1:{active:true},act0:{active:false}};
+function pQuery(sel,opt){
+ let q=sb.from("products").select(sel,opt);
  const s=PQ.q.replace(/[,()%*\\]/g," ").trim();if(s)q=q.or(`name.ilike.*${s}*,id.ilike.*${s}*`);
- if(PQ.cat)q=q.eq("category",PQ.cat);if(PQ.hid)q=q.eq("active",false);if(PQ.noimg)q=q.is("image_url",null);
+ if(PQ.cat)q=q.eq("category",PQ.cat);
+ const f=PQ.f;if(f==="hit")q=q.eq("is_hit",true);else if(f==="new")q=q.eq("is_new",true);else if(f==="spec")q=q.not("special","is",null);else if(f==="sale")q=q.not("old_price","is",null);else if(f==="noimg")q=q.is("image_url",null);else if(f==="out")q=q.eq("in_stock",false);else if(f==="hid")q=q.eq("active",false);
  return q;
 }
 const aThumb=u=>u?(u.indexOf(".supabase.co/")>-1?u:"https://wsrv.nl/?url="+encodeURIComponent(u)+"&w=96&h=96&fit=contain&output=webp"):"";
+const pTags=p=>[p.is_hit?'<i class="tg h">Хіт</i>':"",p.is_new?'<i class="tg n">Новинка</i>':"",p.special?'<i class="tg p">Спецпропозиція</i>':"",p.old_price?'<i class="tg s">Розпродаж</i>':"",p.in_stock?"":'<i class="tg g">Немає</i>',p.active?"":'<i class="tg g">Приховано</i>',p.image_url?"":'<i class="tg g">Без фото</i>'].join("");
 async function loadP(){
- const r=await pQuery("id,name,price,old_price,image_url,active,category,subcategory,subcategory2,is_hit,is_new,in_stock").order("name").range(PQ.page*30,PQ.page*30+29);
- if(r.error)return fail(r.error);const L=r.data;
- $("plist").innerHTML=(L.length?`<div class="rw" style="margin-bottom:8px"><label style="display:flex;gap:6px;align-items:center;margin:0"><input type="checkbox" id="pselall" style="width:auto"> вибрати всі на сторінці</label></div>`+L.map(p=>`<div class="box"><div class="rw"><label style="display:flex;gap:10px;align-items:center;min-width:0;margin:0;color:var(--ink)"><input type="checkbox" data-sel="${esc(p.id)}" style="width:auto"><img src="${esc(aThumb(p.image_url))}" alt="" style="width:48px;height:48px;object-fit:contain;background:#fff;border-radius:6px"><span style="min-width:0"><b>${esc(p.name)}</b><span class="mut" style="display:block">${esc(p.id)} · ${money(p.price)}${p.old_price?" (було "+money(p.old_price)+")":""} · ${esc([p.category,p.subcategory,p.subcategory2].filter(Boolean).join(SEP))}${p.active?"":" · ПРИХОВАНО"}${p.is_hit?" · Хіт":""}${p.is_new?" · Новинка":""}${p.in_stock?"":" · немає в наявності"}</span></span></label><span style="display:flex;gap:4px;align-items:center;flex-wrap:wrap"><input data-qp="${esc(p.id)}" type="number" step="0.01" value="${p.price}" style="width:92px" aria-label="Ціна"><button class="sec" data-act="pq" data-id="${esc(p.id)}">OK</button><button class="sec" data-act="pstock" data-id="${esc(p.id)}" data-v="${p.in_stock}">${p.in_stock?"Є":"Немає"}</button><button class="sec" data-act="pedit" data-id="${esc(p.id)}">Редагувати</button><button class="sec" data-act="pdup" data-id="${esc(p.id)}">Копія</button></span></div></div>`).join(""):'<div class="box">Нічого не знайдено. Якщо база порожня, завантажте прайс у розділі «Імпорт».</div>')+`<div class="rw"><button class="sec" data-act="pprev"${PQ.page?"":" disabled"}>‹ Назад</button><span class="mut">Сторінка ${PQ.page+1}</span><button class="sec" data-act="pnext"${L.length<30?" disabled":""}>Далі ›</button></div>`;
+ const cols="id,name,price,old_price,image_url,active,category,subcategory,subcategory2,is_hit,is_new,in_stock";
+ let r=await pQuery(cols+",special",{count:"exact"}).order("name").range(PQ.page*30,PQ.page*30+29);
+ if(r.error&&/special/.test(r.error.message||"")){if(PQ.f==="spec")return fail("Спершу виконайте schema_v11.sql у Supabase.");r=await pQuery(cols,{count:"exact"}).order("name").range(PQ.page*30,PQ.page*30+29)}
+ if(r.error)return fail(r.error);const L=r.data;PQ.total=r.count||0;
+ $("pfound").textContent="Знайдено: "+PQ.total;$("pallL").textContent="застосувати до всіх знайдених ("+PQ.total+")";
+ $("plist").innerHTML=(L.length?`<label class="ck selall"><input type="checkbox" id="pselall"> Вибрати всі на сторінці</label>`+L.map(p=>`<div class="prow"><input type="checkbox" data-sel="${esc(p.id)}" aria-label="Вибрати"><img src="${esc(aThumb(p.image_url))}" alt=""><div class="pinf" data-act="pedit" data-id="${esc(p.id)}"><b>${esc(p.name)}</b><span class="mut">${esc(p.id)} · ${money(p.price)}${p.old_price?" <s>"+money(p.old_price)+"</s>":""} · ${esc([p.category,p.subcategory,p.subcategory2].filter(Boolean).join(SEP))}</span><span class="tgs">${pTags(p)}</span></div><button class="sec" data-act="pedit" data-id="${esc(p.id)}">Змінити</button></div>`).join(""):'<div class="box">Нічого не знайдено. Змініть пошук чи фільтр. Якщо база порожня, завантажте прайс у розділі «Імпорт».</div>')+(PQ.total>30?`<div class="rw pager"><button class="sec" data-act="pprev"${PQ.page?"":" disabled"}>‹ Назад</button><span class="mut">Сторінка ${PQ.page+1} з ${Math.ceil(PQ.total/30)}</span><button class="sec" data-act="pnext"${(PQ.page+1)*30>=PQ.total?" disabled":""}>Далі ›</button></div>`:"");
+ $("pact").hidden=!L.length;$("pall").checked=false;pSelCount();
 }
+function pSelCount(){const n=document.querySelectorAll("[data-sel]:checked").length,all=$("pall")&&$("pall").checked;if($("pselN"))$("pselN").textContent=all?"Вибрано: усі знайдені ("+PQ.total+")":n?"Вибрано: "+n:"Позначте товари галочками";if($("pact"))$("pact").classList.toggle("on",all||n>0)}
+function pAx(){const v=$("pa").value,x=$("pax");x.innerHTML=v==="spec1"?'<input id="mkt" placeholder="Умови, напр.: При купівлі від 5 шт. — знижка 10%">':v==="move"?pathInputs("mv"):""}
 function editP(p){
  const n=!p;p=p||{id:"",name:"",price:"",old_price:"",brand:"",category:"",subcategory:"",subcategory2:"",image_url:"",description:"",specs:"",active:true,in_stock:true,is_hit:false,is_new:false};
  const ck=(id,v,l)=>`<label style="display:flex;gap:6px;align-items:center;margin:0;color:var(--ink)"><input id="${id}" type="checkbox" style="width:auto"${v?" checked":""}> ${l}</label>`;
- $("ped").innerHTML=`<div class="box"><h2>${n?"Новий товар":"Редагування"}</h2>${n?'<div><label>Артикул</label><input id="eid"></div>':`<div class="mut">Артикул: ${esc(p.id)}</div>`}<div><label>Назва</label><input id="en" value="${esc(p.name)}"></div><div class="grid2"><div><label>Ціна, ₴</label><input id="ep" type="number" step="0.01" value="${esc(p.price)}"></div><div><label>Стара ціна (для акції), ₴</label><input id="eo" type="number" step="0.01" value="${esc(p.old_price||"")}"></div></div><div class="grid3"><div><label>Група</label><input id="ec" list="dl1" value="${esc(p.category)}"></div><div><label>Підгрупа</label><input id="es" list="dl2" value="${esc(p.subcategory||"")}"></div><div><label>Під-підгрупа</label><input id="es2" list="dl3" value="${esc(p.subcategory2||"")}"></div></div>${dl("dl1",lvlNames(0))}${dl("dl2",lvlNames(1))}${dl("dl3",lvlNames(2))}<div><label>Бренд</label><input id="eb" value="${esc(p.brand||"")}"></div><div><label>Фото: посилання або завантажити своє</label><input id="ei" value="${esc(p.image_url||"")}" placeholder="https://…"><input id="ef" type="file" accept="image/*" style="margin-top:6px"></div><div><label>Додаткові фото (по одному посиланню в рядку) або завантажте кілька файлів</label><textarea id="eim" rows="3" data-had="${(p.images||[]).length?1:0}">${esc((p.images||[]).join("\n"))}</textarea><input id="efm" type="file" accept="image/*" multiple style="margin-top:6px"></div><div><label>SEO: заголовок для Google (до 60 символів, необов’язково)</label><input id="esdt" data-has="${"seo_title" in p?1:0}" maxlength="90" value="${esc(p.seo_title||"")}"></div><div><label>SEO: короткий опис для Google (до 160 символів, необов’язково)</label><input id="esdd" maxlength="200" value="${esc(p.seo_description||"")}"></div><div><label>Опис</label><textarea id="ed" rows="4">${esc(p.description||"")}</textarea></div><div><label>Характеристики (назва: значення; назва: значення)</label><textarea id="ex" rows="3">${esc(p.specs||"")}</textarea></div>${ck("ea",p.active,"Показувати на сайті")}${ck("ek",p.in_stock,"Є в наявності")}${ck("eh",p.is_hit,"Хіт")}${ck("ew",p.is_new,"Новинка")}<div><label>Спеціальна пропозиція: умови (необов’язково)</label><input id="esp" data-has="${p.special?1:0}" value="${esc(p.special||"")}" placeholder="Напр.: При купівлі від 5 шт. — знижка 10%"></div><div class="rw"><button data-act="psave" data-new="${n?1:0}" data-id="${esc(p.id)}">Зберегти</button><button class="sec" data-act="pcancel">Скасувати</button>${n?"":`<button class="del" data-act="pdel" data-id="${esc(p.id)}">Видалити</button>`}</div></div>`;
+ $("ped").innerHTML=`<div class="box"><h2>${n?"Новий товар":"Редагування"}</h2>${n?'<div><label>Артикул</label><input id="eid"></div>':`<div class="mut">Артикул: ${esc(p.id)}</div>`}<div><label>Назва</label><input id="en" value="${esc(p.name)}"></div><div class="grid2"><div><label>Ціна, ₴</label><input id="ep" type="number" step="0.01" value="${esc(p.price)}"></div><div><label>Стара ціна (для акції), ₴</label><input id="eo" type="number" step="0.01" value="${esc(p.old_price||"")}"></div></div><div class="grid3"><div><label>Група</label><input id="ec" list="dl1" value="${esc(p.category)}"></div><div><label>Підгрупа</label><input id="es" list="dl2" value="${esc(p.subcategory||"")}"></div><div><label>Під-підгрупа</label><input id="es2" list="dl3" value="${esc(p.subcategory2||"")}"></div></div>${dl("dl1",lvlNames(0))}${dl("dl2",lvlNames(1))}${dl("dl3",lvlNames(2))}<div><label>Бренд</label><input id="eb" value="${esc(p.brand||"")}"></div><div><label>Фото: посилання або завантажити своє</label><input id="ei" value="${esc(p.image_url||"")}" placeholder="https://…"><input id="ef" type="file" accept="image/*" style="margin-top:6px"></div><div><label>Додаткові фото (по одному посиланню в рядку) або завантажте кілька файлів</label><textarea id="eim" rows="3" data-had="${(p.images||[]).length?1:0}">${esc((p.images||[]).join("\n"))}</textarea><input id="efm" type="file" accept="image/*" multiple style="margin-top:6px"></div><div><label>SEO: заголовок для Google (до 60 символів, необов’язково)</label><input id="esdt" data-has="${"seo_title" in p?1:0}" maxlength="90" value="${esc(p.seo_title||"")}"></div><div><label>SEO: короткий опис для Google (до 160 символів, необов’язково)</label><input id="esdd" maxlength="200" value="${esc(p.seo_description||"")}"></div><div><label>Опис</label><textarea id="ed" rows="4">${esc(p.description||"")}</textarea></div><div><label>Характеристики (назва: значення; назва: значення)</label><textarea id="ex" rows="3">${esc(p.specs||"")}</textarea></div>${ck("ea",p.active,"Показувати на сайті")}${ck("ek",p.in_stock,"Є в наявності")}${ck("eh",p.is_hit,"Хіт")}${ck("ew",p.is_new,"Новинка")}<div><label>Спеціальна пропозиція: умови (необов’язково)</label><input id="esp" data-has="${p.special?1:0}" value="${esc(p.special||"")}" placeholder="Напр.: При купівлі від 5 шт. — знижка 10%"></div><div class="rw"><button data-act="psave" data-new="${n?1:0}" data-id="${esc(p.id)}">Зберегти</button>${n?"":`<button class="sec" data-act="pdup" data-id="${esc(p.id)}">Зробити копію</button>`}<button class="sec" data-act="pcancel">Скасувати</button>${n?"":`<button class="del" data-act="pdel" data-id="${esc(p.id)}">Видалити</button>`}</div></div>`;
  $("ped").scrollIntoView({behavior:"smooth"});
 }
 
@@ -337,17 +363,36 @@ document.addEventListener("change",async e=>{
  const s=e.target;
  if(s.id==="od"){OQ.days=+s.value;drawOrders()}
  if(s.dataset&&s.dataset.o){const r=await sb.from("orders").update({status:s.value}).eq("id",s.dataset.o);if(r.error)alert("Не вдалося змінити статус: "+r.error.message);else{const o=OL.find(x=>x.id==s.dataset.o);if(o)o.status=s.value;drawOrders()}}
- if(s.id==="pselall")document.querySelectorAll("[data-sel]").forEach(c=>c.checked=s.checked);
+ if(s.id==="pselall"){document.querySelectorAll("[data-sel]").forEach(c=>c.checked=s.checked);pSelCount()}
+ if(s.dataset&&s.dataset.sel!==undefined||s.id==="pall")pSelCount();
+ if(s.id==="pa")pAx();
+ if(s.id==="pc"){PQ.cat=s.value;PQ.page=0;loadP()}
 });
 const setCat=(path,o)=>sb.from("categories").upsert(Object.assign({path:path},o,{updated_at:new Date().toISOString()}));
 document.addEventListener("click",async e=>{
+ const pi=e.target.closest(".pinf");if(pi&&!e.target.closest("button")){const q=await sb.from("products").select("*").eq("id",pi.dataset.id).maybeSingle();if(q.data)editP(q.data);return}
  const t=e.target.closest("button");if(!t)return;
+ if(t.dataset.pfl!==undefined){PQ.f=t.dataset.pfl;PQ.page=0;document.querySelectorAll(".chip2").forEach(b=>b.classList.toggle("on",b===t));$("ped").innerHTML="";return loadP()}
+ if(t.dataset.sub){SUB[cur]=t.dataset.sub;shell();return}
  if(t.dataset.tab){cur=t.dataset.tab;shell();return}
  if(t.dataset.ost!==undefined){OQ.st=t.dataset.ost;drawOrders();return}
- if(t.closest("[data-go]")){cur=t.closest("[data-go]").dataset.go;OQ.st=cur==="orders"?"new":OQ.st;shell();return}
+ if(t.closest("[data-go]")){const gk=t.closest("[data-go]").dataset.go;setCur(gk);OQ.st=gk==="orders"?"new":OQ.st;shell();return}
  const a=t.dataset.act;if(!a)return;let r;
  /* товари */
- if(a==="psearch"){PQ.q=$("pq").value.trim();PQ.cat=$("pc").value;PQ.hid=$("ph").checked;PQ.noimg=$("pn").checked;PQ.page=0;$("ped").innerHTML="";return loadP()}
+ if(a==="psearch"){PQ.q=$("pq").value.trim();PQ.cat=$("pc").value;PQ.page=0;$("ped").innerHTML="";return loadP()}
+ if(a==="pbulk"){
+  const v=$("pa").value;if(!v)return flash("Оберіть, що зробити з вибраними товарами.");
+  const all=$("pall").checked;let ids=[];
+  if(!all){ids=[...document.querySelectorAll("[data-sel]:checked")].map(c=>c.dataset.sel);if(!ids.length)return flash("Позначте товари галочками або увімкніть «застосувати до всіх знайдених».")}
+  let upd=PUPD[v],path=null;
+  if(v==="spec1"){const tx=($("mkt").value||"").trim();if(!tx)return flash("Впишіть умови спеціальної пропозиції.");upd={special:tx}}
+  if(v==="move"){path=readPath("mv");if(!path.length)return flash("Вкажіть хоча б групу, куди перемістити.")}
+  if(all){flash("Збираю товари…",true);let from=0;for(;;){const q=await pQuery("id").order("id").range(from,from+999);if(q.error)return flash("Помилка: "+q.error.message);ids.push(...q.data.map(x=>x.id));if(q.data.length<1000)break;from+=1000}if(!ids.length)return flash("Нічого не знайдено.")}
+  if(!confirm(`${$("pa").selectedOptions[0].textContent.replace(/^[✓✕]\s*/,"")}: ${ids.length} товар(ів). Продовжити?`))return;
+  t.disabled=true;let n=0;
+  try{for(let k=0;k<ids.length;k+=(path?500:200)){const part=ids.slice(k,k+(path?500:200));const u=path?await sb.rpc("assign_products",{p_ids:part,p_path:path}):await sb.from("products").update(Object.assign({},upd,{updated_at:new Date().toISOString()})).in("id",part);if(u.error){t.disabled=false;return flash("Помилка: "+u.error.message+(/special/.test(u.error.message)?" Виконайте schema_v11.sql у Supabase.":""))}n+=part.length}}finally{t.disabled=false}
+  if(path)TREE=[];$("pa").value="";pAx();flash(`Готово ✓ Змінено товарів: ${n}.`,true);return loadP();
+ }
  if(a==="pprev"){if(PQ.page>0){PQ.page--;loadP()}return}
  if(a==="pnext"){PQ.page++;loadP();return}
  if(a==="pcancel"){$("ped").innerHTML="";return}
@@ -366,18 +411,6 @@ document.addEventListener("click",async e=>{
    if(imgs.length||$("eim").dataset.had==="1")o.images=imgs;
    const sr=isNew?await sb.from("products").insert(o):await sb.from("products").update(o).eq("id",o.id);
    if(sr.error)throw sr.error;$("ped").innerHTML="";TREE=[];flash("Збережено ✓",true);return loadP()}catch(er){return flash("Помилка: "+(er.message||er))}}
- if(a==="pmark"||a==="pmarkall"){
-  const f=$("mk").value,on=$("mkv").value==="1",txt=$("mkt").value.trim();
-  if(f==="special"&&on&&!txt)return flash("Впишіть умови спеціальної пропозиції.");
-  const label=$("mk").selectedOptions[0].textContent+" — "+(on?"увімкнути":"вимкнути");
-  let ids=[];
-  if(a==="pmark"){ids=[...document.querySelectorAll("[data-sel]:checked")].map(c=>c.dataset.sel);if(!ids.length)return flash("Позначте товари у списку нижче.")}
-  else{flash("Збираю товари…",true);let from=0;for(;;){const q=await pQuery("id").order("id").range(from,from+999);if(q.error)return flash("Помилка: "+q.error.message);ids.push(...q.data.map(x=>x.id));if(q.data.length<1000)break;from+=1000}if(!ids.length)return flash("За цим пошуком нічого не знайдено.")}
-  if(!confirm(`${label}: ${ids.length} товарів?`))return;
-  const v=f==="special"?(on?txt:null):on;let n=0;
-  for(let i=0;i<ids.length;i+=200){const u=await sb.from("products").update({[f]:v,updated_at:new Date().toISOString()}).in("id",ids.slice(i,i+200));if(u.error)return flash("Помилка: "+u.error.message+(/special/.test(u.error.message)?" Виконайте schema_v11.sql у Supabase.":""));n+=Math.min(200,ids.length-i)}
-  flash(`Готово ✓ Оновлено товарів: ${n}.`,true);return loadP();
- }
  if(a==="pmove"||a==="pmoveall"){
   const path=readPath("mv");if(!path.length)return flash("Вкажіть хоча б групу (куди перемістити).");
   let ids=[];
@@ -463,6 +496,8 @@ document.addEventListener("click",async e=>{
 });
 init();
 
+
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target&&e.target.id==="pq"){e.preventDefault();const b=document.querySelector('[data-act="psearch"]');if(b)b.click()}});
 </script>
 </body>
 </html>
