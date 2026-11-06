@@ -17,6 +17,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Save supabase.js into the site
+        run: |
+          if [ ! -s supabase.js ]; then
+            curl -fsSL https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js -o supabase.js || curl -fsSL https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js -o supabase.js
+          fi
+          ls -la supabase.js
       - run: npm install --no-save sharp@0.33.5
       - run: node --input-type=module < seo.js
         env:
@@ -26,5 +32,5 @@ jobs:
         run: |
           git config user.name "trend-electro-bot"
           git config user.email "bot@users.noreply.github.com"
-          git add -A p c img poradu feed sitemap.xml robots.txt
+          git add -A supabase.js p c img poradu feed sitemap.xml robots.txt
           if git diff --cached --quiet; then echo "Без змін"; else git commit -m "Автооновлення SEO-сторінок і фото" && git pull --rebase && git push; fi
