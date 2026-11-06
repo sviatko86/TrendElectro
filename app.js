@@ -134,6 +134,7 @@ function route(){
  else if(h.indexOf("#/page/")===0)viewPage(h.slice(7));
  else if(h==="#/birthday")viewBday();
  else viewHome();
+ requestAnimationFrame(hbInit);
  document.querySelectorAll(".bnav button").forEach(b=>b.classList.toggle("on",(b.dataset.nav==="home"&&(h==="#/"||h===""))||(b.dataset.nav==="fav"&&h==="#/fav")||(b.dataset.nav==="cat"&&h.indexOf("#/c")===0)));
  window.scrollTo(0,SCR[h]||0);
 }
@@ -147,10 +148,38 @@ function bdSel(id){const y0=new Date().getFullYear()-16;let d='<option value="">
 function bdVal(id){const w=$(id);if(!w)return"";const g=k=>+w.querySelector(`[data-bd="${k}"]`).value;const d=g("d"),m=g("m"),y=g("y");if(!d||!m||!y)return"";const dt=new Date(Date.UTC(y,m-1,d));if(dt.getUTCMonth()!==m-1||dt.getUTCDate()!==d)return"";return y+"-"+String(m).padStart(2,"0")+"-"+String(d).padStart(2,"0")}
 function bdFix(w){const g=k=>+w.querySelector(`[data-bd="${k}"]`).value,m=g("m"),y=g("y")||2000,ds=w.querySelector('[data-bd="d"]');const n=m?new Date(Date.UTC(y,m,0)).getUTCDate():31;[...ds.options].forEach(o=>{if(o.value)o.hidden=o.disabled=+o.value>n});if(+ds.value>n)ds.value=String(n)}
 const bdOn=()=>!!(SHOP&&SHOP.bday_on&&(+SHOP.bday_percent||0)>0);
+const hbL=(t)=>[...t].map((c,i)=>c===" "?'<span class="hbs"> </span>':`<i style="--i:${i}">${c}</i>`).join("");
+const hbDeco=()=>'<span class="hbd" aria-hidden="true"><b style="left:4%;--d:0s">🎈</b><b style="left:18%;--d:1.2s">🎉</b><b style="left:46%;--d:.6s">🎈</b><b style="left:70%;--d:1.8s">🎁</b><b style="left:88%;--d:.3s">🎈</b><u style="left:12%;top:18%;--d:0s">✨</u><u style="left:60%;top:12%;--d:.8s">✨</u><u style="left:80%;top:62%;--d:1.4s">⭐</u><u style="left:34%;top:70%;--d:.4s">✨</u></span>';
 function bdHome(){
- if(!bdOn())return"";const bi=bdayInfo(),pct=Math.min(90,+SHOP.bday_percent||0);
- if(bi){try{if(!sessionStorage.bdc){sessionStorage.bdc=1;setTimeout(confetti,700)}}catch(e){}const nm=(prof&&prof.full_name||"").split(" ")[0];return`<section class="bdhero"><div class="bdem">🎂</div><div><h2>${nm?esc(nm)+", з":"З"} днем народження!</h2><p>Вітаємо вас від усієї команди Trend Electro! Дарунок для вас: знижка −${bi.pct}% на все, що є на сайті. Діє до ${bi.end.toLocaleDateString("uk-UA",{timeZone:"UTC"})} включно, застосовується автоматично.</p></div></section>`}
- return`<a class="bdhero bdlink" href="#/birthday"><div class="bdem">🎁</div><div><h2>Ваш день народження — наше свято</h2><p>Даруємо знижку −${pct}% на тиждень у честь вашого дня народження. Без реєстрації, за хвилину.</p></div><span class="bdgo">Отримати подарунок</span></a>`}
+ if(!bdOn())return"";const bi=bdayInfo(),pct=Math.min(90,+SHOP.bday_percent||0),pic=`<div class="hbtop"><img src="${esc(SHOP.bday_img||BASE+"hb-banner.webp")}" alt="" loading="lazy"><canvas class="hbfx"></canvas><h2 class="hbh" aria-label="Happy Birthday">${hbL("Happy Birthday!")}</h2></div>`;
+ if(bi){try{if(!sessionStorage.bdc){sessionStorage.bdc=1;setTimeout(confetti,700)}}catch(e){}const nm=(prof&&prof.full_name||"").split(" ")[0];return`<section class="bdhero hbpic">${hbDeco()}${pic}<div class="hbbody"><div class="bdem">🎂</div><div><div class="hbn">${nm?esc(nm)+", з":"З"} днем народження!</div><p>Вітаємо вас від усієї команди Trend Electro! Дарунок для вас: знижка −${bi.pct}% на все, що є на сайті. Діє до ${bi.end.toLocaleDateString("uk-UA",{timeZone:"UTC"})} включно, застосовується автоматично.</p></div></div></section>`}
+ return`<a class="bdhero bdlink hbpic" href="#/birthday">${hbDeco()}${pic}<div class="hbbody"><div class="bdem">🎁</div><div><div class="hbn">Ваш день народження — наше свято</div><p>Даруємо знижку −${pct}% на тиждень у честь вашого дня народження. Без реєстрації, за хвилину.</p></div></div><span class="bdgo">Отримати подарунок</span></a>`}
+const HBC=["#ffd23f","#ff5d8f","#2fd9d3","#9d8cff","#4cd964","#ffffff","#ff9f1c"];
+function hbFx(cv){
+ const ctx=cv.getContext("2d"),par=cv.parentElement,dpr=Math.min(2,devicePixelRatio||1);let W=0,H=0,P=[],F=[],B=[],last=0,tf=0,tb=0,run=false,raf=0,vis=true;
+ const R=(a,b)=>a+Math.random()*(b-a);
+ function size(){W=par.clientWidth;H=par.clientHeight;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0)}
+ size();new ResizeObserver(size).observe(par);
+ for(let i=0;i<34;i++)P.push({x:R(0,W),y:R(-H,H),w:R(5,9),h:R(9,15),r:R(0,6.3),vr:R(-4,4),vy:R(30,70),sw:R(0,6.3),c:HBC[i%7]});
+ function boom(x,y){const c=HBC[(Math.random()*7)|0],n=34;for(let i=0;i<n;i++){const a=6.283*i/n,v=R(70,150);F.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,c,s:R(1.6,3)})}}
+ function step(t){
+  if(!run)return;if(!cv.isConnected){run=false;return}
+  const dt=Math.min(.05,(t-last)/1000||.016);last=t;ctx.clearRect(0,0,W,H);
+  tf-=dt;if(tf<=0){tf=R(.9,1.8);F.push({rk:1,x:R(W*.15,W*.85),y:H,ty:R(H*.18,H*.5),vy:-R(260,340),c:"#fff"})}
+  tb-=dt;if(tb<=0){tb=R(2.2,4);B.push({x:R(10,W-10),y:H+20,vy:-R(38,70),sw:R(0,6.3),e:["🎈","🎈","🎁","🎉"][(Math.random()*4)|0],s:R(20,30)})}
+  P.forEach(p=>{p.y+=p.vy*dt;p.sw+=dt*2;p.x+=Math.sin(p.sw)*18*dt;p.r+=p.vr*dt;if(p.y>H+16){p.y=-16;p.x=R(0,W)}
+   ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.scale(1,Math.cos(p.r*1.3));ctx.fillStyle=p.c;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore()});
+  for(let i=F.length-1;i>=0;i--){const f=F[i];
+   if(f.rk){f.y+=f.vy*dt;ctx.fillStyle="#fff";ctx.fillRect(f.x-1,f.y,2,10);if(f.y<=f.ty){boom(f.x,f.y);F.splice(i,1)}continue}
+   f.vy+=90*dt;f.x+=f.vx*dt;f.y+=f.vy*dt;f.vx*=.985;f.l-=dt*.75;if(f.l<=0){F.splice(i,1);continue}
+   ctx.globalAlpha=f.l;ctx.fillStyle=f.c;ctx.beginPath();ctx.arc(f.x,f.y,f.s,0,6.283);ctx.fill();ctx.globalAlpha=1}
+  ctx.font="26px serif";ctx.textAlign="center";
+  for(let i=B.length-1;i>=0;i--){const b=B[i];b.y+=b.vy*dt;b.sw+=dt*1.6;if(b.y<-40){B.splice(i,1);continue}ctx.font=b.s+"px serif";ctx.fillText(b.e,b.x+Math.sin(b.sw)*14,b.y)}
+  raf=requestAnimationFrame(step)}
+ return{start(){if(run||matchMedia("(prefers-reduced-motion:reduce)").matches)return;run=true;last=performance.now();raf=requestAnimationFrame(step)},stop(){run=false;cancelAnimationFrame(raf)}}}
+const hbIO=window.IntersectionObserver?new IntersectionObserver(es=>es.forEach(e=>{const f=e.target.__fx;if(!f)return;e.isIntersecting&&!document.hidden?f.start():f.stop()}),{threshold:.1}):null;
+function hbInit(){document.querySelectorAll("canvas.hbfx").forEach(cv=>{if(cv.__fx)return;cv.__fx=hbFx(cv);hbIO?hbIO.observe(cv):cv.__fx.start()})}
+document.addEventListener("visibilitychange",()=>{document.querySelectorAll("canvas.hbfx").forEach(cv=>{if(!cv.__fx)return;document.hidden?cv.__fx.stop():cv.__fx.start()})});
 function confetti(){if(matchMedia("(prefers-reduced-motion:reduce)").matches)return;const w=document.createElement("div");w.className="cfw";const c=["#0ABAB5","#ffd23f","#ff5d73","#7c5cff","#4cd964"];for(let i=0;i<46;i++){const e=document.createElement("i");e.style.cssText=`left:${Math.random()*100}%;background:${c[i%5]};animation-delay:${Math.random()*1.2}s;animation-duration:${2.4+Math.random()*1.8}s;transform:rotate(${Math.random()*360}deg)`;w.appendChild(e)}document.body.appendChild(w);setTimeout(()=>w.remove(),5200)}
 function bdResult(r,pct){
  const el=$("bdres");if(!el)return;
@@ -160,7 +189,7 @@ function bdResult(r,pct){
  el.innerHTML=`<div class="bdcard"><h3>🎉 З днем народження!</h3><p>Ваш особистий подарунок: знижка <b>−${r.percent}%</b> на все замовлення. Діє до ${u} включно, один раз.</p><div class="bdcode">${esc(r.code)}</div><div class="bdbtns"><button class="go" data-bduse="${esc(r.code)}">Використати в кошику</button><button class="sec" data-bdcp="${esc(r.code)}">Скопіювати код</button></div><p class="sku">Збережіть код: він діє лише для вас.</p></div>`;confetti()}
 function viewBday(){
  const on=bdOn(),pct=on?Math.min(90,+SHOP.bday_percent||0):0;
- $("view").innerHTML=`<section class="bdpage"><div class="bdem big">🎂</div><h1>Ваш день народження — наше свято</h1><p class="lead">Ми щиро вітаємо кожного клієнта! У тиждень вашого дня народження (7 днів, включно з самим днем) даруємо ${on?`<b>знижку −${pct}%</b>`:"особливу знижку"} на все, що є на сайті.</p>
+ $("view").innerHTML=`<section class="bdpage"><div class="hbtop hbtop2"><img src="${esc(SHOP.bday_img||BASE+"hb-banner.webp")}" alt=""><canvas class="hbfx"></canvas><h1 class="hbh" aria-label="Happy Birthday">${hbL("Happy Birthday!")}</h1></div><div class="hbn" style="margin-top:12px">Ваш день народження — наше свято</div><p class="lead">Ми щиро вітаємо кожного клієнта! У тиждень вашого дня народження (7 днів, включно з самим днем) даруємо ${on?`<b>знижку −${pct}%</b>`:"особливу знижку"} на все, що є на сайті.</p>
  ${on?`<form id="bdForm" class="bdform"><input id="bdn" placeholder="Ваше ім’я" autocomplete="given-name"><input id="bdc" placeholder="Телефон або email" autocomplete="email" required><div class="bdl">Дата народження${bdSel("bdd")}</div><label class="ck"><input type="checkbox" id="bdk"> <span>Погоджуюсь на обробку моїх даних для привітання й подарунка</span></label><div class="msg" id="bdm"></div><button class="go" id="bdgo">Отримати подарунок</button></form><div id="bdres"></div>`:'<div class="empty">Акція зараз не діє. Зазирніть пізніше.</div>'}
  <ul class="bdlist"><li>🎁 Подарунок один раз на рік для кожного</li><li>⏳ Діє 7 календарних днів поспіль</li><li>🔒 Дані використовуємо лише для привітання</li></ul></section>`;
  window.scrollTo(0,0)}
