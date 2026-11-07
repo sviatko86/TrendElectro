@@ -45,8 +45,8 @@ const price=p=>{const r=rate(p);return Math.round(p.pr0*(1+r[0]/100)*(1-r[1]/100
 function oldPrice(p){const r=rate(p);if(r[1]>0)return Math.round(p.pr0*(1+r[0]/100)*100)/100;if(p.old>p.pr0)return Math.round(p.old*(1+r[0]/100)*100)/100;return 0}
 const kyivDay=()=>{const p=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Kyiv",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date()).split("-").map(Number);return Date.UTC(p[0],p[1]-1,p[2])};
 function bdayInfo(){if(!(SHOP&&SHOP.bday_on&&prof&&prof.birthday))return null;const pct=Math.min(90,+SHOP.bday_percent||0);if(pct<=0)return null;const b=String(prof.birthday).split("-").map(Number),t=kyivDay(),y=new Date(t).getUTCFullYear();
- for(const yy of[y-1,y]){let m=b[1],d=b[2];if(m===2&&d===29&&new Date(Date.UTC(yy,1,29)).getUTCMonth()!==1){d=28}const s=Date.UTC(yy,m-1,d);if(t>=s&&t<=s+6*864e5)return{pct,end:new Date(s+6*864e5)}}return null}
-const bdPct=()=>{const b=bdayInfo();return b?b.pct:0};
+ for(const yy of[y-1,y]){let m=b[1],d=b[2];if(m===2&&d===29&&new Date(Date.UTC(yy,1,29)).getUTCMonth()!==1){d=28}const s=Date.UTC(yy,m-1,d);if(t>=s&&t<=s+6*864e5){const st=new Date(s).toISOString().slice(0,10);return{pct,end:new Date(s+6*864e5),start:st,claimed:String(prof.bday_claim||"").slice(0,10)===st}}}return null}
+const bdPct=()=>{const b=bdayInfo();return b&&b.claimed?b.pct:0};
 function priceInfo(p){const pc0=price(p),o=oldPrice(p),pd=prof?Math.max(+prof.discount_percent||0,bdPct()):0,pc=pd>0?Math.round(pc0*(100-pd))/100:pc0,base=o||(pd>0?pc0:0),disc=base?Math.round((1-pc/base)*100):0;return{pc,base,disc,sale:o>0,pers:pd>0}}
 const saleBadges=i=>(i.disc>0||i.sale?`<span class="bd s">${i.sale?"Розпродаж":"Ваша знижка"}</span>`:"")+(i.disc>0?`<span class="bd s2">−${i.disc}%</span>`:"");
 const priceHtml=i=>`<div class="price${i.disc>0?" sale":""}">${money(i.pc)}${i.base>i.pc?`<s>${money(i.base)}</s>`:""}</div>`;
@@ -134,7 +134,7 @@ function route(){
  else if(h.indexOf("#/page/")===0)viewPage(h.slice(7));
  else if(h==="#/birthday")viewBday();
  else viewHome();
- requestAnimationFrame(hbInit);
+ requestAnimationFrame(hbInit);setTimeout(bdPopup,500);
  document.querySelectorAll(".bnav button").forEach(b=>b.classList.toggle("on",(b.dataset.nav==="home"&&(h==="#/"||h===""))||(b.dataset.nav==="fav"&&h==="#/fav")||(b.dataset.nav==="cat"&&h.indexOf("#/c")===0)));
  window.scrollTo(0,SCR[h]||0);
 }
@@ -150,10 +150,21 @@ function bdFix(w){const g=k=>+w.querySelector(`[data-bd="${k}"]`).value,m=g("m")
 const bdOn=()=>!!(SHOP&&SHOP.bday_on&&(+SHOP.bday_percent||0)>0);
 const hbL=(t)=>[...t].map((c,i)=>c===" "?'<span class="hbs"> </span>':`<i style="--i:${i}">${c}</i>`).join("");
 const hbDeco=()=>'<span class="hbd" aria-hidden="true"><b style="left:4%;--d:0s">🎈</b><b style="left:18%;--d:1.2s">🎉</b><b style="left:46%;--d:.6s">🎈</b><b style="left:70%;--d:1.8s">🎁</b><b style="left:88%;--d:.3s">🎈</b><u style="left:12%;top:18%;--d:0s">✨</u><u style="left:60%;top:12%;--d:.8s">✨</u><u style="left:80%;top:62%;--d:1.4s">⭐</u><u style="left:34%;top:70%;--d:.4s">✨</u></span>';
+const bdLines=(bi,nm)=>`<div class="hbn">${nm?esc(nm)+", вітаємо":"Вітаємо"} з днем народження!</div><div class="hbd2">Даруємо знижку <span class="hbpct">${bi.pct}%</span></div>`;
+const bdGift=()=>`<button class="bdgift2" data-bdact type="button"><span class="gbx" aria-hidden="true"><i class="gl"></i><i class="gb"></i><i class="gr"></i></span><span>Отримати знижку</span></button>`;
+const bdOk=bi=>`<div class="bdok">✓ Знижку −${bi.pct}% активовано. Діє до ${bi.end.toLocaleDateString("uk-UA",{timeZone:"UTC"})} включно.</div>`;
 function bdHome(){
- if(!bdOn())return"";const bi=bdayInfo(),pct=Math.min(90,+SHOP.bday_percent||0),pic=`<div class="hbtop"><img src="${esc(SHOP.bday_img||BASE+"hb-banner.webp")}" alt="" loading="lazy"><canvas class="hbfx"></canvas><h2 class="hbh" aria-label="Happy Birthday">${hbL("Happy Birthday!")}</h2></div>`;
- if(bi){try{if(!sessionStorage.bdc){sessionStorage.bdc=1;setTimeout(confetti,700)}}catch(e){}const nm=(prof&&prof.full_name||"").split(" ")[0];return`<section class="bdhero hbpic">${hbDeco()}${pic}<div class="hbbody"><div class="bdem">🎂</div><div><div class="hbn">${nm?esc(nm)+", з":"З"} днем народження!</div><p>Вітаємо вас від усієї команди Trend Electro! Дарунок для вас: знижка −${bi.pct}% на все, що є на сайті. Діє до ${bi.end.toLocaleDateString("uk-UA",{timeZone:"UTC"})} включно, застосовується автоматично.</p></div></div></section>`}
- return`<a class="bdhero bdlink hbpic" href="#/birthday">${hbDeco()}${pic}<div class="hbbody"><div class="bdem">🎁</div><div><div class="hbn">Ваш день народження — наше свято</div><p>Даруємо знижку −${pct}% на тиждень у честь вашого дня народження. Без реєстрації, за хвилину.</p></div></div><span class="bdgo">Отримати подарунок</span></a>`}
+ if(!bdOn())return"";const bi=bdayInfo();if(!bi)return"";
+ const nm=(prof&&prof.full_name||"").split(" ")[0],pic=`<div class="hbtop"><img src="${esc(SHOP.bday_img||BASE+"hb-banner.webp")}" alt="" loading="lazy" onerror="this.style.display='none'"><canvas class="hbfx"></canvas><h2 class="hbh" aria-label="Happy Birthday">${hbL("Happy Birthday!")}</h2></div>`;
+ return`<section class="bdhero hbpic">${pic}<div class="hbbody hbcol">${bdLines(bi,nm)}${bi.claimed?bdOk(bi):bdGift()}</div></section>`}
+async function bdAct(btn){
+ if(!sb||!me)return;btn.disabled=true;document.querySelectorAll(".gbx").forEach(g=>g.classList.add("open"));confetti();
+ await new Promise(r=>setTimeout(r,900));
+ const r=await sb.rpc("claim_my_birthday");
+ if(r.error||!r.data||!r.data.ok){btn.disabled=false;document.querySelectorAll(".gbx").forEach(g=>g.classList.remove("open"));toast(r.error&&/claim_my_birthday|function/i.test(r.error.message||"")?"Знижка ще налаштовується. Спробуйте трохи пізніше.":"Не вдалося отримати знижку. Спробуйте пізніше.");return}
+ await loadProf();const pop=$("bdpop");if(pop){pop.remove();document.body.style.overflow=""}
+ route();window.scrollTo(0,0);document.body.classList.add("bdnew");setTimeout(()=>document.body.classList.remove("bdnew"),5000);
+ toast("Знижку −"+r.data.percent+"% активовано! Ціни оновлено ✓");confetti()}
 const HBC=["#ffd23f","#ff5d8f","#2fd9d3","#9d8cff","#4cd964","#ffffff","#ff9f1c"];
 function hbFx(cv){
  const ctx=cv.getContext("2d"),par=cv.parentElement,dpr=Math.min(2,devicePixelRatio||1);let W=0,H=0,P=[],F=[],B=[],last=0,tf=0,tb=0,run=false,raf=0,vis=true;
@@ -178,6 +189,12 @@ function hbFx(cv){
   raf=requestAnimationFrame(step)}
  return{start(){if(run||matchMedia("(prefers-reduced-motion:reduce)").matches)return;run=true;last=performance.now();raf=requestAnimationFrame(step)},stop(){run=false;cancelAnimationFrame(raf)}}}
 const hbIO=window.IntersectionObserver?new IntersectionObserver(es=>es.forEach(e=>{const f=e.target.__fx;if(!f)return;e.isIntersecting&&!document.hidden?f.start():f.stop()}),{threshold:.1}):null;
+function bdPopup(){
+ if(document.getElementById("bdpop"))return;const bi=bdayInfo();if(!bi||bi.claimed)return;try{if(sessionStorage.bdp)return;sessionStorage.bdp=1}catch(e){}
+ const nm=(prof&&prof.full_name||"").split(" ")[0],pc=`<div class="hbtop"><img src="${esc(SHOP.bday_img||BASE+"hb-banner.webp")}" alt="" onerror="this.style.display='none'"><canvas class="hbfx"></canvas><h2 class="hbh" aria-label="Happy Birthday">${hbL("Happy Birthday!")}</h2></div>`;
+ const d=document.createElement("div");d.id="bdpop";d.className="bdpop";d.innerHTML=`<div class="bdpc" role="dialog" aria-modal="true"><button class="bdx" aria-label="Закрити">✕</button>${pc}<div class="bdpb">${bdLines(bi,nm)}${bdGift()}</div></div>`;
+ d.addEventListener("click",e=>{if(e.target===d||e.target.closest(".bdx")){d.remove();document.body.style.overflow=""}});
+ document.body.appendChild(d);document.body.style.overflow="hidden";hbInit();confetti()}
 function hbInit(){document.querySelectorAll("canvas.hbfx").forEach(cv=>{if(cv.__fx)return;cv.__fx=hbFx(cv);hbIO?hbIO.observe(cv):cv.__fx.start()})}
 document.addEventListener("visibilitychange",()=>{document.querySelectorAll("canvas.hbfx").forEach(cv=>{if(!cv.__fx)return;document.hidden?cv.__fx.stop():cv.__fx.start()})});
 function confetti(){if(matchMedia("(prefers-reduced-motion:reduce)").matches)return;const w=document.createElement("div");w.className="cfw";const c=["#0ABAB5","#ffd23f","#ff5d73","#7c5cff","#4cd964"];for(let i=0;i<46;i++){const e=document.createElement("i");e.style.cssText=`left:${Math.random()*100}%;background:${c[i%5]};animation-delay:${Math.random()*1.2}s;animation-duration:${2.4+Math.random()*1.8}s;transform:rotate(${Math.random()*360}deg)`;w.appendChild(e)}document.body.appendChild(w);setTimeout(()=>w.remove(),5200)}
@@ -189,7 +206,7 @@ function bdResult(r,pct){
  el.innerHTML=`<div class="bdcard"><h3>🎉 З днем народження!</h3><p>Ваш особистий подарунок: знижка <b>−${r.percent}%</b> на все замовлення. Діє до ${u} включно, один раз.</p><div class="bdcode">${esc(r.code)}</div><div class="bdbtns"><button class="go" data-bduse="${esc(r.code)}">Використати в кошику</button><button class="sec" data-bdcp="${esc(r.code)}">Скопіювати код</button></div><p class="sku">Збережіть код: він діє лише для вас.</p></div>`;confetti()}
 function viewBday(){
  const on=bdOn(),pct=on?Math.min(90,+SHOP.bday_percent||0):0;
- $("view").innerHTML=`<section class="bdpage"><div class="hbtop hbtop2"><img src="${esc(SHOP.bday_img||BASE+"hb-banner.webp")}" alt=""><canvas class="hbfx"></canvas><h1 class="hbh" aria-label="Happy Birthday">${hbL("Happy Birthday!")}</h1></div><div class="hbn" style="margin-top:12px">Ваш день народження — наше свято</div><p class="lead">Ми щиро вітаємо кожного клієнта! У тиждень вашого дня народження (7 днів, включно з самим днем) даруємо ${on?`<b>знижку −${pct}%</b>`:"особливу знижку"} на все, що є на сайті.</p>
+ $("view").innerHTML=`<section class="bdpage"><div class="hbtop hbtop2"><img src="${esc(SHOP.bday_img||BASE+"hb-banner.webp")}" alt="" onerror="this.style.display='none'"><canvas class="hbfx"></canvas><h1 class="hbh" aria-label="Happy Birthday">${hbL("Happy Birthday!")}</h1></div><div class="hbn" style="margin-top:12px">Ваш день народження — наше свято</div><p class="lead">Ми щиро вітаємо кожного клієнта! У тиждень вашого дня народження (7 днів, включно з самим днем) даруємо ${on?`<b>знижку −${pct}%</b>`:"особливу знижку"} на все, що є на сайті.</p>
  ${on?`<form id="bdForm" class="bdform"><input id="bdn" placeholder="Ваше ім’я" autocomplete="given-name"><input id="bdc" placeholder="Телефон або email" autocomplete="email" required><div class="bdl">Дата народження${bdSel("bdd")}</div><label class="ck"><input type="checkbox" id="bdk"> <span>Погоджуюсь на обробку моїх даних для привітання й подарунка</span></label><div class="msg" id="bdm"></div><button class="go" id="bdgo">Отримати подарунок</button></form><div id="bdres"></div>`:'<div class="empty">Акція зараз не діє. Зазирніть пізніше.</div>'}
  <ul class="bdlist"><li>🎁 Подарунок один раз на рік для кожного</li><li>⏳ Діє 7 календарних днів поспіль</li><li>🔒 Дані використовуємо лише для привітання</li></ul></section>`;
  window.scrollTo(0,0)}
@@ -428,7 +445,7 @@ async function placeOrder(btn){if(SHOP.orders_off)return;
 /* ---------- кабінет ---------- */
 async function loadProf(){
  prof=null;if(me){try{const r=await sb.from("profiles").select("*").eq("id",me.id).maybeSingle();prof=r.data}catch(e){}}
- $("accL").textContent=me?"Кабінет":"Увійти";drawCart();if($("acc").classList.contains("on"))drawAcc();
+ $("accL").textContent=me?"Кабінет":"Увійти";drawCart();if($("acc").classList.contains("on"))drawAcc();setTimeout(bdPopup,300);
 }
 const lbl=s=>({new:"Нове",confirmed:"Підтверджено",shipped:"Відправлено",done:"Виконано",cancelled:"Скасовано"}[s]||s);
 function drawAcc(msg){
@@ -446,7 +463,7 @@ function drawAcc(msg){
 }
 function bdayBlock(){
  if(!prof)return"";const bi=bdayInfo();
- const gift=bi?`<div class="bdgift">🎂 З днем народження! Ваша знижка −${bi.pct}% діє до ${bi.end.toLocaleDateString("uk-UA",{timeZone:"UTC"})} включно.</div>`:"";
+ const gift=bi?`<div class="bdgift">🎂 ${bi.claimed?`З днем народження! Знижка −${bi.pct}% активна до ${bi.end.toLocaleDateString("uk-UA",{timeZone:"UTC"})} включно.`:`З днем народження! Для вас знижка ${bi.pct}%.`}</div>${bi.claimed?"":bdGift()}`:"";
  if(prof.birthday){return gift+`<div class="sku">Дата народження: ${esc(new Date(prof.birthday+"T00:00:00Z").toLocaleDateString("uk-UA",{timeZone:"UTC"}))}</div>`}
  return gift+`<div class="bdl">Дата народження${bdSel("rb")}</div><button type="button" class="go" id="rbsave">Зберегти дату народження</button><div class="sku">${SHOP&&SHOP.bday_on?`У тиждень дня народження — знижка ${+SHOP.bday_percent||0}%. `:""}Дату можна вказати лише один раз.</div>`}
 async function accClick(t){
@@ -467,7 +484,7 @@ async function accClick(t){
    if(r.error){m(r.error.message==="Invalid login credentials"?"Невірний email або пароль.":"Помилка: "+r.error.message);return}
   }
  }
- if(t.id==="rbsave"){const v=bdVal("rb");if(!v){m("Оберіть день, місяць і рік народження.");return}t.disabled=true;const r=await sb.rpc("set_birthday",{p_date:v});t.disabled=false;if(r.error){const e=r.error.message||"";m(/set_birthday|schema cache|function|birthday/i.test(e)&&!/Невірна|Увійдіть/.test(e)?"Помилка бази: не виконано schema_v13_birthday.sql у Supabase.":"Не вдалося зберегти дату: "+e);return}m("Дату збережено ✓",true);setTimeout(loadProf,0);return}
+ if(t.id==="rbsave"){const v=bdVal("rb");if(!v){m("Оберіть день, місяць і рік народження.");return}t.disabled=true;const r=await sb.rpc("set_birthday",{p_date:v});t.disabled=false;if(r.error){const e=r.error.message||"";m(/set_birthday|schema cache|function|birthday/i.test(e)&&!/Невірна|Увійдіть/.test(e)?"Помилка бази: не виконано schema_v13_birthday.sql у Supabase.":"Не вдалося зберегти дату: "+e);return}if(r.data===false){await loadProf();m(prof&&prof.birthday?"Дата вже збережена раніше.":"Не вдалося знайти ваш профіль. Вийдіть і увійдіть знову.");return}m("Дату збережено ✓",true);setTimeout(loadProf,0);return}
  if(t.id==="rsave"){const u=await sb.from("profiles").update({full_name:$("rn").value.trim(),phone:$("rp").value.trim()}).eq("id",me.id);if(u.error){m("Не вдалося зберегти.");return}m("Збережено ✓",true);setTimeout(loadProf,0)}
  if(t.id==="rout"){await sb.auth.signOut();me=null;prof=null;promoPct=0;promoCode="";$("accL").textContent="Увійти";drawCart();drawAcc()}
 }
@@ -638,6 +655,7 @@ document.addEventListener("DOMContentLoaded",boot);
   if(x=t.closest("[data-install]")){e.preventDefault();if(dip){dip.prompt();dip=null}else toast("На iPhone: «Поділитися» → «На початковий екран». На Android: меню ⋮ → «Встановити додаток».");return}
   if(x=t.closest("[data-copy]")){const u=x.dataset.copy;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast("Посилання скопійовано"),()=>toast(u));return}
   if(x=t.closest("[data-nshare]")){navigator.share({title:x.dataset.t,url:x.dataset.nshare}).catch(()=>{});return}
+  if(x=t.closest("[data-bdact]")){bdAct(x);return}
   if(x=t.closest("[data-bduse]")){openCart();applyPromo(x.dataset.bduse);return}
   if(x=t.closest("[data-bdcp]")){const u=x.dataset.bdcp;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast("Код скопійовано"),()=>toast(u));return}
   if(x=t.closest("[data-usepromo]")){openCart();applyPromo(x.dataset.usepromo);return}
