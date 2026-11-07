@@ -571,10 +571,11 @@ document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target&&e.target.i
 /* ---------- лендінги ---------- */
 const LSITE="https://trendelectro.com.ua/";
 let LLIST=[],LED=null,LST={};
-const LBT={hero:"Головний екран",products:"Товари (картки зі знижкою)",compare:"Порівняння цін: на сайті / за посиланням",benefits:"Переваги",timer:"Таймер до дати",video:"Відео YouTube / TikTok",text:"Текст",gallery:"Галерея фото",steps:"Як замовити (кроки)",faq:"Питання та відповіді",delivery:"Доставка та оплата",order:"Форма швидкого замовлення",contacts:"Кнопки Viber / Telegram / дзвінок",cta:"Заклик із кнопкою"};
+const LBT={hero:"Головний екран",products:"Товари (картки зі знижкою)",compare:"Порівняння цін: на сайті / за посиланням",bundle:"Набір «Разом дешевше» (2–5 товарів)",benefits:"Переваги",timer:"Таймер до дати",video:"Відео YouTube / TikTok",text:"Текст",gallery:"Галерея фото",steps:"Як замовити (кроки)",faq:"Питання та відповіді",delivery:"Доставка та оплата",order:"Форма швидкого замовлення",contacts:"Кнопки Viber / Telegram / дзвінок",cta:"Заклик із кнопкою"};
 const LBF={hero:[["badge","Плашка зверху (напр. «−20%»)"],["title","Великий заголовок"],["sub","Підзаголовок"],["btn","Текст кнопки (веде до форми замовлення)"],["img","Фон",1]],
  products:[["title","Заголовок блоку"],["ids","Артикули через кому",2],["cat","Або вся категорія",3],["n","Скільки показати (до 40)"]],
  compare:[["title","Заголовок"],["ids","Артикули через кому",2],["cat","Або вся категорія",3],["n","Скільки показати (до 8)"]],
+ bundle:[["title","Заголовок"],["ids","Артикули набору через кому (2–5)",2],["btn","Текст кнопки"]],
  benefits:[["title","Заголовок"],["items","Кожен рядок: емодзі | заголовок | текст",4]],
  timer:[["title","Напис над таймером"],["until","Дата й час завершення (справжня дата акції)",5]],
  video:[["title","Заголовок"],["url","Посилання на відео YouTube або TikTok"]],
@@ -593,6 +594,7 @@ const LTPL={
   {t:"benefits",title:"Чому LED-гірлянди",items:"💡 | Економні | Споживають у рази менше, ніж лампи розжарювання\n❄️ | Для вулиці й дому | Є моделі з захистом від вологи\n🎄 | Різні режими | Миготіння, плавне світіння, статичний режим\n🚚 | Швидка доставка | Новою поштою по всій Україні"},
   {t:"products",title:"Оберіть гірлянду",n:"24"},
   {t:"compare",title:"Порівняйте ціни",n:"6"},
+  {t:"bundle",title:"Набір: усе потрібне разом",ids:""},
   {t:"timer",title:"Встигніть замовити до свят"},
   {t:"steps",title:"Як замовити",items:"Оберіть гірлянду | Вкажіть ім’я й телефон у формі\nМи зателефонуємо | Підтвердимо замовлення й доставку\nОтримайте на пошті | Оплата при отриманні або на рахунок"},
   {t:"faq",items:"Чи можна вішати на вулиці? | Так, якщо в описі вказано захист IP44 або вище.\nЯк обрати довжину? | Для ялинки 1,5–2 м зазвичай достатньо 10–15 м гірлянди.\nСкільки йде доставка? | Зазвичай 1–3 дні Новою поштою."},
@@ -625,6 +627,7 @@ function drawLE(){const L=LED,th=L.theme;
  <div class="grid2"><div><label>Колір</label><input type="color" data-th="c" value="${esc(th.c||"#0ABAB5")}" style="height:42px"></div><div><label>Анімація</label><select data-th="fx">${[["none","Без анімації"],["snow","Сніг"],["sparks","Вогники"]].map(o=>`<option value="${o[0]}"${(th.fx||"none")===o[0]?" selected":""}>${o[1]}</option>`).join("")}</select></div></div>
  <label><input type="checkbox" data-th="lights" ${th.lights?"checked":""} style="width:auto"> Гірлянда-лампочки зверху головного екрана</label>
  <label><input type="checkbox" data-th="dark" ${th.dark?"checked":""} style="width:auto"> Темні блоки</label>
+ <div class="box" style="margin:0"><label><input type="checkbox" data-px="on" ${(th.px||{}).on?"checked":""} style="width:auto"> Реклама: підключити коди відстеження (необов’язково, вимкнено за замовчуванням)</label><div class="mut">Потрібні тільки якщо ви запускаєте рекламу. Порожнє поле = цей сервіс не підключається. Зніміть галочку, щоб вимкнути все разом.</div><label>Facebook / Instagram Pixel ID (цифри)</label><input data-px="fb" value="${esc((th.px||{}).fb||"")}" placeholder="напр. 123456789012345"><label>TikTok Pixel ID</label><input data-px="tt" value="${esc((th.px||{}).tt||"")}" placeholder="напр. C1A2B3C4D5E6F7G8H9"><label>Google (GA4 або Ads) ID</label><input data-px="ga" value="${esc((th.px||{}).ga||"")}" placeholder="напр. G-ABC123XYZ"></div>
  <label>Знижка на цьому лендінгу, % від цін сайту (0 = без знижки)</label><input type="number" min="0" max="90" data-th="disc" value="${esc(th.disc||0)}"><div class="mut">Ціни на сторінці показуються зі знижкою й старою ціною. Знижка діє тільки для замовлень з цього лендінгу (код створюється автоматично).</div></div>`+
  L.blocks.map((b,i)=>`<div class="box"${b.off?' style="opacity:.55"':""}><div class="rw"><b>${i+1}. ${esc(LBT[b.t]||b.t)}</b><span><button data-ln="up" data-bi="${i}">↑</button> <button data-ln="dn" data-bi="${i}">↓</button> <button data-ln="off" data-bi="${i}">${b.off?"Показати":"Сховати"}</button> <button data-ln="rm" data-bi="${i}">✕</button></span></div>${(LBF[b.t]||[]).map(f=>lField(b,i,f)).join("")}</div>`).join("")+
  `<div class="box"><label>Додати блок</label><select id="lnb">${Object.keys(LBT).map(k=>`<option value="${k}">${LBT[k]}</option>`).join("")}</select><button data-ln="add">Додати блок унизу</button></div>
@@ -642,6 +645,7 @@ async function lCreate(title,tpl,src){let base=lSlug(title),slug=base,n=2;const 
 let LSQT=null;
 document.addEventListener("input",e=>{const t=e.target;if(!LED||!$("pane").contains(t))return;
  if(t.dataset.lt){LED[t.dataset.lt]=t.type==="checkbox"?t.checked:t.value;if(t.dataset.lt==="active")drawLE()}
+ else if(t.dataset.px){LED.theme.px=LED.theme.px||{};LED.theme.px[t.dataset.px]=t.type==="checkbox"?t.checked:t.value.trim()}
  else if(t.dataset.th){LED.theme[t.dataset.th]=t.type==="checkbox"?t.checked:t.value}
  else if(t.dataset.bk&&t.dataset.bi!=null&&t.type!=="file"){LED.blocks[+t.dataset.bi][t.dataset.bk]=t.value}
  else if(t.dataset.lsq!=null){const i=t.dataset.lsq,q=t.value.trim();clearTimeout(LSQT);if(q.length<2){document.querySelector(`[data-lsr="${i}"]`).innerHTML="";return}
