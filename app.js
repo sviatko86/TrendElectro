@@ -439,7 +439,8 @@ function drawCart(){
  $("dinfo").textContent=t.d>0?"Знижка "+t.d+"%: −"+money(Math.round((t.s-t.t)*100)/100):"";
  const f=Object.keys(fav).length;$("fcnt").textContent=f||"";$("bfcnt").textContent=f||"";
 }
-function openCart(){if(SHOP.orders_off)return;$("drawer").classList.remove("ordered");$("done").hidden=true;$("omsg").textContent="";drawCart();if(prof){if(!$("fn").value)$("fn").value=prof.full_name||"";if(!$("fp").value)$("fp").value=prof.phone||""}const cu=LS("te_cust",null);if(cu){if(!$("fn").value)$("fn").value=cu.n||"";if(!$("fp").value)$("fp").value=cu.p||"";if(!$("fc").value)$("fc").value=cu.c||""}panel("drawer",true)}
+function payOpts(){const s=$("fy");if(!s)return;const o=["Оплата при отриманні","Оплата карткою"];if(SHOP.pay_cod_off)o.shift();if(SHOP.pay_card_off)o.pop();if(SHOP.bank_on)o.push("Оплата на рахунок ФОП (IBAN)");const cur=s.value;s.innerHTML=o.map(x=>`<option>${x}</option>`).join("");if(o.indexOf(cur)>-1)s.value=cur}
+function openCart(){if(SHOP.orders_off)return;payOpts();$("drawer").classList.remove("ordered");$("done").hidden=true;$("omsg").textContent="";drawCart();if(prof){if(!$("fn").value)$("fn").value=prof.full_name||"";if(!$("fp").value)$("fp").value=prof.phone||""}const cu=LS("te_cust",null);if(cu){if(!$("fn").value)$("fn").value=cu.n||"";if(!$("fp").value)$("fp").value=cu.p||"";if(!$("fc").value)$("fc").value=cu.c||""}panel("drawer",true)}
 async function applyPromo(code){
  const c=(code||"").trim().toUpperCase(),pm=$("pmsg");promoPct=0;promoCode="";pm.textContent="";$("fpr").value=c;
  if(c&&sb){const r=await sb.rpc("check_promo",{p_code:c});
@@ -465,7 +466,7 @@ async function placeOrder(btn){if(SHOP.orders_off)return;
  const o=r.data,t="Замовлення №"+o.id+"\n"+o.items.map(x=>x.id+" · "+x.name+" × "+x.qty+" = "+money(Math.round(x.price*x.qty*100)/100)).join("\n")+"\nРазом: "+money(+o.total)+(+o.discount?" (знижка "+o.discount+"%)":"")+"\nДоставка: "+$("fd").value+", "+ad+"\nОплата: "+$("fy").value;
  SV("te_cust",{n:nm,p:ph,d:$("fd").value,c:ad});srcSend(o.id,ph);cart={};save();promoPct=0;promoCode="";$("fpr").value="";$("pmsg").textContent="";drawCart();$("form").hidden=true;$("lines").innerHTML="";
  const d=$("done");d.hidden=false;$("drawer").classList.add("ordered");
- d.innerHTML=`<div class="ok">${ico("check")}</div><b style="font-size:20px">Дякуємо! Замовлення №${esc(o.id)} прийнято.</b><div class="sku" style="font-size:14px">Менеджер зателефонує найближчим часом, щоб підтвердити деталі й доставку.</div><pre>${esc(t)}</pre>${accOffer(nm,ph,"go")}<button class="go" id="dclose">Продовжити покупки</button>`;
+ d.innerHTML=`<div class="ok">${ico("check")}</div><b style="font-size:20px">Дякуємо! Замовлення №${esc(o.id)} прийнято.</b><div class="sku" style="font-size:14px">Менеджер зателефонує найближчим часом, щоб підтвердити деталі й доставку.</div><pre>${esc(t)}</pre>${/IBAN/.test($("fy").value)&&SHOP.bank_text?`<div class="pk big" style="white-space:pre-line"><b>Реквізити для оплати:</b>\n${esc(SHOP.bank_text)}\nПризначення: замовлення №${esc(o.id)}</div>`:""}${accOffer(nm,ph,"go")}<button class="go" id="dclose">Продовжити покупки</button>`;
 }
 
 /* ---------- кабінет ---------- */
@@ -485,9 +486,9 @@ function drawAcc(msg){
  sb.from("promo_codes").select("code,percent,title,expires_at,uses_left").or("client_id.eq."+me.id+",show_all.eq.true").order("created_at",{ascending:false}).then(r=>{
   const l=r.data||[],e=$("pcodes");if(!e)return;
   e.innerHTML=l.length?l.map(c=>`<div class="pcode"><div><b>${esc(c.code)}</b> −${c.percent}%<small>${esc(c.title||"Персональна знижка")}${c.expires_at?" · до "+new Date(c.expires_at).toLocaleDateString("uk-UA"):""}</small></div><button data-use="${esc(c.code)}">Використати</button></div>`).join(""):'<div class="sku">Активних промокодів поки немає.</div>'});
- sb.from("orders").select("id,created_at,total,status").order("created_at",{ascending:false}).limit(20).then(r=>{
+ sb.from("orders").select("id,created_at,total,status,ttn,payment_status").order("created_at",{ascending:false}).limit(20).then(r=>{
   const l=r.data||[],e=$("ords");if(!e)return;
-  {const pe=$("lypend"),pn=l.filter(x=>x.status!=="done"&&x.status!=="cancelled").reduce((s,x)=>s+(+x.total||0),0);if(pe)pe.textContent=pn>0?"Замовлення в обробці: "+money(pn)+". Їх буде враховано після виконання.":""}e.innerHTML=l.length?l.map(o=>`<div class="ord"><span>№${o.id} · ${new Date(o.created_at).toLocaleDateString("uk-UA")}</span><span><b>${money(+o.total)}</b> · ${lbl(o.status)}</span></div>`).join(""):'<div class="empty">Замовлень ще немає.</div>'});
+  {const pe=$("lypend"),pn=l.filter(x=>x.status!=="done"&&x.status!=="cancelled").reduce((s,x)=>s+(+x.total||0),0);if(pe)pe.textContent=pn>0?"Замовлення в обробці: "+money(pn)+". Їх буде враховано після виконання.":""}e.innerHTML=l.length?l.map(o=>`<div class="ord"><span>№${o.id} · ${new Date(o.created_at).toLocaleDateString("uk-UA")}</span><span><b>${money(+o.total)}</b> · ${lbl(o.status)}${o.payment_status==="paid"?" · оплачено":""}</span>${o.ttn?`<span class="ottn">Накладна Нової пошти: <a href="https://novaposhta.ua/tracking/?cargo_number=${encodeURIComponent(o.ttn)}" target="_blank" rel="noopener">${esc(o.ttn)}</a> — відстежити посилку</span>`:""}</div>`).join(""):'<div class="empty">Замовлень ще немає.</div>'});
 }
 function bdayBlock(){
  if(!prof)return"";const bi=bdayInfo();
