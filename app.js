@@ -49,7 +49,7 @@ const kyivDay=()=>{const p=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Kyi
 function bdayInfo(){if(!(SHOP&&SHOP.bday_on&&prof&&prof.birthday))return null;const pct=Math.min(90,+SHOP.bday_percent||0);if(pct<=0)return null;const b=String(prof.birthday).split("-").map(Number),t=kyivDay(),y=new Date(t).getUTCFullYear();
  for(const yy of[y-1,y]){let m=b[1],d=b[2];if(m===2&&d===29&&new Date(Date.UTC(yy,1,29)).getUTCMonth()!==1){d=28}const s=Date.UTC(yy,m-1,d);if(t>=s&&t<=s+(bdN()-1)*864e5){const st=new Date(s).toISOString().slice(0,10);return{pct,end:new Date(s+(bdN()-1)*864e5),start:st,claimed:String(prof.bday_claim||"").slice(0,10)===st}}}return null}
 const bdPct=()=>{const b=bdayInfo();return b&&b.claimed?b.pct:0};
-function priceInfo(p){const pc0=price(p),o=oldPrice(p),pd=Math.max(prof?Math.max(+prof.discount_percent||0,bdPct()):0,LAPPLY),pc=pd>0?Math.round(pc0*(100-pd))/100:pc0,base=o||(pd>0?pc0:0),disc=base?Math.round((1-pc/base)*100):0;return{pc,base,disc,sale:o>0,pers:pd>0}}
+function priceInfo(p){const pc0=price(p),o=oldPrice(p),pd=Math.max(prof?Math.max(+prof.discount_percent||0,bdPct(),cardPct()):0,LAPPLY),pc=pd>0?Math.round(pc0*(100-pd))/100:pc0,base=o||(pd>0?pc0:0),disc=base?Math.round((1-pc/base)*100):0;return{pc,base,disc,sale:o>0,pers:pd>0}}
 const saleBadges=i=>(i.disc>0||i.sale?`<span class="bd s">${i.sale?"Розпродаж":"Ваша знижка"}</span>`:"")+(i.disc>0?`<span class="bd s2">−${i.disc}%</span>`:"");
 const priceHtml=i=>`<div class="price${i.disc>0?" sale":""}">${money(i.pc)}${i.base>i.pc?`<s>${money(i.base)}</s>`:""}</div>`;
 const oldHtml=p=>{const o=oldPrice(p);return o?`<s>${money(o)}</s>`:""};
@@ -72,11 +72,31 @@ async function loadProducts(){
  }
  PALL=all.map(r=>({id:r.id,n:r.name,c:[r.category,r.subcategory,r.subcategory2].filter(x=>x&&x!=="Усі"),b:r.brand||"",pr0:+r.price||0,old:r.old_price!=null?+r.old_price:0,img:r.image_url||"",hit:!!r.is_hit,nw:!!r.is_new,ofr:r.special||"",st:r.in_stock!==false,d:null,sp:null}));
 }
+
+/* ---------- персональні картки клієнта ---------- */
+let LOY={on:true,one:true,tiers:[{k:"silver",p:5,f:0},{k:"gold",p:10,f:5000},{k:"platinum",p:15,f:15000},{k:"vip",p:20,f:50000}]};
+const TN={silver:"Silver",gold:"Gold",platinum:"Platinum",vip:"VIP"};
+const cardPct=()=>LOY.on===false||!prof?0:(+prof.card_pct||0);
+const loyOne=s=>{if(LOY.one===false)return 0;let m=0;(LOY.tiers||[]).forEach(t=>{if(+t.f>0&&+t.f<=s)m=Math.max(m,+t.p)});return m};
+const tierRank=k=>(LOY.tiers||[]).findIndex(t=>t.k===k);
+const cardNo=n=>{const m=String(n||"").match(/(\d+)/);return"TE-"+(m?m[1].padStart(4,"0"):"0000")};
+function wCard(k,pct,no,name){return`<div class="wcard ${esc(k)}"><span class="wsh"></span><img class="wlogo" src="${esc(BASE)}logo2.webp" alt="Trend Electro"><div class="wname">${esc(name||"")}</div><div class="wpct">${esc(pct)}% ЗНИЖКА</div><div class="wtier">${esc(TN[k]||k)}${k==="vip"?"<small>діамантова</small>":""}</div><div class="wno"><small>КАРТКА №</small><b>${esc(no)}</b></div></div>`}
+function loyBlock(){if(!prof||LOY.on===false)return"";const T=LOY.tiers,k=prof.card_tier||"silver",cur=T.find(t=>t.k===k)||T[0],sp=+prof.loyalty_spent||0,nx=T.find(t=>+t.f>sp);
+ const prog=nx?`<div class="lyn">Ще <b>${money(Math.max(0,+nx.f-sp))}</b> покупок до картки <b>${esc(TN[nx.k])}</b> зі знижкою <b>${nx.p}%</b></div><div class="lybar"><i style="width:${Math.min(100,Math.max(3,Math.round((sp-+cur.f)/(+nx.f-+cur.f)*100)))}%"></i></div><div class="lyr"><span>${money(sp)}</span><span>${money(+nx.f)}</span></div>`:`<div class="lyn">🎉 У вас найвищий рівень картки. Дякуємо, що ви з нами!</div>`;
+ const one=LOY.one===false?"":`<div class="sku">Разова знижка за велике замовлення: ${T.filter(t=>+t.f>0).map(t=>"від "+money(+t.f)+" → "+t.p+"%").join(", ")}.</div>`;
+ return`<div class="loy">${wCard(k,cur.p,cardNo(prof.card_number),prof.full_name)}<div class="lyb"><div class="lyh">Куплено на суму: <b>${money(sp)}</b></div>${prog}<div id="lypend" class="sku"></div><div class="lylad">${T.map(t=>`<div class="${t.k===k?"on":""}${sp>=+t.f?" ok":""}"><b>${esc(TN[t.k])}</b><span>${t.p}%</span><small>${+t.f?"від "+money(+t.f):"одразу"}</small></div>`).join("")}</div><div class="sku">Знижка за карткою діє на всі товари сайту і застосовується автоматично. До суми рахуємо виконані замовлення.</div>${one}</div></div>`}
+function loyPop(){if(!prof||!me||LOY.on===false)return;let seen=null;try{seen=localStorage.getItem("te_tier_"+me.id)}catch(e){}const k=prof.card_tier||"silver";if(seen===k)return;
+ if(seen&&tierRank(k)<=tierRank(seen)){try{localStorage.setItem("te_tier_"+me.id,k)}catch(e){}return}
+ const t=LOY.tiers.find(x=>x.k===k)||LOY.tiers[0],first=!seen;try{localStorage.setItem("te_tier_"+me.id,k)}catch(e){}
+ const d=document.createElement("div");d.className="lpop";d.innerHTML=`<div class="lpbox"><button class="lpx" aria-label="Закрити">×</button><h3>${first?"Вітаємо в Trend Electro! 🎉":"Вітаємо з новою карткою! 🎉"}</h3>${wCard(k,t.p,cardNo(prof.card_number),prof.full_name)}<p>${first?`Даруємо вам персональну картку клієнта <b>${esc(TN[k])}</b> з постійною знижкою <b>${t.p}%</b> на всі товари. Ви для нас важливі.`:`Ваша картка стала <b>${esc(TN[k])}</b>. Тепер постійна знижка <b>${t.p}%</b> на всі товари. Дякуємо, що ви з нами!`}</p><button class="go" data-lyopen="1">Дивитись мою картку</button></div>`;
+ d.addEventListener("click",e=>{if(e.target===d||e.target.closest(".lpx"))d.remove();if(e.target.closest("[data-lyopen]")){d.remove();drawAcc();panel("acc",true)}});document.body.appendChild(d);if(typeof confetti==="function")try{confetti()}catch(e){}}
 async function loadSettings(){
- const r=await sb.from("settings").select("key,value").in("key",["pricing","category_images","pages","shop"]);
+ const r=await sb.from("settings").select("key,value").in("key",["pricing","category_images","pages","shop","loyalty"]);
  (r.data||[]).forEach(x=>{
   if(x.key==="pricing"){const v=x.value||{};PR={m:+v.markup_percent||0,d:+v.discount_percent||0,c:v.by_category||{}}}
   if(x.key==="category_images")CI=x.value||{};
+  if(x.key==="loyalty"&&x.value&&Array.isArray(x.value.tiers)&&x.value.tiers.length)LOY=Object.assign(LOY,x.value);
+  else if(x.key==="loyalty"&&x.value)LOY=Object.assign(LOY,{on:x.value.on,one:x.value.one});
   if(x.key==="pages")PAGES=x.value||{};
   if(x.key==="shop")SHOP=x.value||{};
  });
@@ -409,7 +429,7 @@ let ttm=null;function toast(t,btn){$("toastT").textContent=t;$("toastB").hidden=
 
 /* ---------- кошик ---------- */
 const save=()=>SV("te_cart",cart);
-function totals(ids){let s=0;ids.forEach(i=>s+=price(M[i])*cart[i]);const d=Math.max(prof?(+prof.discount_percent||0):0,bdPct(),promoPct);return{s,d,t:Math.round(s*(100-d))/100}}
+function totals(ids){let s=0;ids.forEach(i=>s+=price(M[i])*cart[i]);const d=Math.max(prof?(+prof.discount_percent||0):0,bdPct(),cardPct(),promoPct,loyOne(s));return{s,d,t:Math.round(s*(100-d))/100}}
 function drawCart(){
  const ids=Object.keys(cart).filter(i=>M[i]);let n=0;
  $("lines").innerHTML=ids.length?ids.map(i=>{const p=M[i],q=cart[i];n+=q;const u="#/p/"+encodeURIComponent(i);return `<div class="row"><a class="rth" href="${u}" aria-label="${esc(p.n)}">${img(p.img,120,120)}</a><a href="${u}">${esc(p.n)}</a><b>${money(price(p)*q)}</b><div class="qty"><button data-m="${esc(i)}" aria-label="Менше">−</button>${q}<button data-p="${esc(i)}" aria-label="Більше">+</button></div><span class="sku">${money(price(p))} / шт.</span></div>`}).join(""):'<div class="empty">Кошик поки порожній.<br>Додайте товари з каталогу — і оформлення займе хвилину.<br><br><a class="btn" href="#/c/">До каталогу</a></div>';
@@ -441,29 +461,29 @@ async function placeOrder(btn){if(SHOP.orders_off)return;
  btn.disabled=false;btn.textContent="Оформити замовлення";
  if(r.error){const em=r.error.message||"";return err("",/schema cache|Could not find|function/i.test(em)?"Не вдалося оформити замовлення. Спробуйте ще раз або зателефонуйте нам.":em)}
  const o=r.data,t="Замовлення №"+o.id+"\n"+o.items.map(x=>x.id+" · "+x.name+" × "+x.qty+" = "+money(Math.round(x.price*x.qty*100)/100)).join("\n")+"\nРазом: "+money(+o.total)+(+o.discount?" (знижка "+o.discount+"%)":"")+"\nДоставка: "+$("fd").value+", "+ad+"\nОплата: "+$("fy").value;
- SV("te_cust",{n:nm,p:ph,d:$("fd").value,c:ad});cart={};save();promoPct=0;promoCode="";$("fpr").value="";$("pmsg").textContent="";drawCart();$("form").hidden=true;$("lines").innerHTML="";
+ SV("te_cust",{n:nm,p:ph,d:$("fd").value,c:ad});srcSend(o.id,ph);cart={};save();promoPct=0;promoCode="";$("fpr").value="";$("pmsg").textContent="";drawCart();$("form").hidden=true;$("lines").innerHTML="";
  const d=$("done");d.hidden=false;$("drawer").classList.add("ordered");
- d.innerHTML=`<div class="ok">${ico("check")}</div><b style="font-size:20px">Дякуємо! Замовлення №${esc(o.id)} прийнято.</b><div class="sku" style="font-size:14px">Менеджер зателефонує найближчим часом, щоб підтвердити деталі й доставку.</div><pre>${esc(t)}</pre><button class="go" id="dclose">Продовжити покупки</button>`;
+ d.innerHTML=`<div class="ok">${ico("check")}</div><b style="font-size:20px">Дякуємо! Замовлення №${esc(o.id)} прийнято.</b><div class="sku" style="font-size:14px">Менеджер зателефонує найближчим часом, щоб підтвердити деталі й доставку.</div><pre>${esc(t)}</pre>${accOffer(nm,ph,"go")}<button class="go" id="dclose">Продовжити покупки</button>`;
 }
 
 /* ---------- кабінет ---------- */
 async function loadProf(){
  prof=null;if(me){try{const r=await sb.from("profiles").select("*").eq("id",me.id).maybeSingle();prof=r.data}catch(e){}}
- $("accL").textContent=me?"Кабінет":"Увійти";drawCart();if($("acc").classList.contains("on"))drawAcc();setTimeout(bdPopup,300);
+ $("accL").textContent=me?"Кабінет":"Увійти";drawCart();if($("acc").classList.contains("on"))drawAcc();setTimeout(bdPopup,300);setTimeout(loyPop,900);
 }
 const lbl=s=>({new:"Нове",confirmed:"Підтверджено",shipped:"Відправлено",done:"Виконано",cancelled:"Скасовано"}[s]||s);
 function drawAcc(msg){
  const b=$("abody");
  if(!sb){b.innerHTML='<div class="empty">Кабінет тимчасово недоступний.</div>';return}
  if(!me){
-  b.innerHTML=`<p class="sku" style="font-size:14px;margin:12px 0">Увійдіть, щоб отримати дисконтну картку, бачити свої замовлення й персональні промокоди.</p><div class="tabs"><button data-t="in" class="${tab==="in"?"on":""}">Вхід</button><button data-t="up" class="${tab==="up"?"on":""}">Реєстрація</button></div><div class="df" style="border:0;padding:12px 0">${tab==="up"?'<input id="rn" placeholder="Ім’я та прізвище" autocomplete="name"><input id="rp" placeholder="Телефон" inputmode="tel" autocomplete="tel"><div class="bdl">Дата народження (обов’язково)'+bdSel("rb")+'</div><div class="sku">У тиждень дня народження — особлива знижка. Дату можна вказати лише один раз.</div>':""}<input id="re" type="email" placeholder="Email" autocomplete="email"><input id="rw" type="password" placeholder="Пароль (мінімум 6 символів)" autocomplete="${tab==="up"?"new-password":"current-password"}"><div class="msg" id="rm">${esc(msg||"")}</div><button class="go" id="rgo">${tab==="up"?"Зареєструватися":"Увійти"}</button></div>`;return}
- b.innerHTML=`<div class="bigcard" style="margin-top:12px"><small>Дисконтна картка</small><b>${esc(prof?prof.card_number||"—":"…")}</b><small>Ваша знижка: ${prof?(+prof.discount_percent||0):0}%</small></div><h3 style="margin:6px 0">Мої промокоди</h3><div id="pcodes"><div class="sku">Завантаження…</div></div><div class="df" style="border:0;padding:12px 0"><input id="rn" placeholder="Ім’я та прізвище" value="${esc(prof&&prof.full_name||"")}"><input id="rp" placeholder="Телефон" inputmode="tel" value="${esc(prof&&prof.phone||"")}">${bdayBlock()}<div class="msg" id="rm"></div><button class="go" id="rsave">Зберегти дані</button></div><div class="sku">${esc(me.email||"")}</div><h3 style="margin:14px 0 6px">Мої замовлення</h3><div id="ords"><div class="empty">Завантаження…</div></div><button class="more" id="rout">Вийти</button>`;
+  b.innerHTML=`<p class="sku" style="font-size:14px;margin:12px 0">Зареєструйтеся й отримайте персональну картку клієнта Silver з постійною знижкою 5%. Чим більше купуєте, тим вища знижка: до 20%.</p><div class="tabs"><button data-t="in" class="${tab==="in"?"on":""}">Вхід</button><button data-t="up" class="${tab==="up"?"on":""}">Реєстрація</button></div><div class="df" style="border:0;padding:12px 0">${tab==="up"?'<input id="rn" placeholder="Ім’я та прізвище" autocomplete="name"><input id="rp" placeholder="Телефон" inputmode="tel" autocomplete="tel"><div class="bdl">Дата народження (обов’язково)'+bdSel("rb")+'</div><div class="sku">У тиждень дня народження — особлива знижка. Дату можна вказати лише один раз.</div>':""}<input id="re" type="email" placeholder="Email" autocomplete="email"><input id="rw" type="password" placeholder="Пароль (мінімум 6 символів)" autocomplete="${tab==="up"?"new-password":"current-password"}"><div class="msg" id="rm">${esc(msg||"")}</div><button class="go" id="rgo">${tab==="up"?"Зареєструватися":"Увійти"}</button></div>`;return}
+ b.innerHTML=`${loyBlock()||`<div class="bigcard" style="margin-top:12px"><small>Дисконтна картка</small><b>${esc(prof?prof.card_number||"—":"…")}</b><small>Ваша знижка: ${prof?(+prof.discount_percent||0):0}%</small></div>`}<h3 style="margin:6px 0">Мої промокоди</h3><div id="pcodes"><div class="sku">Завантаження…</div></div><div class="df" style="border:0;padding:12px 0"><input id="rn" placeholder="Ім’я та прізвище" value="${esc(prof&&prof.full_name||"")}"><input id="rp" placeholder="Телефон" inputmode="tel" value="${esc(prof&&prof.phone||"")}">${bdayBlock()}<div class="msg" id="rm"></div><button class="go" id="rsave">Зберегти дані</button></div><div class="sku">${esc(me.email||"")}</div><h3 style="margin:14px 0 6px">Мої замовлення</h3><div id="ords"><div class="empty">Завантаження…</div></div><button class="more" id="rout">Вийти</button>`;
  sb.from("promo_codes").select("code,percent,title,expires_at,uses_left").or("client_id.eq."+me.id+",show_all.eq.true").order("created_at",{ascending:false}).then(r=>{
   const l=r.data||[],e=$("pcodes");if(!e)return;
   e.innerHTML=l.length?l.map(c=>`<div class="pcode"><div><b>${esc(c.code)}</b> −${c.percent}%<small>${esc(c.title||"Персональна знижка")}${c.expires_at?" · до "+new Date(c.expires_at).toLocaleDateString("uk-UA"):""}</small></div><button data-use="${esc(c.code)}">Використати</button></div>`).join(""):'<div class="sku">Активних промокодів поки немає.</div>'});
  sb.from("orders").select("id,created_at,total,status").order("created_at",{ascending:false}).limit(20).then(r=>{
   const l=r.data||[],e=$("ords");if(!e)return;
-  e.innerHTML=l.length?l.map(o=>`<div class="ord"><span>№${o.id} · ${new Date(o.created_at).toLocaleDateString("uk-UA")}</span><span><b>${money(+o.total)}</b> · ${lbl(o.status)}</span></div>`).join(""):'<div class="empty">Замовлень ще немає.</div>'});
+  {const pe=$("lypend"),pn=l.filter(x=>x.status!=="done"&&x.status!=="cancelled").reduce((s,x)=>s+(+x.total||0),0);if(pe)pe.textContent=pn>0?"Замовлення в обробці: "+money(pn)+". Їх буде враховано після виконання.":""}e.innerHTML=l.length?l.map(o=>`<div class="ord"><span>№${o.id} · ${new Date(o.created_at).toLocaleDateString("uk-UA")}</span><span><b>${money(+o.total)}</b> · ${lbl(o.status)}</span></div>`).join(""):'<div class="empty">Замовлень ще немає.</div>'});
 }
 function bdayBlock(){
  if(!prof)return"";const bi=bdayInfo();
@@ -835,8 +855,8 @@ async function lOrder(btn){const f=btn.closest(".lform"),m=f.querySelector(".lms
  let r=await sb.rpc("create_order",args);if(r.error&&args.p_promo&&/Промокод/i.test(r.error.message||"")){args.p_promo=null;r=await sb.rpc("create_order",args)}
  btn.disabled=false;btn.textContent="Оформити замовлення";
  if(r.error){const em=r.error.message||"";return bad(null,/schema cache|Could not find|function/i.test(em)?"Не вдалося оформити замовлення. Спробуйте ще раз або зателефонуйте нам.":em)}
- lHit("order");const o=r.data;lEv("order",+o.total);LCART={};const bar=$("lbar");if(bar)bar.remove();
- f.innerHTML=`<div class="ldone"><b>Дякуємо! Замовлення №${esc(o.id)} прийнято.</b><p>${(o.items||[]).map(x=>esc(x.name)+" × "+x.qty).join("<br>")}</p><p>Разом: ${money(+o.total)}${+o.discount?" (знижка "+esc(o.discount)+"%)":""}</p><p>Менеджер зателефонує найближчим часом.</p></div>`;document.querySelectorAll(".lcard .lctl").forEach(k=>k.innerHTML="")}
+ lHit("order");const o=r.data;lEv("order",+o.total);srcSend(o.id,ph);LCART={};const bar=$("lbar");if(bar)bar.remove();
+ f.innerHTML=`<div class="ldone"><b>Дякуємо! Замовлення №${esc(o.id)} прийнято.</b><p>${(o.items||[]).map(x=>esc(x.name)+" × "+x.qty).join("<br>")}</p><p>Разом: ${money(+o.total)}${+o.discount?" (знижка "+esc(o.discount)+"%)":""}</p><p>Менеджер зателефонує найближчим часом.</p>${accOffer(nm,ph,"lbtn lsm")}</div>`;document.querySelectorAll(".lcard .lctl").forEach(k=>k.innerHTML="")}
 document.addEventListener("click",e=>{
  const g=e.target.closest("[data-lgo]");if(g){const t=$(g.dataset.lgo==="prods"?"lprods":"lorder")||$("lorder");if(t){t.scrollIntoView({behavior:"smooth",block:"start"});lHit("click")}return}
  const lq=e.target.closest("[data-lq]");if(lq){const id=lq.dataset.lq,n=(LCART[id]||0)+(+lq.dataset.d);if(n<=0)delete LCART[id];else LCART[id]=Math.min(99,n);if(+lq.dataset.d>0){lHit("click");lEv("add",M[id]?lPr(M[id],lCur()).l:0)}lRefresh();return}
@@ -849,3 +869,13 @@ document.addEventListener("click",e=>{
 
 document.addEventListener("input",e=>{const s=e.target.closest&&e.target.closest(".lcalc");if(s&&e.target.dataset.cin)lCalc(s)});
 document.addEventListener("change",e=>{const s=e.target.closest&&e.target.closest(".lcalc");if(s&&e.target.dataset.cin)lCalc(s)});
+
+/* ---------- клієнти: джерело замовлення і кабінет після замовлення ---------- */
+function srcInit(){try{let s=JSON.parse(localStorage.getItem("te_src")||"null");const now=Date.now();
+ if(!s||now-s.t>30*864e5){const q=new URLSearchParams(location.search);let ch=q.get("utm_source");if(ch){const c=q.get("utm_campaign");ch+=c?"/"+c:""}else if(q.get("fbclid"))ch="facebook";else if(q.get("ttclid"))ch="tiktok";else if(q.get("gclid"))ch="google";else if(q.get("ref"))ch=q.get("ref");else{try{const h=new URL(document.referrer).hostname.replace(/^www\./,"");if(h&&h!==location.hostname)ch=h}catch(e){}}
+  s={c:String(ch||"direct").slice(0,60),t:now};localStorage.setItem("te_src",JSON.stringify(s))}window.__srcc=s.c}catch(e){window.__srcc="direct"}}
+srcInit();
+function srcStr(){const h=curH(),lp=h.indexOf("#/l/")===0?decodeURIComponent(h.slice(4)):"";return(window.__srcc||"direct")+(lp?" → лендінг "+lp:"")}
+function srcSend(id,phone){if(SHOP.src_off||!sb||!id)return;sb.rpc("set_order_source",{p_id:id,p_phone:phone,p_src:srcStr()}).then(()=>{},()=>{})}
+function accOffer(nm,ph,cls){if(me||SHOP.acc_offer_off)return"";return`<div class="accoffer"><button class="${cls}" data-mkacc="1" data-n="${esc(nm)}" data-p="${esc(ph)}">Створити кабінет</button><div class="sku">Історія замовлень, персональні знижки й вітання в день народження. Ім’я й телефон уже заповнено.</div></div>`}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-mkacc]");if(!b)return;tab="up";drawAcc();panel("acc",true);setTimeout(()=>{const n=$("rn"),p=$("rp");if(n)n.value=b.dataset.n||"";if(p)p.value=(b.dataset.p||"").replace(/\s/g,"")},60)});

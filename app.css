@@ -426,3 +426,29 @@ body.lndon{padding-bottom:84px}
 .lcres{text-align:left!important;justify-items:start!important}.lcres .lbtn{justify-self:center}
 .lpt{width:100%;border-collapse:collapse;font-size:14px}.lpt th,.lpt td{border:1px solid var(--line);padding:6px 8px;text-align:left}.lpt th{background:var(--line2)}.lpu{margin:8px 0;padding-left:20px;display:grid;gap:4px;font-size:15px}
 .lschw{overflow-x:auto;margin:8px 0;background:#fff;border-radius:var(--rs);padding:6px;color:#111}.lsch{min-width:420px;width:100%;height:auto}.lleg{font-size:12px;text-align:center}
+.accoffer{display:grid;gap:6px;justify-items:center;text-align:center;margin-top:10px}
+/* картки клієнта */
+.loy{display:grid;gap:12px;margin-top:12px}
+.wcard{container-type:inline-size;position:relative;aspect-ratio:1.586;border-radius:18px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.6);color:#555;font-family:inherit;user-select:none}
+.wcard::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 1px,transparent 1px 3px);mix-blend-mode:overlay;pointer-events:none}
+.wcard.silver{background:linear-gradient(135deg,#d3d7da,#f8f9fa 38%,#c4c8cc 62%,#e6e9eb);color:#595d61}
+.wcard.gold{background:linear-gradient(135deg,#bf9b47,#f3e2a4 40%,#c3a050 62%,#e8d28e);color:#6b4d0f}
+.wcard.platinum{background:linear-gradient(135deg,#cfd3d7,#fbfbfc 40%,#d6d9dc 65%,#f0f2f3);color:#7a5a35}
+.wcard.vip{background:linear-gradient(135deg,#0a4f94,#1aa6dc 45%,#0b5ea8 70%,#0a3f7c);color:#e9c76d}
+.wsh{position:absolute;inset:-40% -60%;background:linear-gradient(105deg,transparent 42%,rgba(255,255,255,.55) 50%,transparent 58%);transform:translateX(-60%);animation:wsh 5.5s ease-in-out infinite;pointer-events:none}
+@keyframes wsh{0%,55%{transform:translateX(-60%)}100%{transform:translateX(60%)}}
+.wlogo{position:absolute;left:6cqw;top:6cqw;width:30cqw;height:auto}
+.wname{position:absolute;left:6cqw;bottom:21cqw;font-size:3.6cqw;font-weight:700;letter-spacing:.08em;text-transform:uppercase;max-width:60cqw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85}
+.wpct{position:absolute;left:6cqw;bottom:8cqw;font-size:8cqw;font-weight:800;letter-spacing:.02em;text-shadow:0 1px 0 rgba(255,255,255,.35)}
+.wtier{position:absolute;right:6cqw;bottom:21cqw;font-size:8.5cqw;font-weight:800;text-align:right;text-shadow:0 1px 0 rgba(255,255,255,.35)}
+.wtier small{display:block;font-size:3cqw;letter-spacing:.06em;text-transform:uppercase;font-weight:700;opacity:.9}
+.wcard.vip .wtier{font-size:13cqw;line-height:.9;bottom:23cqw;background:linear-gradient(180deg,#f7e3a0,#c79a35);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
+.wno{position:absolute;right:6cqw;bottom:8cqw;text-align:right}.wno small{display:block;font-size:2.8cqw;letter-spacing:.08em;opacity:.8}.wno b{font-size:5.2cqw;letter-spacing:.04em}
+.lyb{display:grid;gap:8px}.lyh{font-size:15px}.lyn{font-size:15px}
+.lybar{height:12px;background:var(--line);border-radius:99px;overflow:hidden}.lybar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),#6ee7e2);border-radius:99px;transition:width 1s var(--ease)}
+.lyr{display:flex;justify-content:space-between;font-size:12px;color:var(--mute)}
+.lylad{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.lylad div{border:1px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center;display:grid;gap:2px;opacity:.6}.lylad div.ok{opacity:1}.lylad div.on{border:2px solid var(--acc);opacity:1;background:var(--accl)}.lylad span{font-weight:800;font-size:18px}.lylad small{font-size:11px;color:var(--mute)}
+.lpop{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.6);display:grid;place-items:center;padding:16px;animation:lin .3s both}
+.lpbox{background:var(--card);border-radius:20px;padding:20px;max-width:420px;width:100%;display:grid;gap:12px;text-align:center;position:relative;max-height:92vh;overflow:auto}.lpbox h3{margin:0}.lpbox p{margin:0}
+.lpx{position:absolute;top:8px;right:12px;background:none;border:0;font-size:28px;cursor:pointer;color:var(--mute)}
+@media(prefers-reduced-motion:reduce){.wsh{animation:none;opacity:0}}
