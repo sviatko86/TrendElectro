@@ -1,3 +1,4 @@
+let RECOV=false;
 let LAPPLY=0;
 const $=i=>document.getElementById(i);
 const curH=()=>location.hash||window.__R||"#/";
@@ -475,8 +476,10 @@ const lbl=s=>({new:"Нове",confirmed:"Підтверджено",shipped:"Ві
 function drawAcc(msg){
  const b=$("abody");
  if(!sb){b.innerHTML='<div class="empty">Кабінет тимчасово недоступний.</div>';return}
+ if(RECOV){b.innerHTML=`<div class="df" style="border:0;padding:12px 0"><h3 style="margin:0">Новий пароль</h3><p class="sku" style="font-size:14px">Придумайте новий пароль для входу (мінімум 6 символів).</p><input id="np1" type="password" placeholder="Новий пароль" autocomplete="new-password"><input id="np2" type="password" placeholder="Повторіть пароль" autocomplete="new-password"><div class="msg" id="rm">${esc(msg||"")}</div><button class="go" id="npgo">Зберегти пароль</button></div>`;return}
+ if(!me&&tab==="forgot"){b.innerHTML=`<div class="df" style="border:0;padding:12px 0"><h3 style="margin:0">Відновлення пароля</h3><p class="sku" style="font-size:14px">Введіть email, з яким реєструвались. Ми надішлемо лист із посиланням, щоб придумати новий пароль.</p><input id="fe" type="email" placeholder="Email" autocomplete="email"><div class="msg" id="rm">${esc(msg||"")}</div><button class="go" id="fgo">Надіслати лист</button><button type="button" class="btn" data-t="in">← Назад до входу</button></div>`;return}
  if(!me){
-  b.innerHTML=`<p class="sku" style="font-size:14px;margin:12px 0">Зареєструйтеся й отримайте персональну картку клієнта Silver з постійною знижкою 5%. Чим більше купуєте, тим вища знижка: до 20%.</p><div class="tabs"><button data-t="in" class="${tab==="in"?"on":""}">Вхід</button><button data-t="up" class="${tab==="up"?"on":""}">Реєстрація</button></div><div class="df" style="border:0;padding:12px 0">${tab==="up"?'<input id="rn" placeholder="Ім’я та прізвище" autocomplete="name"><input id="rp" placeholder="Телефон" inputmode="tel" autocomplete="tel"><div class="bdl">Дата народження (обов’язково)'+bdSel("rb")+'</div><div class="sku">У тиждень дня народження — особлива знижка. Дату можна вказати лише один раз.</div>':""}<input id="re" type="email" placeholder="Email" autocomplete="email"><input id="rw" type="password" placeholder="Пароль (мінімум 6 символів)" autocomplete="${tab==="up"?"new-password":"current-password"}"><div class="msg" id="rm">${esc(msg||"")}</div><button class="go" id="rgo">${tab==="up"?"Зареєструватися":"Увійти"}</button></div>`;return}
+  b.innerHTML=`<p class="sku" style="font-size:14px;margin:12px 0">Зареєструйтеся й отримайте персональну картку клієнта Silver з постійною знижкою 5%. Чим більше купуєте, тим вища знижка: до 20%.</p><div class="tabs"><button data-t="in" class="${tab==="in"?"on":""}">Вхід</button><button data-t="up" class="${tab==="up"?"on":""}">Реєстрація</button></div><div class="df" style="border:0;padding:12px 0">${tab==="up"?'<input id="rn" placeholder="Ім’я та прізвище" autocomplete="name"><input id="rp" placeholder="Телефон" inputmode="tel" autocomplete="tel"><div class="bdl">Дата народження (обов’язково)'+bdSel("rb")+'</div><div class="sku">У тиждень дня народження — особлива знижка. Дату можна вказати лише один раз.</div>':""}<input id="re" type="email" placeholder="Email" autocomplete="email"><input id="rw" type="password" placeholder="Пароль (мінімум 6 символів)" autocomplete="${tab==="up"?"new-password":"current-password"}"><div class="msg" id="rm">${esc(msg||"")}</div><button class="go" id="rgo">${tab==="up"?"Зареєструватися":"Увійти"}</button>${tab==="up"?"":'<button type="button" class="btn" data-t="forgot">Забули пароль?</button>'}</div>`;return}
  b.innerHTML=`${loyBlock()||`<div class="bigcard" style="margin-top:12px"><small>Дисконтна картка</small><b>${esc(prof?prof.card_number||"—":"…")}</b><small>Ваша знижка: ${prof?(+prof.discount_percent||0):0}%</small></div>`}<h3 style="margin:6px 0">Мої промокоди</h3><div id="pcodes"><div class="sku">Завантаження…</div></div><div class="df" style="border:0;padding:12px 0"><input id="rn" placeholder="Ім’я та прізвище" value="${esc(prof&&prof.full_name||"")}"><input id="rp" placeholder="Телефон" inputmode="tel" value="${esc(prof&&prof.phone||"")}">${bdayBlock()}<div class="msg" id="rm"></div><button class="go" id="rsave">Зберегти дані</button></div><div class="sku">${esc(me.email||"")}</div><h3 style="margin:14px 0 6px">Мої замовлення</h3><div id="ords"><div class="empty">Завантаження…</div></div><button class="more" id="rout">Вийти</button>`;
  sb.from("promo_codes").select("code,percent,title,expires_at,uses_left").or("client_id.eq."+me.id+",show_all.eq.true").order("created_at",{ascending:false}).then(r=>{
   const l=r.data||[],e=$("pcodes");if(!e)return;
@@ -494,6 +497,14 @@ async function accClick(t){
  const m=(x,ok)=>{const el=$("rm");if(el){el.className="msg"+(ok?" ok":"");el.textContent=x}};
  if(t.dataset.t){tab=t.dataset.t;drawAcc();return}
  if(t.dataset.use){panel("acc",false);openCart();await applyPromo(t.dataset.use);return}
+ if(t.id==="fgo"){const em=$("fe").value.trim();if(!/^\S+@\S+\.\S+$/.test(em)){m("Введіть правильний email.");return}
+  t.disabled=true;const r=await sb.auth.resetPasswordForEmail(em,{redirectTo:location.origin+"/"});t.disabled=false;
+  if(r.error){m(/rate|seconds|many/i.test(r.error.message)?"Забагато спроб. Спробуйте за хвилину.":"Не вдалося надіслати лист. Спробуйте пізніше або зателефонуйте нам.");return}
+  m("Готово! Якщо цей email зареєстровано, ми надіслали лист із посиланням. Перевірте також «Спам».",true);return}
+ if(t.id==="npgo"){const p1=$("np1").value,p2=$("np2").value;if(p1.length<6){m("Пароль має містити мінімум 6 символів.");return}if(p1!==p2){m("Паролі не збігаються.");return}
+  t.disabled=true;const r=await sb.auth.updateUser({password:p1});t.disabled=false;
+  if(r.error){m(/same|different/i.test(r.error.message)?"Новий пароль має відрізнятися від старого.":"Не вдалося змінити пароль. Відкрийте лист із посиланням ще раз.");return}
+  RECOV=false;tab="in";drawAcc();toast("Пароль змінено ✓");return}
  if(t.id==="rgo"){
   const em=$("re").value.trim(),pw=$("rw").value;
   if(!em||pw.length<6){m("Введіть email і пароль (мінімум 6 символів).");return}
@@ -607,7 +618,7 @@ async function boot(){
   if(window.supabase)break}}
  if(!(window.supabase&&window.TE&&TE.url&&TE.key)){$("view").innerHTML='<div class="empty">Каталог тимчасово недоступний.<br><br><button class="btn" onclick="location.reload()">Спробувати ще раз</button></div>';return}
  sb=supabase.createClient(TE.url,TE.key);
- sb.auth.onAuthStateChange((_e,s)=>{me=s?s.user:null;setTimeout(loadProf,0)});
+ sb.auth.onAuthStateChange((_e,s)=>{me=s?s.user:null;if(_e==="PASSWORD_RECOVERY"){RECOV=true;setTimeout(()=>{drawAcc();panel("acc",true)},400)}setTimeout(loadProf,0)});
  loadBanners();loadPromos();
  try{await Promise.all([loadProducts(),loadSettings(),loadCats(),fetch(BASE+"img/map.json").then(r=>r.ok?r.json():[]).then(a=>{IMG=new Set(a)}).catch(()=>{})]);PALL.forEach(p=>{const k=safeId(p.id);if(IMG.has(k))p.img=BASE+"img/"+k+".webp"})}catch(e){$("view").innerHTML='<div class="empty">Не вдалося завантажити каталог. Перевірте інтернет і оновіть сторінку.</div>';return}
  applyOrders();applyLayout();build();ALLN=[];collectN(ROOT);initChat();drawFooter();
