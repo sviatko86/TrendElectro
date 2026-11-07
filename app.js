@@ -339,7 +339,7 @@ const stile=k=>`<a class="stile" href="${href(k.path)}"><span class="th pic">${i
 function tilesHtml(list){if(!list.length)return"";const S=SHOP||{},c=innerWidth<700?Math.min(3,Math.max(2,+S.cat_cols_m||2)):Math.min(6,Math.max(2,+S.cat_cols||4)),rw=Math.min(8,Math.max(0,+S.cat_rows||0)),lim=rw?c*rw:0;
  return `<div class="stiles">${list.map((k,i)=>lim&&i>=lim?stile(k).replace('class="stile"','class="stile xt" hidden'):stile(k)).join("")}</div>${lim&&list.length>lim?`<button class="more xtb" data-xt="1">Показати всі ${list.length} ↓</button>`:""}`}
 const ytU=q=>"https://www.youtube.com/results?search_query="+encodeURIComponent(q);
-const ytBox=a=>`<div class="box vid"><h2>Відео по темі</h2>${(a.vid||[]).map(v=>`<button class="yt" data-yt="${esc(v)}" style="background-image:url(https://i.ytimg.com/vi/${esc(v)}/hqdefault.jpg)" aria-label="Дивитись відео">▶</button>`).join("")}<p>Краще один раз побачити? Короткі відео за темою «${esc(a.title)}»:</p><div class="cta"><a class="btn" href="${esc(ytU(a.yt||a.title))}" target="_blank" rel="noopener">▶ YouTube</a><a class="btn" href="${esc("https://www.tiktok.com/search?q="+encodeURIComponent(a.yt||a.title))}" target="_blank" rel="noopener">♪ TikTok</a><a class="btn" href="${esc("https://www.google.com/search?q="+encodeURIComponent("site:instagram.com/reel "+(a.yt||a.title)))}" target="_blank" rel="noopener">◎ Instagram Reels</a></div></div>`;
+const ytBox=a=>`<div class="box vid"><h2>Відео за темою</h2>${(a.vid||[]).map(v=>`<button class="yt" data-yt="${esc(v)}" style="background-image:url(https://i.ytimg.com/vi/${esc(v)}/hqdefault.jpg)" aria-label="Дивитись відео">▶</button>`).join("")}<p>Краще один раз побачити? Короткі відео за темою «${esc(a.title)}»:</p><div class="cta"><a class="btn" href="${esc(ytU(a.yt||a.title))}" target="_blank" rel="noopener">▶ YouTube</a><a class="btn" href="${esc("https://www.tiktok.com/search?q="+encodeURIComponent(a.yt||a.title))}" target="_blank" rel="noopener">♪ TikTok</a><a class="btn" href="${esc("https://www.google.com/search?q="+encodeURIComponent("site:instagram.com/reel "+(a.yt||a.title)))}" target="_blank" rel="noopener">◎ Instagram Reels</a></div></div>`;
 const gcard=a=>`<a class="gcard" href="#/guide/${a.slug}"><b>${esc(a.title)}</b><span>${esc(a.description)}</span><em>Читати →</em></a>`;
 async function viewGuide(slug){
  const L=await arts(),a=slug?L.find(x=>x.slug===slug):null;
@@ -485,10 +485,10 @@ async function accClick(t){
    if(!r.data.session)m("Перевірте пошту й підтвердіть email, потім увійдіть.",true);
   }else{
    const r=await sb.auth.signInWithPassword({email:em,password:pw});t.disabled=false;
-   if(r.error){m(r.error.message==="Invalid login credentials"?"Невірний email або пароль.":"Помилка: "+r.error.message);return}
+   if(r.error){m(r.error.message==="Invalid login credentials"?"Неправильний email або пароль.":"Помилка: "+r.error.message);return}
   }
  }
- if(t.id==="rbsave"){const v=bdVal("rb");if(!v){m("Оберіть день, місяць і рік народження.");return}t.disabled=true;const r=await sb.rpc("set_birthday",{p_date:v});t.disabled=false;if(r.error){const e=r.error.message||"";m(/set_birthday|schema cache|function|birthday/i.test(e)&&!/Невірна|Увійдіть/.test(e)?"Помилка бази: не виконано schema_v13_birthday.sql у Supabase.":"Не вдалося зберегти дату: "+e);return}if(r.data===false){await loadProf();m(prof&&prof.birthday?"Дата вже збережена раніше.":"Не вдалося знайти ваш профіль. Вийдіть і увійдіть знову.");return}m("Дату збережено ✓",true);setTimeout(loadProf,0);return}
+ if(t.id==="rbsave"){const v=bdVal("rb");if(!v){m("Оберіть день, місяць і рік народження.");return}t.disabled=true;const r=await sb.rpc("set_birthday",{p_date:v});t.disabled=false;if(r.error){const e=r.error.message||"";m(/set_birthday|schema cache|function|birthday/i.test(e)&&!/Невірна|Увійдіть/.test(e)?"Не вдалося зберегти дату. Спробуйте пізніше або напишіть нам.":"Не вдалося зберегти дату: "+e);return}if(r.data===false){await loadProf();m(prof&&prof.birthday?"Дата вже збережена раніше.":"Не вдалося знайти ваш профіль. Вийдіть і увійдіть знову.");return}m("Дату збережено ✓",true);setTimeout(loadProf,0);return}
  if(t.id==="rsave"){const u=await sb.from("profiles").update({full_name:$("rn").value.trim(),phone:$("rp").value.trim()}).eq("id",me.id);if(u.error){m("Не вдалося зберегти.");return}m("Збережено ✓",true);setTimeout(loadProf,0)}
  if(t.id==="rout"){await sb.auth.signOut();me=null;prof=null;promoPct=0;promoCode="";$("accL").textContent="Увійти";drawCart();drawAcc()}
 }
@@ -510,7 +510,7 @@ function drawFooter(){
 <div><b>Каталог</b>${tops.map(k=>`<a href="${href(k.path)}">${esc(k.name)}</a>`).join("")}</div>
 <div><b>Покупцям</b><a href="#/page/delivery">Оплата і доставка</a><a href="#/page/exchange">Обмін та повернення</a><a href="#/page/coop">Співпраця та опт</a><a href="#/guide/">Поради та статті</a><a href="#" data-install="1">Встановити додаток</a>${SHOP.help_on?'<a href="#/help">Помічник підбору</a>':""}<a href="#/page/privacy">Політика конфіденційності</a><a href="#/page/about">Про нас</a><a href="#/page/contacts">Контакти</a></div>
 <div><b>${c.length?"Зв’язатися з нами":"Допомога"}</b>${c.join("")||`<a href="#/page/contacts">Контакти та підтримка</a>`}</div>`;
- $("fbot").textContent="© "+new Date().getFullYear()+" Trend Electro. Ціни на сайті вказані в гривнях з ПДВ.";
+ $("fbot").textContent="© "+new Date().getFullYear()+" Trend Electro. Ціни на сайті вказані в гривнях.";
 }
 
 /* ---------- події ---------- */
@@ -737,55 +737,55 @@ function lEv(k,val){try{const L=lCur();if(!((L.theme||{}).px||{}).on)return;
  if(window.gtag)gtag("event",k==="add"?"add_to_cart":"generate_lead",val?{value:val,currency:"UAH"}:{})}catch(e){}}
 
 /* ---------- калькулятори (лендінги та сторінка «Помічник підбору») ---------- */
-const CN={garland:"Гірлянда: скільки потрібно",light:"Освітлення: лампи, світильники, трек, стрічка",strip:"LED-стрічка і блок живлення",furn:"Розетки, вимикачі, прохідні й перехресні",cable:"Кабель і автомат за потужністю",panel:"Щиток: автомати, УЗО, реле, таймери"};
+const CN={garland:"Гірлянда: скільки потрібно",light:"Освітлення: лампи, світильники, трек, стрічка",strip:"LED-стрічка і блок живлення",furn:"Розетки, вимикачі, прохідні й перехресні",cable:"Кабель і автомат за потужністю",panel:"Щиток: автомати, захист від ураження струмом, реле, таймери"};
 const cSel=(n,l,o,d)=>`<label>${l}<select data-cin="${n}">${o.map(x=>`<option value="${x[0]}"${String(x[0])===String(d)?" selected":""}>${x[1]}</option>`).join("")}</select></label>`;
 const cNum=(n,l,d,mn,st)=>`<label>${l}<input data-cin="${n}" type="number" min="${mn}" step="${st||1}" value="${d}" inputmode="decimal"></label>`;
 const cRooms=[[150,"Спальня"],[150,"Вітальня"],[200,"Кухня"],[200,"Дитяча"],[100,"Коридор, хол"],[200,"Ванна, санвузол"],[300,"Кабінет, робоче місце"],[100,"Гараж, комора"]];
 const PSU=[12,15,18,24,30,36,40,50,60,75,100,120,150,200,240,300,350,400,500,600,800,1000];
 const BRK=[6,10,16,20,25,32,40,50,63,80,100];
 const CALC={
- garland:{f:()=>cSel("mode","Що прикрашаєте",[["tree","Ялинку"],["line","Вікно, дім, огорожу (по контуру)"]],"tree")+`<span class="c-tree">${cNum("h","Висота ялинки, м",2,.3,.1)}</span><span class="c-tree">${cSel("d","Густота гілок",[[6,"Рідка"],[9,"Звичайна"],[12,"Пишна"]],9)}</span><span class="c-line" hidden>${cNum("len","Довжина контуру, м",10,1,.5)}</span>`,
+ garland:{f:()=>cSel("mode","Що прикрашаєте",[["tree","Ялинку"],["line","Вікно, дім, огорожу (за контуром)"]],"tree")+`<span class="c-tree">${cNum("h","Висота ялинки, м",2,.3,.1)}</span><span class="c-tree">${cSel("d","Густота гілок",[[6,"Рідка"],[9,"Звичайна"],[12,"Пишна"]],9)}</span><span class="c-line" hidden>${cNum("len","Довжина контуру, м",10,1,.5)}</span>`,
   run:(g,gs,s)=>{const m=gs("mode");s.querySelectorAll(".c-tree").forEach(e=>e.hidden=m!=="tree");s.querySelectorAll(".c-line").forEach(e=>e.hidden=m==="tree");const L=Math.ceil((m==="tree"?g("h")*g("d"):g("len"))*1.1),per=+s.dataset.per||0;let q=0,h=`Потрібно приблизно <b>${L} м</b> гірлянди (із запасом 10%).`;if(per>0&&s.dataset.pid){q=Math.ceil(L/per);h+=` Це <b>${q} шт.</b> по ${nf(per)} м.`}return{h,q}}},
  light:{f:()=>cSel("room","Кімната",cRooms,150)+cNum("area","Площа, м²",18,1,.5)+cSel("src","Чим світите",[["lamp","Лампи"],["fix","Світильники, панелі"],["track","Трекові світильники"],["strip","LED-стрічка"]],"lamp")+`<span class="c-nostrip">${cNum("w","Потужність однієї лампи / світильника, Вт",9,1)}</span><span class="c-strip" hidden>${cSel("wm","Потужність стрічки, Вт на метр",[[4.8,"4,8 Вт/м (слабка, підсвітка)"],[9.6,"9,6 Вт/м (звичайна)"],[14.4,"14,4 Вт/м (яскрава)"],[19.2,"19,2 Вт/м (дуже яскрава)"]],9.6)}${cSel("v","Напруга стрічки",[[12,"12 В"],[24,"24 В"]],12)}</span>`,
   run:(g,gs,s)=>{const src=gs("src"),st=src==="strip";s.querySelectorAll(".c-strip").forEach(e=>e.hidden=!st);s.querySelectorAll(".c-nostrip").forEach(e=>e.hidden=st);
    const lux=g("room"),A=g("area"),lm=Math.round(lux*A),eff={lamp:80,fix:90,track:80,strip:80}[src],W=Math.ceil(lm/eff);
-   let h=`Потрібен світловий потік <b>${lm} лм</b> (${lux} лм на 1 м²). Загальна потужність приблизно <b>${W} Вт</b>.`;
+   let h=`Потрібен світловий потік <b>${lm} лм</b> (люменів; ${lux} лм на 1 м²). Загальна потужність приблизно <b>${W} Вт</b>.`;
    if(!st){const w=g("w")||9,n=Math.max(1,Math.ceil(W/w));h+=` Це <b>${n} шт.</b> по ${w} Вт.`}
    else{const wm=g("wm"),v=g("v"),len=Math.ceil(W/wm*2)/2,tot=len*wm,ps=PSU.find(x=>x>=tot*1.2)||Math.ceil(tot*1.2/100)*100;h+=` Стрічки потрібно <b>${nf(len)} м</b>. Блок живлення <b>${v} В, від ${ps} Вт</b> (з запасом 20%).`}
    h+=`<small>Для вітальні й кухні краще 2–3 рівні світла: загальне плюс локальне. Тепле світло 2700–3000 K для відпочинку, нейтральне 4000 K для кухні й роботи.</small>`;return{h}}},
  strip:{f:()=>cNum("len","Довжина стрічки, м",5,.5,.5)+cSel("wm","Потужність стрічки, Вт на метр",[[4.8,"4,8 Вт/м"],[7.2,"7,2 Вт/м"],[9.6,"9,6 Вт/м"],[14.4,"14,4 Вт/м"],[19.2,"19,2 Вт/м"]],9.6)+cSel("v","Напруга стрічки",[[12,"12 В"],[24,"24 В"]],12),
   run:g=>{const len=g("len"),wm=g("wm"),v=g("v"),tot=len*wm,need=tot*1.2,ps=PSU.find(x=>x>=need)||Math.ceil(need/100)*100,mx=v===12?5:10,seg=Math.ceil(len/mx);
-   return{h:`Навантаження стрічки <b>${nf(tot)} Вт</b>. Блок живлення <b>${v} В, не менше ${ps} Вт</b> (потужність стрічки +20%). Струм блока приблизно ${nf(ps/v)} А.${seg>1?`<small>Одну лінію стрічки ${v} В не робіть довшою за ${mx} м: далі яскравість падає. Для ${nf(len)} м підключіть живлення до ${seg} відрізків, кожен від свого виходу блока (або подайте живлення з двох кінців).</small>`:""}<small>Для димування та кольору RGB потрібен діммер або контролер на струм не менше ${nf(tot/v*1.2)} А.</small>`}}},
+   return{h:`Навантаження стрічки <b>${nf(tot)} Вт</b>. Блок живлення <b>${v} В, не менше ${ps} Вт</b> (потужність стрічки +20%). Струм блока живлення приблизно ${nf(ps/v)} А.${seg>1?`<small>Одну лінію стрічки ${v} В не робіть довшою за ${mx} м: далі яскравість падає. Для ${nf(len)} м поділіть стрічку на відрізки (${seg} шт.) і підключіть кожен від свого виходу блока (для одного відрізка можна подати живлення з двох кінців).</small>`:""}<small>Щоб регулювати яскравість або колір (RGB), потрібен діммер або контролер на струм не менше ${nf(tot/v*1.2)} А.</small>`}}},
  furn:{f:()=>cSel("room","Кімната",[["bed","Спальня"],["liv","Вітальня"],["kit","Кухня"],["kid","Дитяча"],["hall","Коридор"],["bath","Ванна, санвузол"],["off","Кабінет"]],"liv")+cNum("area","Площа, м²",18,1,.5)+cSel("n","Скільки місць, з яких треба вмикати одне світло",[[1,"1 (біля входу)"],[2,"2 (на вході й біля ліжка, на двох кінцях коридору)"],[3,"3"],[4,"4"]],1)+cSel("gr","Скільки груп світла (клавіш) у кімнаті",[[1,"1 (все світло разом)"],[2,"2"],[3,"3"]],1),
   run:(g,gs)=>{const r=gs("room"),A=g("area"),n=g("n"),G=g("gr");
    const so={bed:Math.max(4,Math.ceil(A/4)),liv:Math.max(5,Math.ceil(A/3)),kit:5+Math.ceil(A/4),kid:Math.max(4,Math.ceil(A/3)),hall:2,bath:2,off:Math.max(6,Math.ceil(A/2))}[r];
    let h=`<b>Розеток: ${so} шт.</b>`;if(r==="kit")h+=` + окремі розетки під техніку: духовка/плита, холодильник, посудомийка, витяжка (ще 4), кожна на свій автомат.`;if(r==="bath")h+=` Тільки з кришкою IP44, через диф. автомат 30 мА, не ближче 60 см від води.`;
    h+="<br>";
    if(n===1)h+=`<b>Вимикач: 1 шт., ${G}-клавішний.</b>`;
-   else{const cr=n-2;h+=`<b>Прохідних перемикачів: 2 шт.</b> (по краях)${cr>0?`, <b>перехресних: ${cr} шт.</b> (посередині)`:""}${G>1?`. Беріть ${G}-клавішні: кожна клавіша це окрема лінія з власною схемою`:""}.`;h+=lSch(n)+`<small>Між перемикачами прокладають кабель 3×1,5 мм². Роботи з електрикою виконує електрик, на час роботи вимкніть автомат.</small>`}
+   else{const cr=n-2;h+=`<b>Прохідних перемикачів: 2 шт.</b> (по краях)${cr>0?`, <b>перехресних: ${cr} шт.</b> (посередині)`:""}${G>1?`. Беріть ${G}-клавішні: кожна клавіша керує своєю групою світла за такою самою схемою`:""}.`;h+=lSch(n)+`<small>Між перемикачами прокладають кабель 3×1,5 мм². Роботи з електрикою виконує електрик, на час роботи вимкніть автомат.</small>`}
    return{h}}},
  cable:{f:()=>cNum("w","Потужність навантаження, Вт",3000,100,100)+cSel("ph","Мережа",[[1,"Однофазна 220 В"],[3,"Трифазна 380 В"]],1),
   run:(g,gs)=>{const W=g("w"),I=gs("ph")==="3"?W/(1.732*380*.95):W/220,S=[[16,1.5],[25,2.5],[32,4],[40,6],[50,10],[63,16]],need=I*1.25,B=BRK.find(x=>x>=need),c=S.find(x=>x[0]>=need);
-   return{h:c&&B?`Струм приблизно <b>${nf(I)} А</b>. Кабель мідний від <b>${c[1]} мм²</b>, автомат на <b>${B} А</b>.`:`Струм приблизно <b>${nf(I)} А</b>. Для такої потужності потрібен індивідуальний розрахунок, зверніться до електрика.`}}},
+   return{h:c&&B?`Струм приблизно <b>${nf(I)} А</b>. Кабель мідний від <b>${nf(c[1])} мм²</b>, автомат на <b>${B} А</b>.`:`Струм приблизно <b>${nf(I)} А</b>. Для такої потужності потрібен індивідуальний розрахунок, зверніться до електрика.`}}},
  panel:null
 };
 const PL=[["light","Освітлення",2,10,1.5,0],["sock","Розетки в кімнатах",3,16,2.5,1],["bath","Розетки у ванній",1,16,2.5,1],["boil","Бойлер",0,16,2.5,1],["wash","Пральна машина",0,16,2.5,1],["dish","Посудомийна машина",0,16,2.5,1],["ac","Кондиціонер",0,16,2.5,0],["floor","Тепла підлога",0,16,2.5,1],["oven","Електроплита / духова шафа",0,32,6,0]];
 CALC.panel={f:()=>cSel("ph","Мережа",[[1,"Однофазна 220 В"],[3,"Трифазна 380 В"]],1)+cNum("kw","Дозволена потужність за договором, кВт",10,1,.5)+'<div class="c-pl"><b>Які лінії потрібні (скільки штук):</b>'+PL.map(x=>cNum("p_"+x[0],x[1],x[2],0)).join("")+'</div><div class="c-pl"><b>Додатково:</b>'+[["dusk","Вуличне освітлення за сутінками"],["timer","Робота за графіком (бойлер, насос, освітлення)"],["stab","Стабілізатор для техніки"],["imp","Керування світлом з багатьох місць без перехресних"]].map(x=>`<label class="c-ck"><input type="checkbox" data-cin="x_${x[0]}"> ${x[1]}</label>`).join("")+`<span class="c-stab" hidden>${cNum("sw","Потужність техніки, Вт",1000,100,100)}${cSel("mot","Тип техніки",[[1.3,"Звичайна (телевізор, комп’ютер, котел)"],[3,"З двигуном (холодильник, насос, кондиціонер)"]],1.3)}</span></div>`,
  run:(g,gs,s)=>{const ck=n=>{const e=s.querySelector(`[data-cin="${n}"]`);return e&&e.checked};s.querySelector(".c-stab").hidden=!ck("x_stab");
   const ph=gs("ph")==="3",kw=g("kw"),I=ph?kw*1000/(1.732*380*.95):kw*1000/220,intro=BRK.find(x=>x>=I)||100;let rows="",mod=0,lines=0;
-  PL.forEach(x=>{const n=g("p_"+x[0]);if(!n)return;lines+=n;const dev=x[5]?`Диф. автомат ${x[3]} А, 30 мА`:`Автомат ${x[3]} А`;mod+=n*(x[5]?2:1);rows+=`<tr><td>${x[1]} × ${n}</td><td>${dev}</td><td>${x[4]} мм²</td></tr>`});
-  mod+=ph?4:2;const rk=ph?"Реле контролю напруги (3ф)":`Реле контролю напруги ${intro} А`;mod+=2+2;
-  let ex=`<li><b>Вводний автомат ${intro} А</b> (${ph?"3-полюсний":"двополюсний"}) на ${nf(kw)} кВт</li><li><b>${rk}</b>: відключає всю квартиру при стрибках напруги</li><li><b>Обмежувач перенапруг (УЗІП) клас II</b>: захист від імпульсів під час грози</li>`;
-  if(ck("x_dusk"))ex+=`<li><b>Сутінковий вимикач (фотореле)</b>${"; якщо лампи сумарно понад 2 кВт, через контактор 25 А"}</li>`,mod+=2;
-  if(ck("x_timer"))ex+=`<li><b>Таймер добовий на 16 А</b> (модульний, на DIN-рейку)</li>`,mod+=1;
+  PL.forEach(x=>{const n=g("p_"+x[0]);if(!n)return;lines+=n;const dev=x[5]?`Диф. автомат ${x[3]} А, 30 мА`:`Автомат ${x[3]} А`;mod+=n*(x[5]?2:1);rows+=`<tr><td>${x[1]} × ${n}</td><td>${dev}</td><td>${nf(x[4])} мм²</td></tr>`});
+  mod+=ph?4:2;const rk=ph?"Реле контролю напруги трифазне":`Реле контролю напруги ${intro} А`;mod+=2+2;
+  let ex=`<li><b>Вхідний автомат ${intro} А</b> (${ph?"трифазний, 3-полюсний":"двополюсний"}) на ${nf(kw)} кВт</li><li><b>${rk}</b>: відключає всю квартиру при стрибках напруги</li><li><b>Обмежувач перенапруги (УЗІП) клас II</b>: захист від імпульсів під час грози</li>`;
+  if(ck("x_dusk"))ex+=`<li><b>Сутінковий вимикач (фотореле)</b>${"; якщо лампи сумарно понад 2 кВт, через контактор (потужний вимикач) на 25 А"}</li>`,mod+=2;
+  if(ck("x_timer"))ex+=`<li><b>Таймер добовий на 16 А</b> (ставиться в щиток)</li>`,mod+=1;
   if(ck("x_imp"))ex+=`<li><b>Імпульсне реле 16 А</b> + кнопки в кожному місці керування</li>`,mod+=1;
   if(ck("x_stab")){const va=Math.ceil(g("sw")*gs("mot")/100)*100;ex+=`<li><b>Стабілізатор від ${va} ВА</b> (потужність техніки ×${nf(+gs("mot"))})</li>`}
   mod=Math.ceil(mod*1.2);const sz=[4,6,8,12,18,24,36,48,72].find(x=>x>=mod)||72;
-  return{h:`<table class="lpt"><tr><th>Лінія</th><th>Захист</th><th>Кабель</th></tr>${rows||'<tr><td colspan=3>Оберіть кількість ліній</td></tr>'}</table><ul class="lpu">${ex}</ul>Щиток приблизно на <b>${sz} модулів</b> (із запасом 20%).<small>Це типова схема захисту. Номінали автоматів і перерізи кабелів остаточно підтвердить електрик за проєктом.</small>`}}};
+  return{h:`<table class="lpt"><tr><th>Лінія</th><th>Захист</th><th>Кабель</th></tr>${rows||'<tr><td colspan=3>Оберіть кількість ліній</td></tr>'}</table><small>Диф. автомат (диференційний) = автомат + захист людей від ураження струмом в одному корпусі.</small><ul class="lpu">${ex}</ul>Щиток приблизно на <b>${sz} ${sz%10>=2&&sz%10<=4&&(sz%100<10||sz%100>=20)?"модулі":"модулів"}</b> (місць для автоматів), із запасом 20%.<small>Це типова схема захисту. Номінали автоматів і перерізи кабелів остаточно підтвердить електрик за проєктом.</small>`}}};
 const nf=x=>String(Math.round(x*10)/10).replace(".",",");
-function lSch(n){const names=["Коробка","Перемикач 1"].concat(Array.from({length:n-2},(_,i)=>"Хрест "+(i+1))).concat(["Перемикач "+n,"Лампа"]),w=86,W=names.length*w+10;
+function lSch(n){const names=["Коробка","Перемикач 1"].concat(Array.from({length:n-2},(_,i)=>"Перехресний "+(i+1))).concat(["Перемикач "+n,"Лампа"]),w=86,W=names.length*w+10;
  let s=`<svg class="lsch" viewBox="0 0 ${W} 120" role="img" aria-label="Схема підключення">`;
- names.forEach((t,i)=>{const x=10+i*w,c=i===0?"#eee":i===names.length-1?"#fff3cd":t.startsWith("Хрест")?"#e3f2fd":"#e0f7f6";s+=`<rect x="${x}" y="30" width="68" height="40" rx="6" fill="${c}" stroke="#555"/><text x="${x+34}" y="55" text-anchor="middle" font-size="11" fill="#111">${t}</text>`;
+ names.forEach((t,i)=>{const x=10+i*w,c=i===0?"#eee":i===names.length-1?"#fff3cd":t.startsWith("Перехресний")?"#e3f2fd":"#e0f7f6";s+=`<rect x="${x}" y="30" width="68" height="40" rx="6" fill="${c}" stroke="#555"/><text x="${x+34}" y="55" text-anchor="middle" font-size="11" fill="#111">${t}</text>`;
   if(i&&i<names.length-1){const px=x-18;s+=i===1?`<line x1="${px}" y1="50" x2="${x}" y2="50" stroke="#d32f2f" stroke-width="2"/><text x="${px+9}" y="44" text-anchor="middle" font-size="9" fill="#d32f2f">L</text>`:`<line x1="${px}" y1="42" x2="${x}" y2="42" stroke="#1976d2" stroke-width="2"/><line x1="${px}" y1="58" x2="${x}" y2="58" stroke="#388e3c" stroke-width="2"/>`}
   if(i===names.length-1)s+=`<line x1="${x-18}" y1="50" x2="${x}" y2="50" stroke="#d32f2f" stroke-width="2"/><text x="${x-9}" y="44" text-anchor="middle" font-size="9" fill="#d32f2f">L</text>`});
  s+=`<line x1="${10+34}" y1="70" x2="${10+34}" y2="100" stroke="#555" stroke-dasharray="4"/><line x1="${10+34}" y1="100" x2="${10+(names.length-1)*w+34}" y2="100" stroke="#555" stroke-dasharray="4"/><line x1="${10+(names.length-1)*w+34}" y1="100" x2="${10+(names.length-1)*w+34}" y2="70" stroke="#555" stroke-dasharray="4"/><text x="${W/2}" y="114" text-anchor="middle" font-size="10" fill="#555">Нуль N напряму з коробки на лампу</text></svg>`;
@@ -831,7 +831,7 @@ async function lOrder(btn){const f=btn.closest(".lform"),m=f.querySelector(".lms
  if(SHOP.orders_off||!sb)return bad(null,ordMsg());
  ph="+"+ph.replace(/^(\d{3})(\d{2})(\d{3})(\d{2})(\d{2})$/,"$1 $2 $3 $4 $5");
  btn.disabled=true;btn.textContent="Оформлюємо…";m.textContent="";
- const args={p_name:nm,p_phone:ph,p_delivery:"Уточнити по телефону",p_address:"",p_payment:"Уточнити по телефону",p_comment:"Лендінг: "+(L.title||slug)+" (/"+slug+")",p_promo:lDisc(L)?lCode(L):((L.theme&&L.theme.promo)||null),p_items:items};
+ const args={p_name:nm,p_phone:ph,p_delivery:"Уточнити телефоном",p_address:"",p_payment:"Уточнити телефоном",p_comment:"Лендінг: "+(L.title||slug)+" (/"+slug+")",p_promo:lDisc(L)?lCode(L):((L.theme&&L.theme.promo)||null),p_items:items};
  let r=await sb.rpc("create_order",args);if(r.error&&args.p_promo&&/Промокод/i.test(r.error.message||"")){args.p_promo=null;r=await sb.rpc("create_order",args)}
  btn.disabled=false;btn.textContent="Оформити замовлення";
  if(r.error){const em=r.error.message||"";return bad(null,/schema cache|Could not find|function/i.test(em)?"Не вдалося оформити замовлення. Спробуйте ще раз або зателефонуйте нам.":em)}
