@@ -453,3 +453,4 @@ body.lndon{padding-bottom:84px}
 .lpx{position:absolute;top:8px;right:12px;background:none;border:0;font-size:28px;cursor:pointer;color:var(--mute)}
 @media(prefers-reduced-motion:reduce){.wsh{animation:none;opacity:0}}
 .pwf{position:relative;display:block;width:100%}.pwf input{padding-right:46px!important;width:100%;box-sizing:border-box}.pwe{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:40px;height:40px;border:0;background:none;color:#6b7780;cursor:pointer;display:grid;place-items:center;border-radius:50%;padding:0}.pwe:hover{color:#0ABAB5}
+.pk{font-size:12.5px;color:#5b6770;margin:4px 0 8px;line-height:1.35}.pk b{color:#0b7d79}.pk.big{font-size:14.5px;background:#e8f8f7;border-radius:10px;padding:8px 12px;margin:8px 0}
