@@ -178,6 +178,24 @@ for (const p of P) {
 fs.writeFileSync("feed/prom.yml", y + "</offers></shop></yml_catalog>\n");
 console.log("фід Google: товарів", gn);
 urls.unshift([SITE + "/", 1]);
+
+// Промо-сторінки лендінгів: /promo/<slug>/ (превʼю для Viber/Telegram/Facebook, не для пошуку)
+fs.rmSync("promo", { recursive: true, force: true });
+try {
+  const LN = await get("landings?select=slug,title,theme,blocks&active=eq.true");
+  for (const l of LN) {
+    if (!/^[a-z0-9][a-z0-9-]{1,60}$/.test(l.slug)) continue;
+    const hero = (l.blocks || []).find(b => b.t === "hero" && !b.off) || {};
+    const d = Math.min(90, Math.max(0, +(l.theme || {}).disc || 0));
+    const desc = (d ? `−${d}% тільки за цим посиланням. ` : "") + (hero.sub || l.title);
+    const image = /^https?:/.test(hero.img || "") ? hero.img : `${SITE}/logo1.webp`;
+    const url = `${SITE}/promo/${l.slug}/`;
+    fs.mkdirSync(`promo/${l.slug}`, { recursive: true });
+    fs.writeFileSync(`promo/${l.slug}/index.html`, page({ title: `${l.title} — Trend Electro`, desc, url, hash: "#/l/" + l.slug, body: `<h1>${esc(l.title)}</h1><p>${esc(desc)}</p>`, ld: { "@context": "https://schema.org", "@type": "WebPage", name: l.title, url }, image }).replace("</head>", '<meta name="robots" content="noindex,follow">\n</head>'));
+  }
+  console.log("promo pages:", LN.length);
+} catch (e) { console.log("landings skipped:", e.message); }
+
 fs.writeFileSync("sitemap.xml", `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(u => `<url><loc>${esc(u[0])}</loc><lastmod>${today}</lastmod><priority>${u[1]}</priority></url>`).join("\n")}\n</urlset>\n`);
 fs.writeFileSync("robots.txt", `User-agent: *\nAllow: /\nSitemap: ${SITE}/sitemap.xml\n`);
 console.log("сторінок:", urls.length);

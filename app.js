@@ -673,20 +673,30 @@ document.addEventListener("DOMContentLoaded",boot);
  addEventListener("load",()=>{if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register(BASE+"sw.js").catch(()=>{})});
 })();
 /* ---------- лендінги ---------- */
-let LND={},LTM=null,LFXR=0;
-const lStop=()=>{clearInterval(LTM);LTM=null;cancelAnimationFrame(LFXR);LFXR=0;document.body.classList.remove("lndon")};
+let LND={},LTM=null,LFXR=0,LIO=null,LIO2=null,LCART={},LCUR="";
+const lStop=()=>{clearInterval(LTM);LTM=null;cancelAnimationFrame(LFXR);LFXR=0;if(LIO){LIO.disconnect();LIO=null}if(LIO2){LIO2.disconnect();LIO2=null}document.body.classList.remove("lndon")};
 const lLines=t=>String(t||"").split("\n").map(s=>s.trim()).filter(Boolean).map(s=>s.split("|").map(x=>x.trim()));
 const lPara=t=>String(t||"").split(/\n+/).map(s=>s.trim()).filter(Boolean).map(s=>"<p>"+esc(s)+"</p>").join("");
+const lDisc=L=>Math.min(90,Math.max(0,+(L.theme||{}).disc||0));
+const lCode=L=>"LND-"+String(L.slug).toUpperCase();
+const lCur=()=>LND[LCUR]||{theme:{},blocks:[]};
 function lProds(b){const out=[],seen={};String(b.ids||"").split(/[\s,;]+/).filter(Boolean).forEach(i=>{const p=M[i];if(p&&!seen[i]){seen[i]=1;out.push(p)}});
  if(b.cat){const c=String(b.cat);P.forEach(p=>{if(!seen[p.id]&&p.c.join(SEP).indexOf(c)===0){seen[p.id]=1;out.push(p)}})}
  return out.filter(p=>p.st).concat(out.filter(p=>!p.st)).slice(0,+b.n||12)}
-function lAll(L){const s={},o=[];(L.blocks||[]).forEach(b=>{if(!b.off&&(b.t==="products"||b.t==="order"))lProds(b).forEach(p=>{if(!s[p.id]&&p.st){s[p.id]=1;o.push(p)}})});return o.slice(0,40)}
+function lAll(L){const s={},o=[];(L.blocks||[]).forEach(b=>{if(!b.off&&(b.t==="products"||b.t==="compare"))lProds(b).forEach(p=>{if(!s[p.id]&&p.st){s[p.id]=1;o.push(p)}})});return o}
+function lPr(p,L){LAPPLY=0;const s=priceInfo(p).pc;LAPPLY=lDisc(L);const l=priceInfo(p).pc;LAPPLY=0;return{s:Math.max(s,l),l,save:Math.round((Math.max(s,l)-l)*100)/100}}
+const lSite=id=>BASE+"#/p/"+encodeURIComponent(id);
+function lCtl(p){const q=LCART[p.id]||0;return q?`<div class="lqty"><button data-lq="${esc(p.id)}" data-d="-1" aria-label="Менше">−</button><b>${q}</b><button data-lq="${esc(p.id)}" data-d="1" aria-label="Більше">+</button></div>`:`<button class="lbtn lsm" data-lq="${esc(p.id)}" data-d="1">Додати</button>`}
+function lCard(p,L){const pr=lPr(p,L),d=lDisc(L);
+ return`<article class="lcard" data-id="${esc(p.id)}"><div class="lci">${d?`<span class="lsave">−${d}%</span>`:""}${img(p.img,400,400,p.n)}</div><div class="lcb"><h3>${esc(p.n)}</h3><div class="sku">Арт. ${esc(p.id)}</div>${d&&pr.save>0?`<div class="lpr"><span class="lold">На сайті: <s>${money(pr.s)}</s></span><b>${money(pr.l)}</b><em>Економія ${money(pr.save)}</em></div><a class="lchk" href="${esc(lSite(p.id))}" target="_blank" rel="noopener">Перевірити ціну на сайті ↗</a>`:`<div class="lpr"><b>${money(pr.l)}</b></div>`}<div class="lctl">${p.st&&!SHOP.orders_off?lCtl(p):`<span class="stock no">${p.st?"Замовлення призупинені":"Немає в наявності"}</span>`}</div></div></article>`}
 function lVid(u){u=String(u||"");let m=u.match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/);if(m)return`<button class="yt" data-yt="${esc(m[1])}" aria-label="Відтворити відео" style="background-image:url('https://i.ytimg.com/vi/${esc(m[1])}/hqdefault.jpg')">▶</button>`;
  m=u.match(/tiktok\.com\/.*video\/(\d+)/);if(m)return`<iframe class="ltt" loading="lazy" src="https://www.tiktok.com/embed/v2/${m[1]}" allowfullscreen title="Відео TikTok"></iframe>`;return""}
 const lH=(b,d)=>b.title||d?`<h2>${esc(b.title||d)}</h2>`:"";
 const LB={
  hero:(b,L)=>`<section class="lhero${b.img?" wimg":""}">${b.img?`<div class="lhbg" style="background-image:url('${esc(b.img)}')"></div>`:""}<canvas class="lfx"></canvas>${L.theme&&L.theme.lights?'<div class="llights">'+Array.from({length:18},(_,i)=>`<i style="--d:${(i%6)*.25}s"></i>`).join("")+"</div>":""}<div class="lhin">${b.badge?`<span class="lbadge">${esc(b.badge)}</span>`:(lDisc(L)?`<span class="lbadge">−${lDisc(L)}% тільки на цій сторінці</span>`:"")}<h1>${esc(b.title||L.title)}</h1>${b.sub?`<p>${esc(b.sub)}</p>`:""}${b.btn?`<button class="lbtn" data-lgo="order">${esc(b.btn)}</button>`:""}</div></section>`,
- products:b=>{const l=lProds(b);return l.length?`<section class="lsec">${lH(b,"Товари")}<div class="grid">${l.map(card).join("")}</div></section>`:""},
+ products:(b,L)=>{const l=lProds(b);return l.length?`<section class="lsec" id="lprods">${lH(b,"Товари")}<div class="grid lg">${l.map(p=>lCard(p,L)).join("")}</div></section>`:""},
+ compare:(b,L)=>{const d=lDisc(L),l=lProds(b).filter(p=>p.st).slice(0,8);if(!d||!l.length)return"";const rows=l.map(p=>({p,r:lPr(p,L)})).filter(x=>x.r.save>0);if(!rows.length)return"";const sum=rows.reduce((s,x)=>s+x.r.save,0);
+  return`<section class="lsec">${lH(b,"Порівняйте ціни")}<div class="lcmp"><div class="lch"><span>Товар</span><span>На сайті</span><span class="g">За цим посиланням</span></div>${rows.map(x=>`<div class="lcr"><span>${esc(x.p.n)}</span><span><s>${money(x.r.s)}</s></span><span class="g"><b>${money(x.r.l)}</b></span></div>`).join("")}</div><p class="lsub">Ціни на сайті зараз звичайні. Вигода −${d}% діє тільки для замовлень із цієї сторінки. Якщо взяти все: економія до ${money(Math.round(sum*100)/100)}.</p></section>`},
  benefits:b=>{const l=lLines(b.items);return l.length?`<section class="lsec">${lH(b)}<div class="lben">${l.map(x=>`<div><span>${esc(x.length>2?x[0]:"✔")}</span><b>${esc(x.length>2?x[1]:x[0])}</b>${(x.length>2?x[2]:x[1])?`<p>${esc(x.length>2?x[2]:x[1])}</p>`:""}</div>`).join("")}</div></section>`:""},
  timer:b=>{const t=Date.parse(b.until||"");if(!t||t<Date.now())return"";return`<section class="lsec ltim" data-until="${t}">${lH(b,"До кінця акції")}<div class="ltd"><div><b>0</b><span>днів</span></div><div><b>0</b><span>годин</span></div><div><b>0</b><span>хвилин</span></div><div><b>0</b><span>секунд</span></div></div></section>`},
  video:b=>{const v=lVid(b.url);return v?`<section class="lsec">${lH(b)}<div class="lvid">${v}</div></section>`:""},
@@ -695,10 +705,10 @@ const LB={
  steps:b=>{const l=lLines(b.items);return l.length?`<section class="lsec">${lH(b,"Як замовити")}<ol class="lstp">${l.map(x=>`<li><b>${esc(x[0])}</b>${x[1]?`<p>${esc(x[1])}</p>`:""}</li>`).join("")}</ol></section>`:""},
  faq:b=>{const l=lLines(b.items);return l.length?`<section class="lsec">${lH(b,"Питання та відповіді")}<div class="lfaq">${l.map(x=>`<details><summary>${esc(x[0])}</summary><p>${esc(x[1]||"")}</p></details>`).join("")}</div></section>`:""},
  delivery:b=>`<section class="lsec">${lH(b,"Доставка та оплата")}<div class="ltxt">${lPara(b.text||"Відправляємо Новою поштою по всій Україні.\nОплата при отриманні або на рахунок.\nПеред відправкою менеджер телефонує й підтверджує замовлення.")}</div></section>`,
- order:(b,L)=>{const id="lo"+Math.random().toString(36).slice(2,7);
+ order:(b,L)=>{
   if(SHOP.orders_off)return`<section class="lsec lord" id="lorder">${lH(b,"Замовити")}<div class="ltxt"><p>${esc(ordMsg())}</p></div>${LB.contacts({},L,1)}</section>`;
-  const l=b.ids||b.cat?lProds(b).filter(p=>p.st):lAll(L);if(!l.length)return"";
-  return`<section class="lsec lord" id="lorder">${lH(b,"Швидке замовлення")}${b.sub?`<p class="lsub">${esc(b.sub)}</p>`:""}<div class="lform" data-lf="${id}">${l.length>1?`<label>Товар<select class="lfp">${l.map(p=>`<option value="${esc(p.id)}">${esc(p.n)} — ${money(priceInfo(p).pc)}</option>`).join("")}</select></label>`:`<div class="lone"><b>${esc(l[0].n)}</b>${priceHtml(priceInfo(l[0]))}<input type="hidden" class="lfp" value="${esc(l[0].id)}"></div>`}<label>Кількість<input class="lfq" type="number" min="1" max="999" value="1" inputmode="numeric"></label><label>Ім’я<input class="lfn" autocomplete="name" placeholder="Ваше ім’я"></label><label>Телефон<input class="lfph" type="tel" autocomplete="tel" inputmode="tel" placeholder="067 123 45 67"></label><button class="lbtn" data-lord="1">${esc(b.btn||"Замовити")}</button><div class="lmsg"></div><p class="lnote">${lDisc(L)?"Ціни на цій сторінці вже зі знижкою −"+lDisc(L)+"% від цін на сайті. ":""}Менеджер зателефонує, підтвердить замовлення й уточнить доставку.</p></div></section>`},
+  const own=b.ids||b.cat?lProds(b).filter(p=>p.st):[];
+  return`<section class="lsec lord" id="lorder">${lH(b,"Ваше замовлення")}${b.sub?`<p class="lsub">${esc(b.sub)}</p>`:""}${own.length?`<div class="grid lg">${own.map(p=>lCard(p,L)).join("")}</div>`:""}<div class="lform"><div class="lsum"></div><label>Ім’я<input class="lfn" autocomplete="name" placeholder="Ваше ім’я"></label><label>Телефон<input class="lfph" type="tel" autocomplete="tel" inputmode="tel" placeholder="067 123 45 67"></label><button class="lbtn" data-lord="1">${esc(b.btn||"Оформити замовлення")}</button><div class="lmsg"></div><p class="lnote">${lDisc(L)?"Ціни вже зі знижкою −"+lDisc(L)+"% від цін на сайті. ":""}Менеджер зателефонує, підтвердить замовлення й уточнить доставку.</p></div></section>`},
  contacts:(b,L,inner)=>{const s=shop(),a=[];if(s.phone)a.push(`<a class="lc" href="${esc(tel(s.phone))}" data-lclk="1">📞 Зателефонувати</a>`);if(s.viber)a.push(`<a class="lc" href="viber://chat?number=${encodeURIComponent("+"+String(s.viber).replace(/\D/g,""))}" data-lclk="1">Viber</a>`);if(s.telegram)a.push(`<a class="lc" href="https://t.me/${esc(String(s.telegram).replace(/^@/,"").replace(/^https?:\/\/t\.me\//,""))}" target="_blank" rel="noopener" data-lclk="1">Telegram</a>`);if(s.whatsapp)a.push(`<a class="lc" href="https://wa.me/${String(s.whatsapp).replace(/\D/g,"")}" target="_blank" rel="noopener" data-lclk="1">WhatsApp</a>`);if(!a.length)return"";const h=`<div class="lcs">${a.join("")}</div>`;return inner?h:`<section class="lsec">${lH(b,"Є питання? Напишіть нам")}${h}</section>`},
  cta:b=>`<section class="lsec lcta">${lH(b)}${b.sub?`<p>${esc(b.sub)}</p>`:""}<button class="lbtn" data-lgo="order">${esc(b.btn||"Замовити зараз")}</button></section>`
 };
@@ -708,37 +718,45 @@ function lFx(kind){const c=document.querySelector(".lfx");if(!c||!kind||kind==="
  const cols=kind==="sparks"?["#ffd54a","#ff6b6b","#0ABAB5","#fff"]:["#fff"];
  for(let i=0;i<(kind==="snow"?70:45);i++)F.push({x:Math.random()*W,y:Math.random()*H,r:kind==="snow"?1+Math.random()*2.6:1+Math.random()*1.8,s:.3+Math.random()*.9,w:Math.random()*6.28,c:cols[i%cols.length]});
  const st=()=>{if(!c.isConnected)return;if(c.offsetWidth!==W)sz();x.clearRect(0,0,W,H);F.forEach(f=>{f.w+=.02;if(kind==="snow"){f.y+=f.s;f.x+=Math.sin(f.w)*.4;if(f.y>H+4){f.y=-4;f.x=Math.random()*W}x.globalAlpha=.85}else{x.globalAlpha=.35+.65*Math.abs(Math.sin(f.w*2))}x.fillStyle=f.c;x.beginPath();x.arc(f.x,f.y,f.r,0,6.28);x.fill()});LFXR=requestAnimationFrame(st)};st()}
-const lDisc=L=>Math.min(90,Math.max(0,+(L.theme||{}).disc||0));
-const lCode=L=>"LND-"+String(L.slug).toUpperCase();
-function lBlocks(L){LAPPLY=lDisc(L);let h="";try{h=(L.blocks||[]).filter(b=>!b.off&&LB[b.t]).map(b=>{try{let s=LB[b.t](b,L);if(LAPPLY&&b.t==="products")s=s.replace(/<button class="add" data-a="([^"]*)"([^>]*)>.*?<\/button>/g,(m,id,r)=>/disabled/.test(r)?m:`<button class="add" data-lpick="${id}">Замовити −${LAPPLY}%</button>`);return s}catch(e){return""}}).join("")}finally{LAPPLY=0}return h}
+function lTot(){const L=lCur();let s=0,l=0,n=0;Object.keys(LCART).forEach(id=>{const p=M[id];if(!p)return;const q=LCART[id],pr=lPr(p,L);s+=pr.s*q;l+=pr.l*q;n+=q});return{s,l,n,save:Math.round((s-l)*100)/100}}
+function lRefresh(){const L=lCur(),t=lTot(),d=lDisc(L);
+ document.querySelectorAll(".lcard").forEach(c=>{const p=M[c.dataset.id],k=c.querySelector(".lctl");if(p&&k&&p.st&&!SHOP.orders_off)k.innerHTML=lCtl(p)});
+ document.querySelectorAll(".lsum").forEach(e=>{const ids=Object.keys(LCART).filter(i=>M[i]);e.innerHTML=ids.length?ids.map(id=>{const p=M[id],pr=lPr(p,L);return`<div class="lsl"><span>${esc(p.n)}</span><span class="lqty"><button data-lq="${esc(id)}" data-d="-1">−</button><b>${LCART[id]}</b><button data-lq="${esc(id)}" data-d="1">+</button></span><b>${money(pr.l*LCART[id])}</b></div>`}).join("")+`<div class="lsl lt"><span>Разом</span><b>${money(t.l)}</b></div>${t.save>0?`<div class="lsvd">Ви економите ${money(t.save)} (на сайті було б ${money(t.s)})</div>`:""}`:'<div class="lemp">Оберіть товари вище кнопкою «Додати».<br><button class="lbtn lsm" data-lgo="prods">Перейти до товарів</button></div>'});
+ const bar=$("lbar");if(bar)bar.innerHTML=t.n?`<div><b>${money(t.l)}</b>${t.save>0?`<span> · економія ${money(t.save)}</span>`:""}</div><button class="lbtn" data-lgo="order">Оформити (${t.n})</button>`:`<div><b>${d?"−"+d+"% за цим посиланням":"Замовлення онлайн"}</b></div><button class="lbtn" data-lgo="${lAll(L).length?"prods":"order"}">${lAll(L).length?"Обрати товар":"Замовити"}</button>`}
 async function viewLanding(slug){
  const v=$("view");document.body.classList.add("lndon");
  let L=LND[slug];if(!L){v.innerHTML='<div class="empty">Завантаження…</div>';if(sb){const r=await sb.from("landings").select("*").eq("slug",slug).maybeSingle();L=r.data;if(L)LND[slug]=L}if(curH()!=="#/l/"+slug)return}
  if(!L){v.innerHTML='<div class="empty">Цю сторінку не знайдено або акція завершилась. <a href="#/">На головну</a></div>';return}
- const th=L.theme||{};document.title=(L.title||"Акція")+" — Trend Electro";
- v.innerHTML=`<div class="lnd${th.dark?" ldark":""}" style="--lc:${esc(/^#[0-9a-f]{6}$/i.test(th.c||"")?th.c:"#0ABAB5")}">${L.active?"":'<div class="ldraft">Чернетка: лендінг вимкнений, його бачите тільки ви як адміністратор.</div>'}${lBlocks(L)}<div class="lback"><a href="#/">Перейти до всього каталогу →</a></div></div>`;
- lFx(th.fx);if(document.querySelector(".ltim")){lTick();LTM=setInterval(lTick,1000)}
+ if(LCUR!==slug){LCART={};LCUR=slug}
+ const th=L.theme||{},d=lDisc(L),s=shop();document.title=(L.title||"Акція")+" — Trend Electro";
+ const all=lAll(L);if(!Object.keys(LCART).length&&all.length===1&&!SHOP.orders_off)LCART[all[0].id]=1;
+ v.innerHTML=`<div class="lnd lrv${th.dark?" ldark":""}" style="--lc:${esc(/^#[0-9a-f]{6}$/i.test(th.c||"")?th.c:"#0ABAB5")}"><div class="ltop"><a href="${esc(BASE)}" aria-label="Trend Electro"><img src="${esc(BASE)}logo1.webp" alt="Trend Electro" width="71" height="40"></a>${s.phone?`<a class="ltel" href="${esc(tel(s.phone))}" data-lclk="1">📞 ${esc(s.phone)}</a>`:""}</div>${L.active?"":'<div class="ldraft">Чернетка: лендінг вимкнений, його бачите тільки ви як адміністратор.</div>'}${d?`<div class="lstrip">🔥 −${d}% — тільки за цим посиланням. На сайті зараз звичайні ціни.</div>`:""}${(L.blocks||[]).filter(b=>!b.off&&LB[b.t]).map(b=>{try{return LB[b.t](b,L)}catch(e){return""}}).join("")}<div class="lback"><a href="${esc(BASE)}">Перейти до всього каталогу →</a></div></div>${SHOP.orders_off?"":'<div class="lbar" id="lbar"></div>'}`;
+ lRefresh();lFx(th.fx);if(document.querySelector(".ltim")){lTick();LTM=setInterval(lTick,1000)}
+ if("IntersectionObserver"in window&&!matchMedia("(prefers-reduced-motion:reduce)").matches){LIO=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("lin2")}}),{threshold:.08});document.querySelectorAll(".lnd .lsec").forEach(x=>LIO.observe(x))}else document.querySelector(".lnd").classList.remove("lrv");
+ const o=$("lorder");if(o&&$("lbar")&&"IntersectionObserver"in window){const io=new IntersectionObserver(es=>{const b=$("lbar");if(b)b.classList.toggle("hid",es[0].isIntersecting)},{threshold:.15});io.observe(o);LIO2=io}
  if(L.active&&sb){const k="lv_"+slug;let seen=0;try{seen=sessionStorage.getItem(k)}catch(e){}if(!seen){try{sessionStorage.setItem(k,1)}catch(e){}sb.rpc("landing_hit",{p_slug:slug,p_kind:"view"}).then(()=>{},()=>{})}}
 }
 const lHit=k=>{const h=curH();if(h.indexOf("#/l/")===0&&sb)sb.rpc("landing_hit",{p_slug:decodeURIComponent(h.slice(4)),p_kind:k}).then(()=>{},()=>{})};
-async function lOrder(btn){const f=btn.closest(".lform"),m=f.querySelector(".lmsg"),q=s=>f.querySelector(s),slug=decodeURIComponent(curH().slice(4)),L=LND[slug]||{};
+async function lOrder(btn){const f=btn.closest(".lform"),m=f.querySelector(".lmsg"),q=s=>f.querySelector(s),slug=LCUR,L=lCur();
  const bad=(el,t)=>{f.querySelectorAll(".bad").forEach(x=>x.classList.remove("bad"));m.className="lmsg bad";m.textContent=t;if(el){el.classList.add("bad");el.focus()}};
- const nm=q(".lfn").value.trim(),dg=q(".lfph").value.replace(/\D/g,""),id=q(".lfp").value,qty=Math.min(999,Math.max(1,parseInt(q(".lfq").value)||1));
+ const items=Object.keys(LCART).filter(i=>M[i]&&M[i].st).map(i=>({id:i,qty:Math.min(999,LCART[i])}));
+ if(!items.length)return bad(null,"Спочатку додайте товар кнопкою «Додати».");
+ const nm=q(".lfn").value.trim(),dg=q(".lfph").value.replace(/\D/g,"");
  let ph=dg;if(/^0\d{9}$/.test(dg))ph="380"+dg.slice(1);else if(/^80\d{9}$/.test(dg))ph="3"+dg;
  if(nm.length<2)return bad(q(".lfn"),"Вкажіть, будь ласка, ім’я.");
  if(!/^380\d{9}$/.test(ph))return bad(q(".lfph"),"Вкажіть номер телефону у форматі 067 123 45 67.");
  if(SHOP.orders_off||!sb)return bad(null,ordMsg());
  ph="+"+ph.replace(/^(\d{3})(\d{2})(\d{3})(\d{2})(\d{2})$/,"$1 $2 $3 $4 $5");
  btn.disabled=true;btn.textContent="Оформлюємо…";m.textContent="";
- const args={p_name:nm,p_phone:ph,p_delivery:"Уточнити по телефону",p_address:"",p_payment:"Уточнити по телефону",p_comment:"Лендінг: "+(L.title||slug)+" (/"+slug+")",p_promo:lDisc(L)?lCode(L):((L.theme&&L.theme.promo)||null),p_items:[{id,qty}]};
+ const args={p_name:nm,p_phone:ph,p_delivery:"Уточнити по телефону",p_address:"",p_payment:"Уточнити по телефону",p_comment:"Лендінг: "+(L.title||slug)+" (/"+slug+")",p_promo:lDisc(L)?lCode(L):((L.theme&&L.theme.promo)||null),p_items:items};
  let r=await sb.rpc("create_order",args);if(r.error&&args.p_promo&&/Промокод/i.test(r.error.message||"")){args.p_promo=null;r=await sb.rpc("create_order",args)}
- btn.disabled=false;btn.textContent="Замовити";
+ btn.disabled=false;btn.textContent="Оформити замовлення";
  if(r.error){const em=r.error.message||"";return bad(null,/schema cache|Could not find|function/i.test(em)?"Не вдалося оформити замовлення. Спробуйте ще раз або зателефонуйте нам.":em)}
- lHit("order");const o=r.data;
- f.innerHTML=`<div class="ldone"><b>Дякуємо! Замовлення №${esc(o.id)} прийнято.</b><p>${esc((o.items&&o.items[0]&&o.items[0].name)||"")} × ${qty} · Разом: ${money(+o.total)}${+o.discount?" (знижка "+esc(o.discount)+"%)":""}</p><p>Менеджер зателефонує найближчим часом.</p></div>`}
+ lHit("order");const o=r.data;LCART={};const bar=$("lbar");if(bar)bar.remove();
+ f.innerHTML=`<div class="ldone"><b>Дякуємо! Замовлення №${esc(o.id)} прийнято.</b><p>${(o.items||[]).map(x=>esc(x.name)+" × "+x.qty).join("<br>")}</p><p>Разом: ${money(+o.total)}${+o.discount?" (знижка "+esc(o.discount)+"%)":""}</p><p>Менеджер зателефонує найближчим часом.</p></div>`;document.querySelectorAll(".lcard .lctl").forEach(k=>k.innerHTML="")}
 document.addEventListener("click",e=>{
- const g=e.target.closest("[data-lgo]");if(g){const t=$("lorder");if(t){t.scrollIntoView({behavior:"smooth",block:"start"});lHit("click")}return}
- const pk=e.target.closest("[data-lpick]");if(pk){const s=document.querySelector(".lfp");if(s&&s.tagName==="SELECT")s.value=pk.dataset.lpick;const t=$("lorder");if(t){t.scrollIntoView({behavior:"smooth",block:"start"});lHit("click")}return}
+ const g=e.target.closest("[data-lgo]");if(g){const t=$(g.dataset.lgo==="prods"?"lprods":"lorder")||$("lorder");if(t){t.scrollIntoView({behavior:"smooth",block:"start"});lHit("click")}return}
+ const lq=e.target.closest("[data-lq]");if(lq){const id=lq.dataset.lq,n=(LCART[id]||0)+(+lq.dataset.d);if(n<=0)delete LCART[id];else LCART[id]=Math.min(99,n);if(+lq.dataset.d>0)lHit("click");lRefresh();return}
  const o=e.target.closest("[data-lord]");if(o){lOrder(o);return}
- if(e.target.closest("[data-lclk]")||e.target.closest(".lnd [data-a]"))lHit("click");
+ if(e.target.closest("[data-lclk]"))lHit("click");
 });
