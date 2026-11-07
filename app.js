@@ -43,9 +43,10 @@ function rate(p){
 }
 const price=p=>{const r=rate(p);return Math.round(p.pr0*(1+r[0]/100)*(1-r[1]/100)*100)/100};
 function oldPrice(p){const r=rate(p);if(r[1]>0)return Math.round(p.pr0*(1+r[0]/100)*100)/100;if(p.old>p.pr0)return Math.round(p.old*(1+r[0]/100)*100)/100;return 0}
+const bdN=()=>Math.min(14,Math.max(1,Math.round(+(SHOP&&SHOP.bday_days)||3)));const bdDays=()=>{const n=bdN();return n===1?"1 день":n<5?n+" дні":n+" днів"};
 const kyivDay=()=>{const p=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Kyiv",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date()).split("-").map(Number);return Date.UTC(p[0],p[1]-1,p[2])};
 function bdayInfo(){if(!(SHOP&&SHOP.bday_on&&prof&&prof.birthday))return null;const pct=Math.min(90,+SHOP.bday_percent||0);if(pct<=0)return null;const b=String(prof.birthday).split("-").map(Number),t=kyivDay(),y=new Date(t).getUTCFullYear();
- for(const yy of[y-1,y]){let m=b[1],d=b[2];if(m===2&&d===29&&new Date(Date.UTC(yy,1,29)).getUTCMonth()!==1){d=28}const s=Date.UTC(yy,m-1,d);if(t>=s&&t<=s+6*864e5){const st=new Date(s).toISOString().slice(0,10);return{pct,end:new Date(s+6*864e5),start:st,claimed:String(prof.bday_claim||"").slice(0,10)===st}}}return null}
+ for(const yy of[y-1,y]){let m=b[1],d=b[2];if(m===2&&d===29&&new Date(Date.UTC(yy,1,29)).getUTCMonth()!==1){d=28}const s=Date.UTC(yy,m-1,d);if(t>=s&&t<=s+(bdN()-1)*864e5){const st=new Date(s).toISOString().slice(0,10);return{pct,end:new Date(s+(bdN()-1)*864e5),start:st,claimed:String(prof.bday_claim||"").slice(0,10)===st}}}return null}
 const bdPct=()=>{const b=bdayInfo();return b&&b.claimed?b.pct:0};
 function priceInfo(p){const pc0=price(p),o=oldPrice(p),pd=prof?Math.max(+prof.discount_percent||0,bdPct()):0,pc=pd>0?Math.round(pc0*(100-pd))/100:pc0,base=o||(pd>0?pc0:0),disc=base?Math.round((1-pc/base)*100):0;return{pc,base,disc,sale:o>0,pers:pd>0}}
 const saleBadges=i=>(i.disc>0||i.sale?`<span class="bd s">${i.sale?"Розпродаж":"Ваша знижка"}</span>`:"")+(i.disc>0?`<span class="bd s2">−${i.disc}%</span>`:"");
@@ -201,14 +202,14 @@ function confetti(){if(matchMedia("(prefers-reduced-motion:reduce)").matches)ret
 function bdResult(r,pct){
  const el=$("bdres");if(!el)return;
  if(r.state==="off"){el.innerHTML='<div class="msg">Акція зараз не діє. Зазирніть пізніше.</div>';return}
- if(r.state==="later"){el.innerHTML=`<div class="bdcard"><h3>Дякуємо! 🎈</h3><p>Ми запам’ятали ваш день народження. Коли він настане, завітайте на цю сторінку — і ви отримаєте подарунок −${pct}% на 7 днів. Ми вас обов’язково привітаємо!</p></div>`;return}
+ if(r.state==="later"){el.innerHTML=`<div class="bdcard"><h3>Дякуємо! 🎈</h3><p>Ми запам’ятали ваш день народження. Коли він настане, завітайте на цю сторінку — і ви отримаєте подарунок −${pct}% на ${bdDays()}. Ми вас обов’язково привітаємо!</p></div>`;return}
  const u=new Date(r.until+"T00:00:00Z").toLocaleDateString("uk-UA",{timeZone:"UTC"});
  el.innerHTML=`<div class="bdcard"><h3>🎉 З днем народження!</h3><p>Ваш особистий подарунок: знижка <b>−${r.percent}%</b> на все замовлення. Діє до ${u} включно, один раз.</p><div class="bdcode">${esc(r.code)}</div><div class="bdbtns"><button class="go" data-bduse="${esc(r.code)}">Використати в кошику</button><button class="sec" data-bdcp="${esc(r.code)}">Скопіювати код</button></div><p class="sku">Збережіть код: він діє лише для вас.</p></div>`;confetti()}
 function viewBday(){
  const on=bdOn(),pct=on?Math.min(90,+SHOP.bday_percent||0):0;
- $("view").innerHTML=`<section class="bdpage"><div class="hbtop hbtop2"><img src="${esc(SHOP.bday_img||BASE+"hb-banner.webp")}" alt="" onerror="this.style.display='none'"><canvas class="hbfx"></canvas><h1 class="hbh" aria-label="Happy Birthday">${hbL("Happy Birthday!")}</h1></div><div class="hbn" style="margin-top:12px">Ваш день народження — наше свято</div><p class="lead">Ми щиро вітаємо кожного клієнта! У тиждень вашого дня народження (7 днів, включно з самим днем) даруємо ${on?`<b>знижку −${pct}%</b>`:"особливу знижку"} на все, що є на сайті.</p>
+ $("view").innerHTML=`<section class="bdpage"><div class="hbtop hbtop2"><img src="${esc(SHOP.bday_img||BASE+"hb-banner.webp")}" alt="" onerror="this.style.display='none'"><canvas class="hbfx"></canvas><h1 class="hbh" aria-label="Happy Birthday">${hbL("Happy Birthday!")}</h1></div><div class="hbn" style="margin-top:12px">Ваш день народження — наше свято</div><p class="lead">Ми щиро вітаємо кожного клієнта! У тиждень вашого дня народження (${bdDays()}, включно з самим днем) даруємо ${on?`<b>знижку −${pct}%</b>`:"особливу знижку"} на все, що є на сайті.</p>
  ${on?`<form id="bdForm" class="bdform"><input id="bdn" placeholder="Ваше ім’я" autocomplete="given-name"><input id="bdc" placeholder="Телефон або email" autocomplete="email" required><div class="bdl">Дата народження${bdSel("bdd")}</div><label class="ck"><input type="checkbox" id="bdk"> <span>Погоджуюсь на обробку моїх даних для привітання й подарунка</span></label><div class="msg" id="bdm"></div><button class="go" id="bdgo">Отримати подарунок</button></form><div id="bdres"></div>`:'<div class="empty">Акція зараз не діє. Зазирніть пізніше.</div>'}
- <ul class="bdlist"><li>🎁 Подарунок один раз на рік для кожного</li><li>⏳ Діє 7 календарних днів поспіль</li><li>🔒 Дані використовуємо лише для привітання</li></ul></section>`;
+ <ul class="bdlist"><li>🎁 Подарунок один раз на рік для кожного</li><li>⏳ Діє ${bdDays()} поспіль</li><li>🔒 Дані використовуємо лише для привітання</li></ul></section>`;
  window.scrollTo(0,0)}
 function viewHome(){
  document.title="Trend Electro — електротовари та LED-освітлення";
