@@ -609,7 +609,7 @@ async function tLand(){
 async function lOpen(id){const r=await sb.from("landings").select("*").eq("id",id).maybeSingle();if(r.error||!r.data)return fail(r.error||"Не знайдено");LED=r.data;LED.theme=LED.theme||{};LED.blocks=LED.blocks||[];if(!TREE.length)try{await loadTree()}catch(e){}drawLE()}
 function lField(b,i,f){const [k,l,ty]=f,v=b[k]==null?"":String(b[k]),a=`data-bi="${i}" data-bk="${k}"`;
  if(ty===1)return`<div><label>${l}</label>${v?`<img src="${esc(v)}" style="max-width:220px;border-radius:8px;display:block">`:""}<input type="file" accept="image/*" data-lup="${i}" data-bk="${k}">${v?`<button data-ln="clr" data-bi="${i}" data-bk="${k}">Прибрати фото</button>`:""}</div>`;
- if(ty===2)return`<div><label>${l}</label><textarea rows="2" ${a}>${esc(v)}</textarea><input placeholder="🔍 Пошук товару за назвою чи артикулом" data-lsq="${i}"><div data-lsr="${i}"></div></div>`;
+ if(ty===2)return`<div><label>${l}</label><textarea rows="2" ${a}>${esc(v)}</textarea><input placeholder="🔍 Пошук товару за назвою чи артикулом" data-lsq="${i}"><div data-lsr="${i}"></div><button data-ln="brw" data-bi="${i}">📂 Вибрати з каталогу (по меню)</button><div data-lbr="${i}"></div></div>`;
  if(ty===3){const opts=new Set();(TREE||[]).forEach(t=>{const p=t.p.filter(x=>x!=="Усі");for(let j=1;j<=p.length;j++)opts.add(p.slice(0,j).join(SEP))});return`<div><label>${l}</label><select ${a}><option value="">— не вибрано —</option>${[...opts].sort((x,y)=>x.localeCompare(y,"uk")).map(o=>`<option${o===v?" selected":""}>${esc(o)}</option>`).join("")}</select></div>`}
  if(ty===4)return`<div><label>${l}</label><textarea rows="4" ${a}>${esc(v)}</textarea></div>`;
  if(ty===5)return`<div><label>${l}</label><input type="datetime-local" ${a} value="${esc(v)}"><span class="mut">Порожньо або минула дата = таймер не показується.</span></div>`;
@@ -664,6 +664,25 @@ document.addEventListener("click",async e=>{const t=e.target.closest("[data-ln]"
  if(a==="pick"){const cur=String(B[i].ids||"").split(/[\s,;]+/).filter(Boolean);if(!cur.includes(t.dataset.pid))cur.push(t.dataset.pid);B[i].ids=cur.join(", ");const ta=document.querySelector(`textarea[data-bi="${i}"][data-bk="ids"]`);if(ta)ta.value=B[i].ids;t.remove();return}
 });
 document.addEventListener("click",e=>{if(e.target.id==="lnew"){const n=$("lnt").value.trim();if(n.length<2)return flash("Вкажіть назву лендінгу.");lCreate(n,$("lntp").value)}});
+
+/* огляд каталогу для лендінгу */
+let LBR={i:-1,path:[]};
+const lIds=i=>String(LED.blocks[i].ids||"").split(/[\s,;]+/).filter(Boolean);
+async function lBrowse(){const i=LBR.i,box=document.querySelector(`[data-lbr="${i}"]`);if(!box)return;
+ if(!TREE.length)try{await loadTree()}catch(e){}
+ let node=treeModel();LBR.path.forEach(n=>{node=(node.kids&&node.kids[n])||node});
+ const P=LBR.path,kids=P.length<3?sk(node):[],ch=lIds(i);
+ let q=sb.from("products").select("id,name,price,in_stock").order("name").limit(60);["category","subcategory","subcategory2"].forEach((c,k)=>{if(P[k])q=q.eq(c,P[k])});
+ box.innerHTML='<div class="mut">Завантаження…</div>';const r=P.length?await q:{data:[]};
+ const crumbs=`<div class="rw" style="justify-content:flex-start;gap:4px"><button data-ln="bgo" data-bp="">Усі розділи</button>${P.map((n,k)=>`<button data-ln="bgo" data-bp="${esc(encodeURIComponent(JSON.stringify(P.slice(0,k+1))))}">› ${esc(n)}</button>`).join("")}<button data-ln="bclose">✕ Закрити</button></div>`;
+ box.innerHTML=`<div class="box" style="border-color:#0ABAB5">${crumbs}${kids.length?'<div class="mut">Розділи (натисніть, щоб зайти):</div>'+kids.map(k=>`<button data-ln="bgo" data-bp="${esc(encodeURIComponent(JSON.stringify(k.path)))}" style="display:block;width:100%;text-align:left;margin-top:4px">📁 ${esc(k.name)} <span class="mut">(${k.n})</span></button>`).join(""):""}${P.length?`<button data-ln="bcat" data-bi="${i}" data-bc="${esc(P.join(SEP))}">⭐ Рекламувати весь розділ «${esc(P[P.length-1])}»</button><div class="mut">Товари в цьому розділі${(r.data||[]).length>=60?" (перші 60, решту знайдіть пошуком)":""}:</div>`+(r.data||[]).map(p=>`<button data-ln="btog" data-bi="${i}" data-pid="${esc(p.id)}" style="display:block;width:100%;text-align:left;margin-top:4px">${ch.includes(p.id)?"✅":"＋"} ${esc(p.id)} · ${esc(p.name)} · ${p.price}₴${p.in_stock===false?" (немає)":""}</button>`).join(""):'<div class="mut">Оберіть розділ, щоб дійти до товарів.</div>'}</div>`}
+document.addEventListener("click",async e=>{const t=e.target.closest("[data-ln]");if(!t||!LED)return;const a=t.dataset.ln,i=+t.dataset.bi;
+ if(a==="brw"){LBR={i,path:[]};return lBrowse()}
+ if(a==="bgo"){LBR.path=t.dataset.bp?JSON.parse(decodeURIComponent(t.dataset.bp)):[];return lBrowse()}
+ if(a==="bclose"){const b=document.querySelector(`[data-lbr="${LBR.i}"]`);if(b)b.innerHTML="";return}
+ if(a==="bcat"){LED.blocks[i].cat=t.dataset.bc;const b=LED.blocks[i],sc=window.scrollY;drawLE();window.scrollTo(0,sc);return flash("Вибрано весь розділ: "+t.dataset.bc+". Натисніть «Зберегти».",true)}
+ if(a==="btog"){const b=LED.blocks[i],c=lIds(i),k=c.indexOf(t.dataset.pid);if(k>-1)c.splice(k,1);else c.push(t.dataset.pid);b.ids=c.join(", ");const ta=document.querySelector(`textarea[data-bi="${i}"][data-bk="ids"]`);if(ta)ta.value=b.ids;t.textContent=t.textContent.replace(/^(✅|＋)/,k>-1?"＋":"✅")}
+});
 </script>
 </body>
 </html>
