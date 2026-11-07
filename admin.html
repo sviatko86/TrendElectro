@@ -37,6 +37,7 @@ label{font-size:13px;color:var(--mute);display:block;margin-bottom:3px}h2{margin
 @media (max-width:600px){.prow{grid-template-columns:auto 44px 1fr 14px}.prow>button{display:none}.prow:after{content:"›";font-size:22px;color:var(--mute)}.prow img{width:44px;height:44px}}
 .pact:not(.on) .psrch,.pact:not(.on) #pax{display:none}.pact:not(.on){box-shadow:none;padding:8px 10px}
 .tbl{width:100%;border-collapse:collapse}.tbl td,.tbl th{padding:8px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}
+.pwf{position:relative;display:block;width:100%}.pwf input{padding-right:46px!important;width:100%;box-sizing:border-box}.pwe{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:40px;height:40px;border:0;background:none;color:#6b7780;cursor:pointer;display:grid;place-items:center;border-radius:50%;padding:0}.pwe:hover{color:#0ABAB5}
 </style>
 </head>
 <body>
@@ -726,6 +727,12 @@ document.addEventListener("click",async e=>{if(e.target.id!=="lysave")return;con
  const r=await sb.from("settings").upsert({key:"loyalty",value:{on:$("lyon").checked,one:$("lyone").checked,tiers},updated_at:new Date().toISOString()});if(r.error)return flash("Помилка: "+r.error.message);
  const q=await sb.rpc("admin_loy_recalc_all");flash(q.error?"Збережено, але перерахунок не вдався: "+q.error.message:"Збережено ✓ Картки "+q.data+" клієнтів перераховано. Оновіть сайт (Ctrl+F5).",!q.error)});
 document.addEventListener("click",async e=>{const t=e.target.closest("[data-ladj]");if(!t)return;const c=clients.find(x=>x.id===t.dataset.ladj);const v=prompt("Скільки гривень покупок поза сайтом врахувати для картки клієнта «"+(c&&c.full_name||"")+"»? Зараз: "+(+(c&&c.loyalty_adj)||0),String(+(c&&c.loyalty_adj)||0));if(v===null)return;const n=Math.max(0,parseFloat(String(v).replace(",","."))||0);const r=await sb.rpc("admin_set_loyalty_adj",{p_id:t.dataset.ladj,p_adj:n});if(r.error)return flash("Помилка: "+r.error.message);tClients()});
+
+/* показати / сховати пароль */
+(function(){const E='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>',X='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.9 17.9A10.9 10.9 0 0 1 12 19C5 19 1 12 1 12a19 19 0 0 1 5.1-5.9M9.9 4.2A10.7 10.7 0 0 1 12 4c7 0 11 8 11 8a19 19 0 0 1-3.2 4.2M14.1 14.1a3 3 0 1 1-4.2-4.2"/><path d="M1 1l22 22"/></svg>';
+ function wrap(i){if(i.dataset.eye)return;i.dataset.eye=1;const w=document.createElement("div");w.className="pwf";i.parentNode.insertBefore(w,i);w.appendChild(i);const b=document.createElement("button");b.type="button";b.className="pwe";b.setAttribute("aria-label","Показати пароль");b.innerHTML=E;b.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();const show=i.type==="password";i.type=show?"text":"password";b.innerHTML=show?X:E;b.setAttribute("aria-label",show?"Сховати пароль":"Показати пароль");i.focus()});w.appendChild(b)}
+ const scan=()=>document.querySelectorAll('input[type="password"]').forEach(wrap);
+ new MutationObserver(scan).observe(document.documentElement,{childList:true,subtree:true});scan()})();
 </script>
 </body>
 </html>

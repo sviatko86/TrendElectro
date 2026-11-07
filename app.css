@@ -452,3 +452,4 @@ body.lndon{padding-bottom:84px}
 .lpbox{background:var(--card);border-radius:20px;padding:20px;max-width:420px;width:100%;display:grid;gap:12px;text-align:center;position:relative;max-height:92vh;overflow:auto}.lpbox h3{margin:0}.lpbox p{margin:0}
 .lpx{position:absolute;top:8px;right:12px;background:none;border:0;font-size:28px;cursor:pointer;color:var(--mute)}
 @media(prefers-reduced-motion:reduce){.wsh{animation:none;opacity:0}}
+.pwf{position:relative;display:block;width:100%}.pwf input{padding-right:46px!important;width:100%;box-sizing:border-box}.pwe{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:40px;height:40px;border:0;background:none;color:#6b7780;cursor:pointer;display:grid;place-items:center;border-radius:50%;padding:0}.pwe:hover{color:#0ABAB5}
