@@ -68,11 +68,10 @@ let NOSP=false;
 async function loadProducts(){
  const all=[];let from=0;const step=1000;
  for(;;){
-  const cols="id,name,category,subcategory,subcategory2,brand,price,old_price,image_url,in_stock,is_hit,is_new";let r=NOSP?null:await sb.from("products").select(cols+",special,pack_qty,in_pack,in_box").eq("active",true).order("id").range(from,from+step-1);
-  if(!r||r.error){NOSP=true;r=await sb.from("products").select(cols).eq("active",true).order("id").range(from,from+step-1)}
+  const cols="id,name,category,subcategory,subcategory2,brand,price,old_price,image_url,in_stock,is_hit,is_new";let r=null;for(const ex of NOSP===2?[""]:NOSP===1?[",special",""]:[",special,pack_qty,in_pack,in_box,stock",",special,pack_qty,in_pack,in_box",",special",""]){r=await sb.from("products").select(cols+ex).eq("active",true).order("id").range(from,from+step-1);if(!r.error){NOSP=ex===""?2:ex===",special"?1:0;break}}
   if(r.error)throw r.error;all.push(...r.data);if(r.data.length<step)break;from+=step;
  }
- PALL=all.map(r=>({id:r.id,n:r.name,c:[r.category,r.subcategory,r.subcategory2].filter(x=>x&&x!=="Усі"),b:r.brand||"",pr0:+r.price||0,old:r.old_price!=null?+r.old_price:0,img:r.image_url||"",hit:!!r.is_hit,nw:!!r.is_new,ofr:r.special||"",pq:+r.pack_qty||0,ip:+r.in_pack||0,ib:+r.in_box||0,st:r.in_stock!==false,d:null,sp:null}));
+ PALL=all.map(r=>({id:r.id,n:r.name,c:[r.category,r.subcategory,r.subcategory2].filter(x=>x&&x!=="Усі"),b:r.brand||"",pr0:+r.price||0,old:r.old_price!=null?+r.old_price:0,img:r.image_url||"",hit:!!r.is_hit,nw:!!r.is_new,ofr:r.special||"",sk:r.stock==null?null:+r.stock,pq:+r.pack_qty||0,ip:+r.in_pack||0,ib:+r.in_box||0,st:r.in_stock!==false,d:null,sp:null}));
 }
 
 /* ---------- персональні картки клієнта ---------- */
@@ -391,9 +390,9 @@ async function viewProduct(id){
  $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a>${p.c.map((n,i)=>`<span>›</span><a href="${href(p.c.slice(0,i+1))}">${esc(n)}</a>`).join("")}</nav>
 <div class="pgrid"><div><div class="pimg" id="pmain">${img(p.img,900,900,p.n)}</div><div class="thumbs" id="pthumbs"></div></div><div class="pinfo"><h1>${esc(p.n)}</h1>
 <div class="meta"><span>Артикул: <b>${esc(p.id)}</b></span>${p.b?`<span>Бренд: <a href="#/c/" data-brand="${esc(p.b)}">${esc(p.b)}</a></span>`:""}</div>
-<div class="avail${p.st?"":" no"}">${p.st?ico("check")+"Є в наявності":"Немає в наявності"}</div>
+<div class="avail${p.st?"":" no"}">${p.st?ico("check")+stkTxt(p):"Немає в наявності"}</div>
 <div class="bigprice${disc>0?" sale":""}">${money(pc)}${pi.base>pc?`<s>${money(pi.base)}</s>`:""}${disc>0?`<span class="bds2">${saleBadges(pi)}</span>`:""}</div>${packHtml(p,1)}${p.ofr?`<div class="spbox"><span class="bd p">Спеціальна пропозиція</span><div>${esc(p.ofr)}</div></div>`:""}
-<div class="buyrow"><div class="qtybox"><button data-q="-1" aria-label="Менше">−</button><input id="pq" type="number" min="1" max="999" value="1" inputmode="numeric" aria-label="Кількість"><button data-q="1" aria-label="Більше">+</button></div><button class="buybtn" id="buy" data-id="${esc(p.id)}"${p.st?"":" disabled"}>${p.st?ico("cart")+"Купити":"Немає в наявності"}</button><button class="favbtn${fav[p.id]?" on":""}" data-f="${esc(p.id)}" aria-label="Обране">${ico("heart")}</button></div><p class="ordoff">${esc(ordMsg())}</p>
+<div class="buyrow"><div class="qtybox"><button data-q="-1" aria-label="Менше">−</button><input id="pq" type="number" min="1" max="${stkMax(p)}" value="1" inputmode="numeric" aria-label="Кількість"><button data-q="1" aria-label="Більше">+</button></div><button class="buybtn" id="buy" data-id="${esc(p.id)}"${p.st?"":" disabled"}>${p.st?ico("cart")+"Купити":"Немає в наявності"}</button><button class="favbtn${fav[p.id]?" on":""}" data-f="${esc(p.id)}" aria-label="Обране">${ico("heart")}</button></div><p class="ordoff">${esc(ordMsg())}</p>
 <div class="ptrust"><a href="#/page/delivery">${ico("truck")}<span><b>Доставка по Україні</b>Нова пошта, Укрпошта</span></a><a href="#/page/delivery">${ico("wallet")}<span><b>Оплата при отриманні</b>або карткою</span></a><a href="#/page/exchange">${ico("swap")}<span><b>Обмін та повернення</b>за законом, без зайвих питань</span></a></div>
 <div class="box" style="margin:14px 0 0"><h3>Основні характеристики</h3><div id="pkey"><div class="sku">Завантаження…</div></div></div></div></div>
 <div class="tabsb"><button data-pt="info" class="on">Опис</button><button data-pt="spec">Усі характеристики</button></div><div class="box" id="pdet"><div class="sku">Завантаження…</div></div>
@@ -432,13 +431,17 @@ let ttm=null;function toast(t,btn){$("toastT").textContent=t;$("toastB").hidden=
 /* ---------- кошик ---------- */
 const save=()=>SV("te_cart",cart);
 function totals(ids){let s=0;ids.forEach(i=>s+=price(M[i])*cart[i]);const d=Math.max(prof?(+prof.discount_percent||0):0,bdPct(),cardPct(),promoPct,loyOne(s));return{s,d,t:Math.round(s*(100-d))/100}}
-function drawCart(){
+function drawCart(){stkClamp();
  const ids=Object.keys(cart).filter(i=>M[i]);let n=0;
  $("lines").innerHTML=ids.length?ids.map(i=>{const p=M[i],q=cart[i];n+=q;const u="#/p/"+encodeURIComponent(i);return `<div class="row"><a class="rth" href="${u}" aria-label="${esc(p.n)}">${img(p.img,120,120)}</a><a href="${u}">${esc(p.n)}</a><b>${money(price(p)*q)}</b><div class="qty"><button data-m="${esc(i)}" aria-label="Менше">−</button>${q}<button data-p="${esc(i)}" aria-label="Більше">+</button></div><span class="sku">${money(price(p))} / шт.</span></div>`}).join(""):'<div class="empty">Кошик поки порожній.<br>Додайте товари з каталогу — і оформлення займе хвилину.<br><br><a class="btn" href="#/c/">До каталогу</a></div>';
  const t=totals(ids);$("sum").textContent=money(t.t);$("cnt").textContent=n||"";$("bcnt").textContent=n||"";$("form").hidden=!ids.length;
  $("dinfo").textContent=t.d>0?"Знижка "+t.d+"%: −"+money(Math.round((t.s-t.t)*100)/100):"";
  const f=Object.keys(fav).length;$("fcnt").textContent=f||"";$("bfcnt").textContent=f||"";
 }
+const stkOn=p=>!!SHOP.stock_on&&p&&p.sk!=null;
+function stkTxt(p){if(!stkOn(p))return"Є в наявності";return p.sk<=5?"Залишилось "+p.sk+" шт":"Є в наявності: "+p.sk+" шт"}
+function stkMax(p){return stkOn(p)?Math.max(1,p.sk):999}
+function stkClamp(){let ch=0;Object.keys(cart).forEach(i=>{const p=M[i];if(stkOn(p)&&cart[i]>p.sk){ch=1;if(p.sk>0)cart[i]=p.sk;else delete cart[i]}});if(ch){save();toast("Кількість змінено: більше, ніж є в наявності, замовити не можна",1)}}
 function payOpts(){const s=$("fy");if(!s)return;const o=["Оплата при отриманні","Оплата карткою"];if(SHOP.pay_cod_off)o.shift();if(SHOP.pay_card_off)o.pop();if(SHOP.bank_on)o.push("Оплата на рахунок ФОП (IBAN)");const cur=s.value;s.innerHTML=o.map(x=>`<option>${x}</option>`).join("");if(o.indexOf(cur)>-1)s.value=cur}
 function openCart(){if(SHOP.orders_off)return;payOpts();$("drawer").classList.remove("ordered");$("done").hidden=true;$("omsg").textContent="";drawCart();if(prof){if(!$("fn").value)$("fn").value=prof.full_name||"";if(!$("fp").value)$("fp").value=prof.phone||""}const cu=LS("te_cust",null);if(cu){if(!$("fn").value)$("fn").value=cu.n||"";if(!$("fp").value)$("fp").value=cu.p||"";if(!$("fc").value)$("fc").value=cu.c||""}panel("drawer",true)}
 async function applyPromo(code){
@@ -575,7 +578,7 @@ document.addEventListener("click",e=>{
  if(d.ph){const m=$("pmain");if(m)m.innerHTML=img(d.ph,900,900);document.querySelectorAll("#pthumbs button").forEach(b=>b.classList.toggle("on",b===t));return}
  if(d.sc){const r=$(d.sc);if(r)r.scrollBy({left:(+d.d)*r.clientWidth*.9,behavior:"smooth"});return}
  if(d.nav){const v=d.nav;if(v==="home")location.hash="#/";if(v==="cat")openCatMenu();if(v==="fav")location.hash="#/fav";if(v==="cart")openCart();if(v==="acc"){drawAcc();panel("acc",true)}return}
- if(t.id==="buy"){const n=Math.max(1,Math.min(999,+$("pq").value||1)),id=t.dataset.id;cart[id]=(cart[id]||0)+n;save();drawCart();toast(n>1?"Додано в кошик: "+n+" шт.":"Додано в кошик",1);return}
+ if(t.id==="buy"){const n=Math.max(1,Math.min(stkMax(M[t.dataset.id]),+$("pq").value||1)),id=t.dataset.id;cart[id]=(cart[id]||0)+n;save();drawCart();toast(n>1?"Додано в кошик: "+n+" шт.":"Додано в кошик",1);return}
  if(d.pt){PTAB=d.pt;document.querySelectorAll(".tabsb button").forEach(b=>b.classList.toggle("on",b===t));const id=decodeURIComponent(curH().slice(4));if(M[id])drawDet(M[id]);return}
  if(d.b!==undefined){lastTouch=Date.now();showB(+d.b);return}
  if(d.sa){lastTouch=Date.now();showB((bix+ +d.sa+BN.length)%BN.length);return}
