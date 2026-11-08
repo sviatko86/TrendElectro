@@ -554,3 +554,4 @@ html{background:var(--nav)}body{min-height:100vh;min-height:100dvh}
 .simt{margin:12px 0}.simok{color:#0a8a86}
 @media print{.estf input::placeholder{color:transparent}}
 .ptr{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 6px);transform:translate(-50%,0);z-index:300;opacity:0;pointer-events:none;background:#0ABAB5;color:#062826;font:700 13px Manrope,system-ui,sans-serif;padding:7px 14px;border-radius:999px;white-space:nowrap}.ptr.go{background:#fff;color:#062826}
+.simcmp{margin:14px 0}.simcmph{font-weight:700;margin-bottom:6px}.simcmpg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.simcmpg button{border:1px solid var(--line);background:var(--card);color:inherit;border-radius:10px;padding:4px;cursor:pointer;font:700 13px Manrope,system-ui,sans-serif}.simcmpg canvas{width:100%;height:auto;display:block;border-radius:7px}.simcmpg b{display:block;padding:4px 0 2px}
