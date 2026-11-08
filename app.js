@@ -1026,5 +1026,5 @@ if(IOS&&!STANDALONE)setTimeout(()=>instShow("Додайте Trend Electro на �
 function netBar(){let b=$("netb");if(navigator.onLine){if(b)b.remove();return}if(!b){b=document.createElement("div");b.id="netb";b.className="netb";b.textContent="Немає інтернету. Показуємо збережене на телефоні. Замовити можна, коли зв’язок повернеться.";document.body.appendChild(b)}}
 addEventListener("online",netBar);addEventListener("offline",netBar);netBar();
 /* кнопка «Назад» для встановленого додатка (PWA) */
-function backDraw(){const b=$("backBtn");if(!b)return;const h=curH();b.hidden=!(STANDALONE&&h!=="#/"&&h!=="")}
+function backDraw(){const b=$("backBtn");if(!b)return;const h=curH();b.hidden=!STANDALONE;b.style.visibility=(h==="#/"||h==="")?"hidden":"visible"}
 document.addEventListener("click",e=>{if(e.target.closest("#backBtn")){e.preventDefault();if(history.length>1)history.back();else location.hash="#/"}});
