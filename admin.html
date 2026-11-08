@@ -655,7 +655,26 @@ async function lSave(){const L=LED;L.slug=lSlug(L.slug);
 async function lCreate(title,tpl,src){let base=lSlug(title),slug=base,n=2;const ex=new Set(LLIST.map(l=>l.slug));while(ex.has(slug))slug=base+"-"+n++;
  const t=src||{theme:LTPL[tpl][1],blocks:LTPL[tpl][2]};
  const r=await sb.from("landings").insert({title,slug,active:false,theme:JSON.parse(JSON.stringify(t.theme)),blocks:JSON.parse(JSON.stringify(t.blocks))}).select().single();if(r.error)return flash("Помилка: "+r.error.message);LLIST.push(r.data);lOpen(r.data.id)}
-let LSQT=null;
+let LSQT=null,LPRC=null;
+/* вибрані товари блоку: фото, назва, ціна на сайті і ціна на лендінгу */
+async function lSelDraw(i){const b=LED&&LED.blocks[i],box=document.querySelector(`[data-lsel="${i}"]`);if(!b||!box)return;
+ const ids=String(b.ids||"").split(/[\s,;]+/).filter(Boolean).slice(0,60);
+ if(!LPRC){const r=await sb.from("settings").select("value").eq("key","pricing").maybeSingle();LPRC=(r.data&&r.data.value)||{}}
+ const bc=LPRC.by_category||{},gm=+LPRC.markup_percent||0,gd=+LPRC.discount_percent||0,dc=Math.min(90,Math.max(0,+LED.theme.disc||0));
+ const rows=ids.length?((await sb.from("products").select("id,name,price,image_url,in_stock,category,subcategory,subcategory2").in("id",ids)).data||[]):[];
+ const by={};rows.forEach(r=>by[r.id]=r);
+ const sp=p=>{const k1=p.category,k2=p.subcategory?k1+" › "+p.subcategory:null,k3=k2&&p.subcategory2?k2+" › "+p.subcategory2:null,g=(f)=>{for(const k of [k3,k2,k1]){if(k&&bc[k]&&bc[k][f]!=null&&bc[k][f]!=="")return +bc[k][f]}return null},m=g("m"),d=g("d");return Math.round(p.price*(1+(m==null?gm:m)/100)*(1-(d==null?gd:d)/100)*100)/100};
+ let h=ids.map(id=>{const p=by[id];if(!p)return`<div class="rw" style="gap:8px;border-top:1px solid #8884;padding:6px 0"><span style="color:#c62828">⚠️ Артикул ${esc(id)} не знайдено</span><button data-ln="unpick" data-bi="${i}" data-pid="${esc(id)}">✕</button></div>`;
+  const s=sp(p),l=dc?Math.round(s*(100-dc))/100:s;
+  return`<div class="rw" style="gap:8px;border-top:1px solid #8884;padding:6px 0;justify-content:flex-start;flex-wrap:nowrap">${p.image_url?`<img src="${esc(p.image_url)}" alt="" style="width:44px;height:44px;object-fit:contain;border-radius:6px;flex:none">`:'<span style="width:44px;flex:none"></span>'}<div style="flex:1;min-width:0"><div style="font-size:13px;line-height:1.25">${esc(p.name)}${p.in_stock===false?' <b style="color:#c62828">(немає)</b>':""}</div><div class="mut">Арт. ${esc(p.id)} · на сайті <b>${money(s)}</b>${dc?` → на лендінгу <b style="color:#0a8f8b">${money(l)}</b> (−${dc}%)`:""}</div></div><button data-ln="unpick" data-bi="${i}" data-pid="${esc(p.id)}" title="Прибрати">✕</button></div>`}).join("");
+ if(b.cat)h+=`<div class="mut" style="margin-top:6px">📁 Весь розділ: <b>${esc(b.cat)}</b> (показується до ${+b.n||12} шт.) <button data-ln="uncat" data-bi="${i}">Прибрати розділ</button></div>`;
+ box.innerHTML=h?`<div class="mut" style="margin-top:8px"><b>Вибрано на цій сторінці${ids.length?" ("+ids.length+")":""}:</b></div>`+h:'<div class="mut" style="margin-top:8px">Поки нічого не вибрано. Знайдіть товар пошуком нижче або відкрийте каталог і відмітьте потрібні.</div>'}
+function lSelAll(){document.querySelectorAll('textarea[data-bk="ids"]').forEach(ta=>{const i=+ta.dataset.bi;if(!document.querySelector(`[data-lsel="${i}"]`))ta.insertAdjacentHTML("afterend",`<div data-lsel="${i}"></div>`);lSelDraw(i)})
+ document.querySelectorAll('select[data-bk="cat"]').forEach(s=>{const i=+s.dataset.bi;if(!document.querySelector(`[data-lsel="${i}"]`))s.parentElement.insertAdjacentHTML("beforeend",`<div data-lsel="${i}"></div>`);lSelDraw(i)})}
+{const _d=drawLE;drawLE=function(){_d.apply(this,arguments);lSelAll()}}
+let LSELT=null;document.addEventListener("input",e=>{const t=e.target;if(!LED||t.dataset.bk!=="ids"||t.dataset.bi==null)return;clearTimeout(LSELT);LSELT=setTimeout(()=>lSelDraw(+t.dataset.bi),500)});
+document.addEventListener("change",e=>{const t=e.target;if(LED&&t.dataset&&t.dataset.bk==="cat"&&t.dataset.bi!=null)lSelDraw(+t.dataset.bi)});
+document.addEventListener("input",e=>{const t=e.target;if(LED&&t.dataset&&t.dataset.th==="disc"){clearTimeout(LSELT);LSELT=setTimeout(()=>document.querySelectorAll("[data-lsel]").forEach(b=>lSelDraw(+b.dataset.lsel)),500)}});
 document.addEventListener("input",e=>{const t=e.target;if(!LED||!$("pane").contains(t))return;
  if(t.dataset.lt){LED[t.dataset.lt]=t.type==="checkbox"?t.checked:t.value;if(t.dataset.lt==="active")drawLE()}
  else if(t.dataset.px){LED.theme.px=LED.theme.px||{};LED.theme.px[t.dataset.px]=t.type==="checkbox"?t.checked:t.value.trim()}
@@ -680,7 +699,7 @@ document.addEventListener("click",async e=>{const t=e.target.closest("[data-ln]"
  if(a==="rm"){if(confirm("Прибрати цей блок?")){B.splice(i,1);drawLE()}return}
  if(a==="add"){if($("lnb").value==="calc"&&B.some(x=>x.t==="calc"))return flash("У лендінгу може бути лише один калькулятор — оберіть під тему товару.");B.push({t:$("lnb").value});drawLE();window.scrollTo(0,document.body.scrollHeight);return}
  if(a==="clr"){B[i][t.dataset.bk]="";return drawLE()}
- if(a==="pick"){const cur=String(B[i].ids||"").split(/[\s,;]+/).filter(Boolean);if(!cur.includes(t.dataset.pid))cur.push(t.dataset.pid);B[i].ids=cur.join(", ");const ta=document.querySelector(`textarea[data-bi="${i}"][data-bk="ids"]`);if(ta)ta.value=B[i].ids;t.remove();return}
+ if(a==="pick"){const cur=String(B[i].ids||"").split(/[\s,;]+/).filter(Boolean);if(!cur.includes(t.dataset.pid))cur.push(t.dataset.pid);B[i].ids=cur.join(", ");const ta=document.querySelector(`textarea[data-bi="${i}"][data-bk="ids"]`);if(ta)ta.value=B[i].ids;t.remove();lSelDraw(i);return}
 });
 document.addEventListener("click",e=>{if(e.target.id==="lnew"){const n=$("lnt").value.trim();if(n.length<2)return flash("Вкажіть назву лендінгу.");lCreate(n,$("lntp").value)}});
 
@@ -700,7 +719,9 @@ document.addEventListener("click",async e=>{const t=e.target.closest("[data-ln]"
  if(a==="bgo"){LBR.path=t.dataset.bp?JSON.parse(decodeURIComponent(t.dataset.bp)):[];return lBrowse()}
  if(a==="bclose"){const b=document.querySelector(`[data-lbr="${LBR.i}"]`);if(b)b.innerHTML="";return}
  if(a==="bcat"){LED.blocks[i].cat=t.dataset.bc;const b=LED.blocks[i],sc=window.scrollY;drawLE();window.scrollTo(0,sc);return flash("Вибрано весь розділ: "+t.dataset.bc+". Натисніть «Зберегти».",true)}
- if(a==="btog"){const b=LED.blocks[i],c=lIds(i),k=c.indexOf(t.dataset.pid);if(k>-1)c.splice(k,1);else c.push(t.dataset.pid);b.ids=c.join(", ");const ta=document.querySelector(`textarea[data-bi="${i}"][data-bk="ids"]`);if(ta)ta.value=b.ids;t.textContent=t.textContent.replace(/^(✅|＋)/,k>-1?"＋":"✅")}
+ if(a==="btog"){const b=LED.blocks[i],c=lIds(i),k=c.indexOf(t.dataset.pid);if(k>-1)c.splice(k,1);else c.push(t.dataset.pid);b.ids=c.join(", ");const ta=document.querySelector(`textarea[data-bi="${i}"][data-bk="ids"]`);if(ta)ta.value=b.ids;t.textContent=t.textContent.replace(/^(✅|＋)/,k>-1?"＋":"✅");lSelDraw(i)}
+ if(a==="unpick"){const b=LED.blocks[i],c=lIds(i).filter(x=>x!==t.dataset.pid);b.ids=c.join(", ");const ta=document.querySelector(`textarea[data-bi="${i}"][data-bk="ids"]`);if(ta)ta.value=b.ids;lSelDraw(i);return}
+ if(a==="uncat"){LED.blocks[i].cat="";const s=document.querySelector(`select[data-bi="${i}"][data-bk="cat"]`);if(s)s.value="";lSelDraw(i);return}
 });
 
 /* ---------- клієнти: усі покупці й джерела замовлень ---------- */
