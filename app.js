@@ -66,10 +66,17 @@ function card(p){
 /* ---------- дані ---------- */
 let NOSP=false;
 async function loadProducts(){
- const all=[];let from=0;const step=1000;
+ let all=[];const step=1000,FULL=",special,pack_qty,in_pack,in_box,stock",cols="id,name,category,subcategory,subcategory2,brand,price,old_price,image_url,in_stock,is_hit,is_new";
+ {const c=LS("te_cat",null);if(c&&c.rows&&Date.now()-c.t<6e5){all=c.rows;NOSP=c.n||0}}
+ if(!all.length){const N=+LS("te_pc",0)||0;
+  if(N){try{const pg=Math.ceil(N/step)+1,rs=await Promise.all(Array.from({length:pg},(_,i)=>sb.from("products").select(cols+FULL).eq("active",true).order("id").range(i*step,i*step+step-1)));if(!rs.some(r=>r.error))all=rs.flatMap(r=>r.data)}catch(e){all=[]}}
+  if(!all.length){let from=0;
  for(;;){
   const cols="id,name,category,subcategory,subcategory2,brand,price,old_price,image_url,in_stock,is_hit,is_new";let r=null;for(const ex of NOSP===2?[""]:NOSP===1?[",special",""]:[",special,pack_qty,in_pack,in_box,stock",",special,pack_qty,in_pack,in_box",",special",""]){r=await sb.from("products").select(cols+ex).eq("active",true).order("id").range(from,from+step-1);if(!r.error){NOSP=ex===""?2:ex===",special"?1:0;break}}
   if(r.error)throw r.error;all.push(...r.data);if(r.data.length<step)break;from+=step;
+  }
+  }
+  SV("te_pc",all.length);try{localStorage.setItem("te_cat",JSON.stringify({t:Date.now(),n:NOSP||0,rows:all}))}catch(e){try{localStorage.removeItem("te_cat")}catch(x){}}
  }
  PALL=all.map(r=>({id:r.id,n:r.name,c:[r.category,r.subcategory,r.subcategory2].filter(x=>x&&x!=="Усі"),b:r.brand||"",pr0:+r.price||0,old:r.old_price!=null?+r.old_price:0,img:r.image_url||"",hit:!!r.is_hit,nw:!!r.is_new,ofr:r.special||"",sk:r.stock==null?null:+r.stock,pq:+r.pack_qty||0,ip:+r.in_pack||0,ib:+r.in_box||0,st:r.in_stock!==false,d:null,sp:null}));
 }
