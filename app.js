@@ -451,7 +451,7 @@ function stkTxt(p){if(!stkOn(p))return"Є в наявності";return p.sk<=5?
 function stkMax(p){return stkOn(p)?Math.max(1,p.sk):999}
 function stkClamp(){let ch=0;Object.keys(cart).forEach(i=>{const p=M[i];if(stkOn(p)&&cart[i]>p.sk){ch=1;if(p.sk>0)cart[i]=p.sk;else delete cart[i]}});if(ch){save();toast("Кількість змінено: більше, ніж є в наявності, замовити не можна",1)}}
 function payOpts(){const s=$("fy");if(!s)return;const o=["Оплата при отриманні","Оплата карткою"];if(SHOP.pay_cod_off)o.shift();if(SHOP.pay_card_off)o.pop();if(SHOP.bank_on)o.push("Оплата на рахунок ФОП (IBAN)");const cur=s.value;s.innerHTML=o.map(x=>`<option>${x}</option>`).join("");if(o.indexOf(cur)>-1)s.value=cur}
-function openCart(){if(SHOP.orders_off)return;payOpts();{const lp=LS("te_lpromo",null);if(lp&&!promoCode&&Date.now()-lp.t<2592e5)applyPromo(lp.c)}$("drawer").classList.remove("ordered");$("done").hidden=true;$("omsg").textContent="";drawCart();if(prof){if(!$("fn").value)$("fn").value=prof.full_name||"";if(!$("fp").value)$("fp").value=prof.phone||""}const cu=LS("te_cust",null);if(cu){if(!$("fn").value)$("fn").value=cu.n||"";if(!$("fp").value)$("fp").value=cu.p||"";if(!$("fc").value)$("fc").value=cu.c||""}panel("drawer",true)}
+function openCart(){if(SHOP.orders_off)return;payOpts();{const lp=LS("te_lpromo",null);if(lp&&!promoCode&&Date.now()-lp.t<2592e5&&(!lp.e||lp.e>Date.now()))applyPromo(lp.c)}$("drawer").classList.remove("ordered");$("done").hidden=true;$("omsg").textContent="";drawCart();if(prof){if(!$("fn").value)$("fn").value=prof.full_name||"";if(!$("fp").value)$("fp").value=prof.phone||""}const cu=LS("te_cust",null);if(cu){if(!$("fn").value)$("fn").value=cu.n||"";if(!$("fp").value)$("fp").value=cu.p||"";if(!$("fc").value)$("fc").value=cu.c||""}panel("drawer",true)}
 async function applyPromo(code){
  const c=(code||"").trim().toUpperCase(),pm=$("pmsg");promoPct=0;promoCode="";pm.textContent="";$("fpr").value=c;
  if(c&&sb){const r=await sb.rpc("check_promo",{p_code:c});
@@ -718,12 +718,14 @@ document.addEventListener("DOMContentLoaded",boot);
  addEventListener("load",()=>{if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register(BASE+"sw.js").catch(()=>{})});
 })();
 /* ---------- лендінги ---------- */
-let LND={},LTM=null,LFXR=0,LIO=null,LIO2=null,LCART={},LCUR="";
+let LND={},LWIN={},LTM=null,LFXR=0,LIO=null,LIO2=null,LCART={},LCUR="";
 const lStop=()=>{clearInterval(LTM);LTM=null;cancelAnimationFrame(LFXR);LFXR=0;if(LIO){LIO.disconnect();LIO=null}if(LIO2){LIO2.disconnect();LIO2=null}document.body.classList.remove("lndon")};
 const lLines=t=>String(t||"").split("\n").map(s=>s.trim()).filter(Boolean).map(s=>s.split("|").map(x=>x.trim()));
 const lPara=t=>String(t||"").split(/\n+/).map(s=>s.trim()).filter(Boolean).map(s=>"<p>"+esc(s)+"</p>").join("");
-const lDisc=L=>{const t=L.theme||{},e=Date.parse(t.ends||"");if(e&&e<Date.now())return 0;return Math.min(90,Math.max(0,+t.disc||0))};
-const lCode=L=>"LND-"+String(L.slug).toUpperCase();
+const lWin=L=>{const t=L.theme||{};return(+t.win>0&&+t.disc>0)?(LWIN[L.slug]||{code:null,end:0,pct:0}):null};
+const lDisc=L=>{const t=L.theme||{},w=lWin(L);if(w)return w.code&&w.end>Date.now()?Math.min(90,Math.max(0,w.pct)):0;const e=Date.parse(t.ends||"");if(e&&e<Date.now())return 0;return Math.min(90,Math.max(0,+t.disc||0))};
+const lVisitor=()=>{let v=LS("te_vid",null);if(!v||String(v).length<8){v=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now().toString(36)).replace(/-/g,"");SV("te_vid",v)}return v};
+const lCode=L=>{const w=lWin(L);return w&&w.code?w.code:"LND-"+String(L.slug).toUpperCase()};
 const lCur=()=>LND[LCUR]||{theme:{},blocks:[]};
 function lProds(b){const out=[],seen={};String(b.ids||"").split(/[\s,;]+/).filter(Boolean).forEach(i=>{const p=M[i];if(p&&!seen[i]){seen[i]=1;out.push(p)}});
  if(b.cat){const c=String(b.cat);P.forEach(p=>{if(!seen[p.id]&&p.c.join(SEP).indexOf(c)===0){seen[p.id]=1;out.push(p)}})}
@@ -748,7 +750,7 @@ const LB={
   return`<section class="lsec lbun">${lH(b,"Набір: усе потрібне разом")}<div class="lbi">${l.map((p,i)=>`${i?'<span class="lpl">+</span>':""}<div class="lbp">${img(p.img,200,200,p.n)}<span>${esc(p.n)}</span></div>`).join("")}</div><div class="lbs">${sv>0?`<span class="lold">На сайті разом: <s>${money(s)}</s></span>`:""}<b>${money(t)}</b>${sv>0?`<em>Економія ${money(sv)}</em>`:""}</div><button class="lbtn" data-lbun="${esc(l.map(p=>p.id).join(","))}">${esc(b.btn||"Додати весь набір")}</button></section>`},
 
  calc:(b,L)=>lCalcHtml(b.kind||"garland",b),
- timer:(b,L)=>{const t=Date.parse(b.until||((L&&L.theme)||{}).ends||"");if(!t||t<Date.now())return"";return`<section class="lsec ltim" data-until="${t}">${lH(b,"До кінця акції")}<div class="ltd"><div><b>0</b><span>днів</span></div><div><b>0</b><span>годин</span></div><div><b>0</b><span>хвилин</span></div><div><b>0</b><span>секунд</span></div></div></section>`},
+ timer:(b,L)=>{const w=L&&lWin(L),t=w?(w.code&&w.end>Date.now()?w.end:0):Date.parse(b.until||((L&&L.theme)||{}).ends||"");if(!t||t<Date.now())return"";return`<section class="lsec ltim" data-until="${t}">${lH(b,"До кінця акції")}<div class="ltd"><div><b>0</b><span>днів</span></div><div><b>0</b><span>годин</span></div><div><b>0</b><span>хвилин</span></div><div><b>0</b><span>секунд</span></div></div></section>`},
  video:b=>{const v=lVid(b.url);return v?`<section class="lsec">${lH(b)}<div class="lvid">${v}</div></section>`:""},
  text:b=>b.text||b.title?`<section class="lsec">${lH(b)}<div class="ltxt">${lPara(b.text)}</div></section>`:"",
  gallery:b=>{const l=String(b.imgs||"").split(/\s+/).filter(x=>/^https?:\/\//.test(x));return l.length?`<section class="lsec">${lH(b)}<div class="lgal">${l.map(u=>img(u,600,600,b.title||"")).join("")}</div></section>`:""},
@@ -762,7 +764,9 @@ const LB={
  contacts:(b,L,inner)=>{const s=shop(),a=[];if(s.phone)a.push(`<a class="lc" href="${esc(tel(s.phone))}" data-lclk="1">📞 Зателефонувати</a>`);if(s.viber)a.push(`<a class="lc" href="viber://chat?number=${encodeURIComponent("+"+String(s.viber).replace(/\D/g,""))}" data-lclk="1">Viber</a>`);if(s.telegram)a.push(`<a class="lc" href="https://t.me/${esc(String(s.telegram).replace(/^@/,"").replace(/^https?:\/\/t\.me\//,""))}" target="_blank" rel="noopener" data-lclk="1">Telegram</a>`);if(s.whatsapp)a.push(`<a class="lc" href="https://wa.me/${String(s.whatsapp).replace(/\D/g,"")}" target="_blank" rel="noopener" data-lclk="1">WhatsApp</a>`);if(!a.length)return"";const h=`<div class="lcs">${a.join("")}</div>`;return inner?h:`<section class="lsec">${lH(b,"Є питання? Напишіть нам")}${h}</section>`},
  cta:b=>`<section class="lsec lcta">${lH(b)}${b.sub?`<p>${esc(b.sub)}</p>`:""}<button class="lbtn" data-lgo="order">${esc(b.btn||"Замовити зараз")}</button></section>`
 };
-function lTick(){document.querySelectorAll(".ltim").forEach(s=>{let d=Math.max(0,+s.dataset.until-Date.now());if(!d){s.remove();return}const v=[Math.floor(d/864e5),Math.floor(d/36e5)%24,Math.floor(d/6e4)%60,Math.floor(d/1e3)%60];s.querySelectorAll("b").forEach((x,i)=>x.textContent=v[i])})}
+function lTick(){document.querySelectorAll(".lcd").forEach(s=>{const d=Math.max(0,+s.dataset.until-Date.now());if(!d)return;s.textContent=Math.floor(d/36e5)+":"+String(Math.floor(d/6e4)%60).padStart(2,"0")+":"+String(Math.floor(d/1e3)%60).padStart(2,"0")});
+ const L0=lCur();if(L0&&lWin(L0)&&lDisc(L0)===0&&LWIN[L0.slug]&&LWIN[L0.slug].code&&!LWIN[L0.slug].done){LWIN[L0.slug].done=1;viewLanding(LCUR);return}
+ document.querySelectorAll(".ltim").forEach(s=>{let d=Math.max(0,+s.dataset.until-Date.now());if(!d){s.remove();return}const v=[Math.floor(d/864e5),Math.floor(d/36e5)%24,Math.floor(d/6e4)%60,Math.floor(d/1e3)%60];s.querySelectorAll("b").forEach((x,i)=>x.textContent=v[i])})}
 function lFx(kind){const c=document.querySelector(".lfx");if(!c||!kind||kind==="none"||matchMedia("(prefers-reduced-motion:reduce)").matches)return;
  const x=c.getContext("2d"),r=devicePixelRatio||1;let W,H,F=[];const sz=()=>{W=c.offsetWidth;H=c.offsetHeight;c.width=W*r;c.height=H*r;x.setTransform(r,0,0,r,0,0)};sz();
  const cols=kind==="sparks"?["#ffd54a","#ff6b6b","#0ABAB5","#fff"]:["#fff"];
@@ -855,11 +859,13 @@ async function viewLanding(slug){
  const v=$("view");document.body.classList.add("lndon");
  let L=LND[slug];if(!L){v.innerHTML='<div class="empty">Завантаження…</div>';if(sb){const r=await sb.from("landings").select("*").eq("slug",slug).maybeSingle();L=r.data;if(L)LND[slug]=L}if(curH()!=="#/l/"+slug)return}
  if(!L){v.innerHTML='<div class="empty">Цю сторінку не знайдено або акція завершилась. <a href="#/">На головну</a></div>';return}
- if(LCUR!==slug){LCART={};LCUR=slug}{const _d=lDisc(L);if(_d>0)SV("te_lpromo",{c:"LND-"+String(slug).toUpperCase(),t:Date.now()})}
+ if(LCUR!==slug){LCART={};LCUR=slug}
+ if(+(L.theme||{}).win>0&&+(L.theme||{}).disc>0&&L.active&&sb&&!LWIN[slug]){try{const r=await sb.rpc("landing_window",{p_slug:slug,p_vid:lVisitor()});const d=r.data;LWIN[slug]=d?{code:d.code||null,end:Date.now()+(+d.left||0)*1e3,pct:+d.pct||0}:{code:null,end:0,pct:0}}catch(e){LWIN[slug]={code:null,end:0,pct:0}}if(curH()!=="#/l/"+slug)return}
+ {const _d=lDisc(L);if(_d>0)SV("te_lpromo",{c:lCode(L),t:Date.now(),e:(lWin(L)||{}).end||0})}
  const th=L.theme||{},d=lDisc(L),s=shop();document.title=(L.title||"Акція")+" — Trend Electro";
  const all=lAll(L);if(!Object.keys(LCART).length&&all.length===1&&!SHOP.orders_off)LCART[all[0].id]=1;
- v.innerHTML=`<div class="lnd lrv lst-${esc(th.dark?"dark":(th.style||"festive"))}" style="--lc:${esc(/^#[0-9a-f]{6}$/i.test(th.c||"")?th.c:"#0ABAB5")}"><div class="ltop"><a href="${esc(BASE)}" aria-label="Trend Electro"><img src="${esc(BASE)}logo1.webp" alt="Trend Electro" width="71" height="40"></a>${s.phone?`<a class="ltel" href="${esc(tel(s.phone))}" data-lclk="1">📞 ${esc(s.phone)}</a>`:""}</div>${L.active?"":'<div class="ldraft">Чернетка: лендінг вимкнений, його бачите тільки ви як адміністратор.</div>'}${d?`<div class="lstrip">🔥 −${d}% — тільки за цим посиланням. На сайті зараз звичайні ціни.</div>`:""}${(L.blocks||[]).filter(b=>!b.off&&LB[b.t]).map(b=>{try{return LB[b.t](b,L)}catch(e){return""}}).join("")}<div class="lback"><a href="${esc(BASE)}">Перейти до всього каталогу →</a></div></div>${SHOP.orders_off?"":'<div class="lbar" id="lbar"></div>'}`;
- lRefresh();lCalcAll();lFx(th.fx);lPix(L);if(document.querySelector(".ltim")){lTick();LTM=setInterval(lTick,1000)}
+ v.innerHTML=`<div class="lnd lrv lst-${esc(th.dark?"dark":(th.style||"festive"))}" style="--lc:${esc(/^#[0-9a-f]{6}$/i.test(th.c||"")?th.c:"#0ABAB5")}"><div class="ltop"><a href="${esc(BASE)}" aria-label="Trend Electro"><img src="${esc(BASE)}logo1.webp" alt="Trend Electro" width="71" height="40"></a>${s.phone?`<a class="ltel" href="${esc(tel(s.phone))}" data-lclk="1">📞 ${esc(s.phone)}</a>`:""}</div>${L.active?"":'<div class="ldraft">Чернетка: лендінг вимкнений, його бачите тільки ви як адміністратор.</div>'}${d?`<div class="lstrip">🔥 −${d}% — тільки за цим посиланням${lWin(L)?` · ваш час: <b class="lcd" data-until="${lWin(L).end}">…</b>`:". На сайті зараз звичайні ціни."}</div>`:(lWin(L)&&LWIN[slug]?'<div class="lstrip lend">Ваш час на знижку закінчився — ціни як на сайті.</div>':"")}${(L.blocks||[]).filter(b=>!b.off&&LB[b.t]).map(b=>{try{return LB[b.t](b,L)}catch(e){return""}}).join("")}<div class="lback"><a href="${esc(BASE)}">Перейти до всього каталогу →</a></div></div>${SHOP.orders_off?"":'<div class="lbar" id="lbar"></div>'}`;
+ lRefresh();lCalcAll();lFx(th.fx);lPix(L);if(document.querySelector(".ltim,.lcd")||lWin(L)){lTick();LTM=setInterval(lTick,1000)}
  if("IntersectionObserver"in window&&!matchMedia("(prefers-reduced-motion:reduce)").matches){LIO=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("lin2")}}),{threshold:.08});document.querySelectorAll(".lnd .lsec").forEach(x=>LIO.observe(x))}else document.querySelector(".lnd").classList.remove("lrv");
  const o=$("lorder");if(o&&$("lbar")&&"IntersectionObserver"in window){const io=new IntersectionObserver(es=>{const b=$("lbar");if(b)b.classList.toggle("hid",es[0].isIntersecting)},{threshold:.15});io.observe(o);LIO2=io}
  if(L.active&&sb){const k="lv_"+slug;let seen=0;try{seen=sessionStorage.getItem(k)}catch(e){}if(!seen){try{sessionStorage.setItem(k,1)}catch(e){}sb.rpc("landing_hit",{p_slug:slug,p_kind:"view"}).then(()=>{},()=>{})}}
