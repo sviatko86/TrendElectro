@@ -56,7 +56,7 @@ const priceHtml=i=>`<div class="price${i.disc>0?" sale":""}">${money(i.pc)}${i.b
 const oldHtml=p=>{const o=oldPrice(p);return o?`<s>${money(o)}</s>`:""};
 
 /* ---------- картка товару ---------- */
-function packHtml(p,big){if(SHOP.pack_off)return"";const pr=priceInfo(p).pc;let h="";if(p.pq>0){h=`Продається цілою бухтою: <b>${p.pq} м</b> · ≈ ${money(pr/p.pq)} за 1 м`}else{const t=[];if(p.ip>1)t.push("В упаковці: <b>"+p.ip+" шт</b>");if(p.ib>1&&p.ib!==p.ip)t.push("в ящику: <b>"+p.ib+" шт</b>");h=t.join(" · ")}return h?`<div class="pk${big?" big":""}">${h}</div>`:""}
+function packHtml(p,big){if(SHOP.pack_off)return"";const pr=priceInfo(p).pc;let h="";if(p.pq>0){h=`Продається цілою бухтою: <b>${p.pq} м</b> · ≈ ${money(pr/p.pq)} за 1 м`}else{const t=[];if(p.ip>1)t.push("В упаковці: <b>"+p.ip+" шт</b>");h=t.join(" · ")}return h?`<div class="pk${big?" big":""}">${h}</div>`:""}
 function card(p){
  const out=!p.st,pi=priceInfo(p),u="#/p/"+encodeURIComponent(p.id);
  const b=(p.hit?'<span class="bd h">Хіт продажу</span>':"")+(p.nw?'<span class="bd n">Новинка</span>':"")+(p.ofr?'<span class="bd p">Спецпропозиція</span>':"")+saleBadges(pi);
