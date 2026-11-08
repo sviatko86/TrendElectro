@@ -147,6 +147,7 @@ function drawPromos(){const e=$("promos");if(e)e.innerHTML=PROMOS.map(x=>`<div c
 
 /* ---------- маршрутизація ---------- */
 function route(){
+ if(!/^#\/l\//.test(curH())&&Object.keys(LCART).length){Object.keys(LCART).forEach(id=>{if(M[id])cart[id]=Math.min(999,(cart[id]||0)+LCART[id])});LCART={};save();drawCart()}
  closeAll();lStop();{const v=$("view");v.classList.remove("pg");void v.offsetWidth;v.classList.add("pg")}$("sbuy").hidden=true;const h=curH();
  document.body.classList.toggle("pv",h.indexOf("#/p/")===0);
  if(h.indexOf("#/p/")===0)viewProduct(decodeURIComponent(h.slice(4)));
@@ -443,7 +444,7 @@ function stkTxt(p){if(!stkOn(p))return"Є в наявності";return p.sk<=5?
 function stkMax(p){return stkOn(p)?Math.max(1,p.sk):999}
 function stkClamp(){let ch=0;Object.keys(cart).forEach(i=>{const p=M[i];if(stkOn(p)&&cart[i]>p.sk){ch=1;if(p.sk>0)cart[i]=p.sk;else delete cart[i]}});if(ch){save();toast("Кількість змінено: більше, ніж є в наявності, замовити не можна",1)}}
 function payOpts(){const s=$("fy");if(!s)return;const o=["Оплата при отриманні","Оплата карткою"];if(SHOP.pay_cod_off)o.shift();if(SHOP.pay_card_off)o.pop();if(SHOP.bank_on)o.push("Оплата на рахунок ФОП (IBAN)");const cur=s.value;s.innerHTML=o.map(x=>`<option>${x}</option>`).join("");if(o.indexOf(cur)>-1)s.value=cur}
-function openCart(){if(SHOP.orders_off)return;payOpts();$("drawer").classList.remove("ordered");$("done").hidden=true;$("omsg").textContent="";drawCart();if(prof){if(!$("fn").value)$("fn").value=prof.full_name||"";if(!$("fp").value)$("fp").value=prof.phone||""}const cu=LS("te_cust",null);if(cu){if(!$("fn").value)$("fn").value=cu.n||"";if(!$("fp").value)$("fp").value=cu.p||"";if(!$("fc").value)$("fc").value=cu.c||""}panel("drawer",true)}
+function openCart(){if(SHOP.orders_off)return;payOpts();{const lp=LS("te_lpromo",null);if(lp&&!promoCode&&Date.now()-lp.t<2592e5)applyPromo(lp.c)}$("drawer").classList.remove("ordered");$("done").hidden=true;$("omsg").textContent="";drawCart();if(prof){if(!$("fn").value)$("fn").value=prof.full_name||"";if(!$("fp").value)$("fp").value=prof.phone||""}const cu=LS("te_cust",null);if(cu){if(!$("fn").value)$("fn").value=cu.n||"";if(!$("fp").value)$("fp").value=cu.p||"";if(!$("fc").value)$("fc").value=cu.c||""}panel("drawer",true)}
 async function applyPromo(code){
  const c=(code||"").trim().toUpperCase(),pm=$("pmsg");promoPct=0;promoCode="";pm.textContent="";$("fpr").value=c;
  if(c&&sb){const r=await sb.rpc("check_promo",{p_code:c});
@@ -714,7 +715,7 @@ let LND={},LTM=null,LFXR=0,LIO=null,LIO2=null,LCART={},LCUR="";
 const lStop=()=>{clearInterval(LTM);LTM=null;cancelAnimationFrame(LFXR);LFXR=0;if(LIO){LIO.disconnect();LIO=null}if(LIO2){LIO2.disconnect();LIO2=null}document.body.classList.remove("lndon")};
 const lLines=t=>String(t||"").split("\n").map(s=>s.trim()).filter(Boolean).map(s=>s.split("|").map(x=>x.trim()));
 const lPara=t=>String(t||"").split(/\n+/).map(s=>s.trim()).filter(Boolean).map(s=>"<p>"+esc(s)+"</p>").join("");
-const lDisc=L=>Math.min(90,Math.max(0,+(L.theme||{}).disc||0));
+const lDisc=L=>{const t=L.theme||{},e=Date.parse(t.ends||"");if(e&&e<Date.now())return 0;return Math.min(90,Math.max(0,+t.disc||0))};
 const lCode=L=>"LND-"+String(L.slug).toUpperCase();
 const lCur=()=>LND[LCUR]||{theme:{},blocks:[]};
 function lProds(b){const out=[],seen={};String(b.ids||"").split(/[\s,;]+/).filter(Boolean).forEach(i=>{const p=M[i];if(p&&!seen[i]){seen[i]=1;out.push(p)}});
@@ -740,7 +741,7 @@ const LB={
   return`<section class="lsec lbun">${lH(b,"Набір: усе потрібне разом")}<div class="lbi">${l.map((p,i)=>`${i?'<span class="lpl">+</span>':""}<div class="lbp">${img(p.img,200,200,p.n)}<span>${esc(p.n)}</span></div>`).join("")}</div><div class="lbs">${sv>0?`<span class="lold">На сайті разом: <s>${money(s)}</s></span>`:""}<b>${money(t)}</b>${sv>0?`<em>Економія ${money(sv)}</em>`:""}</div><button class="lbtn" data-lbun="${esc(l.map(p=>p.id).join(","))}">${esc(b.btn||"Додати весь набір")}</button></section>`},
 
  calc:(b,L)=>lCalcHtml(b.kind||"garland",b),
- timer:b=>{const t=Date.parse(b.until||"");if(!t||t<Date.now())return"";return`<section class="lsec ltim" data-until="${t}">${lH(b,"До кінця акції")}<div class="ltd"><div><b>0</b><span>днів</span></div><div><b>0</b><span>годин</span></div><div><b>0</b><span>хвилин</span></div><div><b>0</b><span>секунд</span></div></div></section>`},
+ timer:(b,L)=>{const t=Date.parse(b.until||((L&&L.theme)||{}).ends||"");if(!t||t<Date.now())return"";return`<section class="lsec ltim" data-until="${t}">${lH(b,"До кінця акції")}<div class="ltd"><div><b>0</b><span>днів</span></div><div><b>0</b><span>годин</span></div><div><b>0</b><span>хвилин</span></div><div><b>0</b><span>секунд</span></div></div></section>`},
  video:b=>{const v=lVid(b.url);return v?`<section class="lsec">${lH(b)}<div class="lvid">${v}</div></section>`:""},
  text:b=>b.text||b.title?`<section class="lsec">${lH(b)}<div class="ltxt">${lPara(b.text)}</div></section>`:"",
  gallery:b=>{const l=String(b.imgs||"").split(/\s+/).filter(x=>/^https?:\/\//.test(x));return l.length?`<section class="lsec">${lH(b)}<div class="lgal">${l.map(u=>img(u,600,600,b.title||"")).join("")}</div></section>`:""},
@@ -762,7 +763,8 @@ function lFx(kind){const c=document.querySelector(".lfx");if(!c||!kind||kind==="
  const st=()=>{if(!c.isConnected)return;if(c.offsetWidth!==W)sz();x.clearRect(0,0,W,H);F.forEach(f=>{f.w+=.02;if(kind==="snow"){f.y+=f.s;f.x+=Math.sin(f.w)*.4;if(f.y>H+4){f.y=-4;f.x=Math.random()*W}x.globalAlpha=.85}else{x.globalAlpha=.35+.65*Math.abs(Math.sin(f.w*2))}x.fillStyle=f.c;x.beginPath();x.arc(f.x,f.y,f.r,0,6.28);x.fill()});LFXR=requestAnimationFrame(st)};st()}
 
 let LPX={};
-function lPix(L){const x=(L.theme||{}).px||{};if(!x.on)return;const k=LCUR;if(LPX[k])return;LPX[k]=1;
+function lPix(L){const x=(L.theme||{}).px||{};if(!x.on)return;const ck=LS("te_ck",null);if(ck===1){lPixRun(L);return}if(ck===0)return;if($("ckb"))return;const b=document.createElement("div");b.id="ckb";b.className="ckb";b.innerHTML='<span>Ми використовуємо файли cookie та рекламні пікселі, щоб вимірювати ефективність реклами. Ви можете відмовитись.</span><button data-ckok="1">Згоден</button><button data-ckno="1" class="sec">Відмовитись</button>';document.body.appendChild(b)}
+function lPixRun(L){const x=(L.theme||{}).px||{};if(!x.on)return;const k=LCUR;if(LPX[k])return;LPX[k]=1;
  const fb=String(x.fb||"").trim(),tt=String(x.tt||"").trim(),ga=String(x.ga||"").trim();
  if(/^\d{8,20}$/.test(fb)&&!window.fbq){!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");fbq("init",fb);fbq("track","PageView")}
  if(/^[A-Za-z0-9]{10,30}$/.test(tt)&&!window.ttq){!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"];ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.load=function(e){var n="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{};ttq._i[e]=[];ttq._t=ttq._t||{};ttq._t[e]=+new Date;var o=d.createElement("script");o.type="text/javascript";o.async=!0;o.src=n+"?sdkid="+e+"&lib="+t;var a=d.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};ttq.load(tt);ttq.page()}(window,document,"ttq")}
@@ -846,7 +848,7 @@ async function viewLanding(slug){
  const v=$("view");document.body.classList.add("lndon");
  let L=LND[slug];if(!L){v.innerHTML='<div class="empty">Завантаження…</div>';if(sb){const r=await sb.from("landings").select("*").eq("slug",slug).maybeSingle();L=r.data;if(L)LND[slug]=L}if(curH()!=="#/l/"+slug)return}
  if(!L){v.innerHTML='<div class="empty">Цю сторінку не знайдено або акція завершилась. <a href="#/">На головну</a></div>';return}
- if(LCUR!==slug){LCART={};LCUR=slug}
+ if(LCUR!==slug){LCART={};LCUR=slug}{const _d=lDisc(L);if(_d>0)SV("te_lpromo",{c:"LND-"+String(slug).toUpperCase(),t:Date.now()})}
  const th=L.theme||{},d=lDisc(L),s=shop();document.title=(L.title||"Акція")+" — Trend Electro";
  const all=lAll(L);if(!Object.keys(LCART).length&&all.length===1&&!SHOP.orders_off)LCART[all[0].id]=1;
  v.innerHTML=`<div class="lnd lrv lst-${esc(th.dark?"dark":(th.style||"festive"))}" style="--lc:${esc(/^#[0-9a-f]{6}$/i.test(th.c||"")?th.c:"#0ABAB5")}"><div class="ltop"><a href="${esc(BASE)}" aria-label="Trend Electro"><img src="${esc(BASE)}logo1.webp" alt="Trend Electro" width="71" height="40"></a>${s.phone?`<a class="ltel" href="${esc(tel(s.phone))}" data-lclk="1">📞 ${esc(s.phone)}</a>`:""}</div>${L.active?"":'<div class="ldraft">Чернетка: лендінг вимкнений, його бачите тільки ви як адміністратор.</div>'}${d?`<div class="lstrip">🔥 −${d}% — тільки за цим посиланням. На сайті зараз звичайні ціни.</div>`:""}${(L.blocks||[]).filter(b=>!b.off&&LB[b.t]).map(b=>{try{return LB[b.t](b,L)}catch(e){return""}}).join("")}<div class="lback"><a href="${esc(BASE)}">Перейти до всього каталогу →</a></div></div>${SHOP.orders_off?"":'<div class="lbar" id="lbar"></div>'}`;
@@ -875,6 +877,7 @@ async function lOrder(btn){const f=btn.closest(".lform"),m=f.querySelector(".lms
  f.innerHTML=`<div class="ldone"><b>Дякуємо! Замовлення №${esc(o.id)} прийнято.</b><p>${(o.items||[]).map(x=>esc(x.name)+" × "+x.qty).join("<br>")}</p><p>Разом: ${money(+o.total)}${+o.discount?" (знижка "+esc(o.discount)+"%)":""}</p><p>Менеджер зателефонує найближчим часом.</p>${accOffer(nm,ph,"lbtn lsm")}</div>`;document.querySelectorAll(".lcard .lctl").forEach(k=>k.innerHTML="")}
 document.addEventListener("click",e=>{
  const g=e.target.closest("[data-lgo]");if(g){const t=$(g.dataset.lgo==="prods"?"lprods":"lorder")||$("lorder");if(t){t.scrollIntoView({behavior:"smooth",block:"start"});lHit("click")}return}
+ const cko=e.target.closest("[data-ckok],[data-ckno]");if(cko){SV("te_ck",cko.hasAttribute("data-ckok")?1:0);const bx=$("ckb");if(bx)bx.remove();if(cko.hasAttribute("data-ckok")){LPX={};lPixRun(lCur())}return}
  const lq=e.target.closest("[data-lq]");if(lq){const id=lq.dataset.lq,n=(LCART[id]||0)+(+lq.dataset.d);if(n<=0)delete LCART[id];else LCART[id]=Math.min(99,n);if(+lq.dataset.d>0){lHit("click");lEv("add",M[id]?lPr(M[id],lCur()).l:0)}lRefresh();return}
  const fd=e.target.closest("[data-lfind]");if(fd){$("q").value=fd.dataset.lfind;goSearch();return}
  const ca=e.target.closest("[data-lcadd]");if(ca){const[id,n]=ca.dataset.lcadd.split("|");if(M[id]){LCART[id]=Math.min(99,(LCART[id]||0)+(+n||1));lHit("click");lEv("add",0);lRefresh();const t=$("lorder");if(t)t.scrollIntoView({behavior:"smooth",block:"start"})}return}
