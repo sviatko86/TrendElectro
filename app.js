@@ -56,7 +56,7 @@ const priceHtml=i=>`<div class="price${i.disc>0?" sale":""}">${money(i.pc)}${i.b
 const oldHtml=p=>{const o=oldPrice(p);return o?`<s>${money(o)}</s>`:""};
 
 /* ---------- картка товару ---------- */
-function packHtml(p,big){if(SHOP.pack_off)return"";const pr=priceInfo(p).pc;let h="";if(p.pq>0){h=`Продається цілою бухтою: <b>${p.pq} м</b> · ≈ ${money(pr/p.pq)} за 1 м`}else{const t=[];if(p.ip>1)t.push("В упаковці: <b>"+p.ip+" шт</b>");h=t.join(" · ")}return h?`<div class="pk${big?" big":""}">${h}</div>`:""}
+function packHtml(p,big){if(SHOP.pack_off&&!(p.po>1))return"";const pr=priceInfo(p).pc;let h="";if(p.po>1){h=`Продається лише пачками по <b>${p.po} шт</b> · ≈ ${money(pr/p.po)} за 1 шт`}else if(p.pq>0){h=`Продається цілою бухтою: <b>${p.pq} м</b> · ≈ ${money(pr/p.pq)} за 1 м`}else{const t=[];if(p.ip>1)t.push("В упаковці: <b>"+p.ip+" шт</b>");h=t.join(" · ")}return h?`<div class="pk${big?" big":""}">${h}</div>`:""}
 function card(p){
  const out=!p.st,pi=priceInfo(p),u="#/p/"+encodeURIComponent(p.id);
  const b=(p.hit?'<span class="bd h">Хіт продажу</span>':"")+(p.nw?'<span class="bd n">Новинка</span>':"")+(p.ofr?'<span class="bd p">Спецпропозиція</span>':"")+saleBadges(pi);
@@ -72,12 +72,12 @@ async function loadProducts(){
  mapRows(all)
 }
 async function fetchProducts(){
- let all=[];const step=1000,FULL=",special,pack_qty,in_pack,in_box,stock",cols="id,name,category,subcategory,subcategory2,brand,price,old_price,image_url,in_stock,is_hit,is_new";
+ let all=[];const step=1000,FULL=",special,pack_qty,in_pack,in_box,stock,pack_only",cols="id,name,category,subcategory,subcategory2,brand,price,old_price,image_url,in_stock,is_hit,is_new";
  {const N=+LS("te_pc",0)||3000;
   if(N){try{const pg=Math.ceil(N/step)+1,rs=await Promise.all(Array.from({length:pg},(_,i)=>sb.from("products").select(cols+FULL).eq("active",true).order("id").range(i*step,i*step+step-1)));if(!rs.some(r=>r.error)){all=rs.flatMap(r=>r.data);let f=pg*step;while(rs.length&&rs[rs.length-1].data.length===step){const r=await sb.from("products").select(cols+FULL).eq("active",true).order("id").range(f,f+step-1);if(r.error){all=[];break}all.push(...r.data);rs.push(r);f+=step}}}catch(e){all=[]}}
   if(!all.length){let from=0;
  for(;;){
-  const cols="id,name,category,subcategory,subcategory2,brand,price,old_price,image_url,in_stock,is_hit,is_new";let r=null;for(const ex of NOSP===2?[""]:NOSP===1?[",special",""]:[",special,pack_qty,in_pack,in_box,stock",",special,pack_qty,in_pack,in_box",",special",""]){r=await sb.from("products").select(cols+ex).eq("active",true).order("id").range(from,from+step-1);if(!r.error){NOSP=ex===""?2:ex===",special"?1:0;break}}
+  const cols="id,name,category,subcategory,subcategory2,brand,price,old_price,image_url,in_stock,is_hit,is_new";let r=null;for(const ex of NOSP===2?[""]:NOSP===1?[",special",""]:[",special,pack_qty,in_pack,in_box,stock,pack_only",",special,pack_qty,in_pack,in_box,stock",",special,pack_qty,in_pack,in_box",",special",""]){r=await sb.from("products").select(cols+ex).eq("active",true).order("id").range(from,from+step-1);if(!r.error){NOSP=ex===""?2:ex===",special"?1:0;break}}
   if(r.error)throw r.error;all.push(...r.data);if(r.data.length<step)break;from+=step;
   }
   }
@@ -86,7 +86,7 @@ async function fetchProducts(){
  return all
 }
 function mapRows(all){
- PALL=all.map(r=>({id:r.id,n:r.name,c:[r.category,r.subcategory,r.subcategory2].filter(x=>x&&x!=="Усі"),b:r.brand||"",pr0:+r.price||0,old:r.old_price!=null?+r.old_price:0,img:r.image_url||"",hit:!!r.is_hit,nw:!!r.is_new,ofr:r.special||"",sk:r.stock==null?null:+r.stock,pq:+r.pack_qty||0,ip:+r.in_pack||0,ib:+r.in_box||0,st:r.in_stock!==false,d:null,sp:null}));
+ PALL=all.map(r=>({id:r.id,n:r.name,c:[r.category,r.subcategory,r.subcategory2].filter(x=>x&&x!=="Усі"),b:r.brand||"",pr0:+r.price||0,old:r.old_price!=null?+r.old_price:0,img:r.image_url||"",hit:!!r.is_hit,nw:!!r.is_new,ofr:r.special||"",sk:r.stock==null?null:+r.stock,pq:+r.pack_qty||0,po:+r.pack_only||0,ip:+r.in_pack||0,ib:+r.in_box||0,st:r.in_stock!==false,d:null,sp:null}));
 }
 
 /* ---------- персональні картки клієнта ---------- */
