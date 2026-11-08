@@ -13,7 +13,7 @@ const SEP=" › ",ORD=["Освітлення","Розетки та вимика�
 const PDEF={privacy:["Політика конфіденційності","Ця політика пояснює, які дані ми збираємо на сайті Trend Electro і навіщо.\nЯкі дані ми отримуємо: імʼя, номер телефону, адресу та коментар до замовлення; email і пароль (або вхід через сервіс авторизації), якщо ви створюєте кабінет; дату народження, якщо ви самі її вказали для персональної знижки; контакт (email або телефон), якщо ви підписалися на промокод чи вітання.\nНавіщо: щоб прийняти й виконати замовлення, звʼязатися з вами, надати знижку чи привітання, відповісти на звернення. Ми не продаємо ваші дані й не передаємо їх третім особам, крім випадків, потрібних для виконання замовлення (служба доставки) та технічної роботи сайту (хмарна база даних, сервіс повідомлень).\nДата народження використовується тільки для привітання та знижки в день народження. Ви можете змінити або видалити її у своєму кабінеті чи попросити нас це зробити.\nФайли cookie та реклама: сайт зберігає у вашому браузері кошик, вибране й налаштування. На рекламних сторінках (промо-лендінгах) можуть працювати інструменти аналітики та реклами (Meta Pixel, TikTok Pixel, Google Analytics), якщо ми їх підключили. Вони збирають знеособлену інформацію про перегляди та дії на сторінці. Ви можете вимкнути cookie у налаштуваннях браузера.\nЗберігання: дані зберігаються стільки, скільки потрібно для мети збору або вимагає закон. Ми захищаємо їх доступом за паролем і шифрованим зʼєднанням.\nВаші права: ви маєте право дізнатися, які ваші дані ми зберігаємо, виправити їх, відкликати згоду та вимагати видалення. Напишіть чи зателефонуйте нам за контактами зі сторінки «Контакти», і ми відповімо найближчим часом.\nУмови можуть оновлюватися; актуальна версія завжди на цій сторінці."],delivery:["Оплата і доставка","Відправляємо замовлення по всій Україні Новою поштою (у відділення, поштомат або кур’єром) та Укрпоштою.\nОплатити можна при отриманні або карткою — менеджер підтвердить замовлення телефоном і підкаже найзручніший варіант."],exchange:["Обмін та повернення","Обмін і повернення товару здійснюються відповідно до законодавства України про захист прав споживачів.\nЩоб оформити обмін або повернення, напишіть чи зателефонуйте нам — підкажемо, що робити, і допоможемо швидко вирішити питання."],coop:["Співпраця","Пропонуємо оптові ціни та зручні умови для електриків, монтажних організацій, дизайнерів і магазинів.\nНапишіть нам — підготуємо персональну пропозицію під ваш об’єкт."],about:["Про нас","Trend Electro — електротовари, LED-освітлення та електрофурнітура для дому, офісу й об’єктів.\nДопомагаємо підібрати рішення, швидко відправляємо по Україні та завжди на зв’язку."],contacts:["Контакти","Зв’яжіться з нами телефоном або в месенджері — відповімо й допоможемо з вибором."]};
 const PERKS=[["truck","Доставка по Україні","Нова пошта та Укрпошта"],["wallet","Оплата при отриманні","або карткою — як зручно"],["shield","Гарантія на товари","за умовами виробника"],["chat","Допомога з вибором","підкажемо, що підійде саме вам"]];
 let P=[],PALL=[],M={},ROOT={kids:{},count:0,path:[]},PR={m:0,d:0,c:{}},CI={},CM={},SHOP={},PAGES={},sb=null,me=null,prof=null,promoPct=0,promoCode="",BN=[],bix=0,btm=null,tab="in",PROMOS=[];
-let cart=LS("te_cart",{}),fav=LS("te_fav",{}),F={brand:"",min:"",max:"",sort:"def",q:"",lim:24,a:{},stock:false,fo:innerWidth>=860},SCR={},CUR={path:[],list:[],key:null},PTAB="info",QTY=1;
+let cart=LS("te_cart",{}),fav=LS("te_fav",{}),CMP=(a=>Array.isArray(a)?a.filter(x=>typeof x==="string").slice(0,4):[])(LS("te_cmp",[])),INSTEV=null,IOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1),STANDALONE=!!(window.matchMedia&&matchMedia("(display-mode: standalone)").matches||navigator.standalone),F={brand:"",min:"",max:"",sort:"def",q:"",lim:24,a:{},stock:false,fo:innerWidth>=860},SCR={},CUR={path:[],list:[],key:null},PTAB="info",QTY=1;
 
 /* ---------- зображення ---------- */
 const thumb=(u,w,h)=>!u?"":(u.indexOf(".supabase.co/")>-1||u.indexOf(BASE)===0)?u:"https://wsrv.nl/?url="+encodeURIComponent(u)+"&w="+w+"&h="+(h||Math.round(w*.75))+"&fit=contain&output=webp&q=75";
@@ -60,7 +60,7 @@ function packHtml(p,big){if(SHOP.pack_off)return"";const pr=priceInfo(p).pc;let 
 function card(p){
  const out=!p.st,pi=priceInfo(p),u="#/p/"+encodeURIComponent(p.id);
  const b=(p.hit?'<span class="bd h">Хіт продажу</span>':"")+(p.nw?'<span class="bd n">Новинка</span>':"")+(p.ofr?'<span class="bd p">Спецпропозиція</span>':"")+saleBadges(pi);
- return `<article class="card"><a class="pic" href="${u}" aria-label="${esc(p.n)}">${img(p.img,400,400,p.n)}${b?`<div class="bds">${b}</div>`:""}</a><button class="fv${fav[p.id]?" on":""}" data-f="${esc(p.id)}" aria-label="Додати в обране">${ico("heart")}</button><div class="body"><a class="name" href="${u}">${esc(p.n)}</a><div class="m2"><span class="sku">Арт. ${esc(p.id)}</span>${out?'<span class="stock no">Немає</span>':'<span class="stock">В наявності</span>'}</div>${priceHtml(pi)}${packHtml(p)}<button class="add" data-a="${esc(p.id)}"${out?" disabled":""}>${out?"Немає в наявності":ico("cart")+"У кошик"}</button></div></article>`;
+ return `<article class="card"><a class="pic" href="${u}" aria-label="${esc(p.n)}">${img(p.img,400,400,p.n)}${b?`<div class="bds">${b}</div>`:""}</a><button class="fv${fav[p.id]?" on":""}" data-f="${esc(p.id)}" aria-label="Додати в обране">${ico("heart")}</button>${cmpOn()?`<button class="cmpb${CMP.includes(p.id)?" on":""}" data-cmp="${esc(p.id)}" aria-label="Порівняти" title="Порівняти">${ico("cmp")}</button>`:""}<div class="body"><a class="name" href="${u}">${esc(p.n)}</a><div class="m2"><span class="sku">Арт. ${esc(p.id)}</span>${out?'<span class="stock no">Немає</span>':'<span class="stock">В наявності</span>'}</div>${priceHtml(pi)}${packHtml(p)}<button class="add" data-a="${esc(p.id)}"${out?" disabled":""}>${out?"Немає в наявності":ico("cart")+"У кошик"}</button></div></article>`;
 }
 
 /* ---------- дані ---------- */
@@ -166,6 +166,7 @@ function route(){
  closeAll();lStop();{const v=$("view");v.classList.remove("pg");void v.offsetWidth;v.classList.add("pg")}$("sbuy").hidden=true;const h=curH();
  document.body.classList.toggle("pv",h.indexOf("#/p/")===0);
  if(h.indexOf("#/p/")===0)viewProduct(decodeURIComponent(h.slice(4)));
+ else if(h==="#/cmp")viewCmp();
  else if(h.indexOf("#/c")===0)viewList(h.slice(4).split("/").filter(Boolean).map(decodeURIComponent));
  else if(h==="#/fav")viewFav();
  else if(h.indexOf("#/sel/")===0)viewSel(h.slice(6));
@@ -175,8 +176,8 @@ function route(){
  else if(h==="#/help")viewHelp();
  else if(h.indexOf("#/l/")===0)viewLanding(decodeURIComponent(h.slice(4)));
  else viewHome();
- requestAnimationFrame(hbInit);setTimeout(bdPopup,500);
- document.querySelectorAll(".bnav button").forEach(b=>b.classList.toggle("on",(b.dataset.nav==="home"&&(h==="#/"||h===""))||(b.dataset.nav==="fav"&&h==="#/fav")||(b.dataset.nav==="cat"&&h.indexOf("#/c")===0)));
+ requestAnimationFrame(hbInit);setTimeout(bdPopup,500);cmpDraw();
+ document.querySelectorAll(".bnav button").forEach(b=>b.classList.toggle("on",(b.dataset.nav==="home"&&(h==="#/"||h===""))||(b.dataset.nav==="fav"&&h==="#/fav")||(b.dataset.nav==="cat"&&h.indexOf("#/c")===0&&h!=="#/cmp")));
  window.scrollTo(0,SCR[h]||0);
 }
 const SELS={hit:["Хіти продажу","Те, що найчастіше обирають наші клієнти",p=>p.hit],new:["Новинки","Свіжі надходження в асортименті",p=>p.nw],sale:["Розпродаж","Вигідні пропозиції — поки є в наявності",p=>oldPrice(p)>0],special:["Спеціальні пропозиції","Товари з особливими умовами",p=>!!p.ofr]};
@@ -646,7 +647,7 @@ async function boot(){
  loadBanners();loadPromos();
  const pf=(async()=>{try{const g=await sb.auth.getSession();me=g.data.session?g.data.session.user:null;await loadProf()}catch(e){}})();
  try{await Promise.all([loadProducts(),loadSettings(),loadCats(),fetch(BASE+"img/map.json").then(r=>r.ok?r.json():[]).then(a=>{IMG=new Set(a)}).catch(()=>{})]);imgMap()}catch(e){$("view").innerHTML='<div class="empty">Не вдалося завантажити каталог. Перевірте інтернет і оновіть сторінку.</div>';return}
- applyOrders();applyLayout();build();ALLN=[];collectN(ROOT);initChat();drawFooter();
+ applyOrders();document.body.classList.toggle("fxon",!SHOP.anim_off);applyLayout();build();ALLN=[];collectN(ROOT);initChat();drawFooter();
  await pf;
  route();
  if(CATBG)setTimeout(catRefresh,1500);
@@ -713,14 +714,14 @@ document.addEventListener("DOMContentLoaded",boot);
  let ft=null;const later=()=>{clearTimeout(ft);ft=setTimeout(()=>fit(),60)};
  D.addEventListener("DOMContentLoaded",()=>{
   const v=$("view");if(v)new MutationObserver(later).observe(v,{childList:true,subtree:true});addEventListener("resize",later);
-  if(SR&&$("micBtn"))$("micBtn").hidden=false;
+  if(SR&&$("micBtn")&&!SHOP.mic_off)$("micBtn").hidden=false;
   if(D.fonts&&D.fonts.ready)D.fonts.ready.then(later)});
  /* --- події --- */
- let dip=null;addEventListener("beforeinstallprompt",e=>{e.preventDefault();dip=e});
+ let dip=null;addEventListener("beforeinstallprompt",e=>{e.preventDefault();dip=e;INSTEV=e;instSoon()});
  D.addEventListener("click",e=>{const t=e.target;let x;
   if(t.closest("#thBtn")){setTheme(curTheme()==="dark"?"light":"dark");return}
   if(t.closest("#micBtn")){mic();return}
-  if(x=t.closest("[data-install]")){e.preventDefault();if(dip){dip.prompt();dip=null}else toast("На iPhone: «Поділитися» → «На початковий екран». На Android: меню ⋮ → «Встановити додаток».");return}
+  if(x=t.closest("[data-install]")){e.preventDefault();if(dip){dip.prompt();dip=null}else if(IOS&&!STANDALONE)instIos();else toast("На iPhone: «Поділитися» → «На початковий екран». На Android: меню ⋮ → «Встановити додаток».");return}
   if(x=t.closest("[data-copy]")){const u=x.dataset.copy;(navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(()=>toast("Посилання скопійовано"),()=>toast(u));return}
   if(x=t.closest("[data-nshare]")){navigator.share({title:x.dataset.t,url:x.dataset.nshare}).catch(()=>{});return}
   if(x=t.closest("[data-bdact]")){bdAct(x);return}
@@ -987,3 +988,40 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-mkacc]");i
  function wrap(i){if(i.dataset.eye)return;i.dataset.eye=1;const w=document.createElement("div");w.className="pwf";i.parentNode.insertBefore(w,i);w.appendChild(i);const b=document.createElement("button");b.type="button";b.className="pwe";b.setAttribute("aria-label","Показати пароль");b.innerHTML=E;b.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();const show=i.type==="password";i.type=show?"text":"password";b.innerHTML=show?X:E;b.setAttribute("aria-label",show?"Сховати пароль":"Показати пароль");i.focus()});w.appendChild(b)}
  const scan=()=>document.querySelectorAll('input[type="password"]').forEach(wrap);
  new MutationObserver(scan).observe(document.documentElement,{childList:true,subtree:true});scan()})();
+
+/* ===== Порівняння товарів, банер встановлення, офлайн, анімації ===== */
+const cmpOn=()=>!SHOP.cmp_off;
+function cmpDraw(){document.querySelectorAll("[data-cmp]").forEach(b=>b.classList.toggle("on",CMP.includes(b.dataset.cmp)));let bar=$("cmpbar");const n=CMP.length;
+ if(!cmpOn()||!n||curH()==="#/cmp"){if(bar)bar.remove();return}
+ if(!bar){bar=document.createElement("div");bar.id="cmpbar";bar.className="cmpbar";document.body.appendChild(bar)}
+ bar.innerHTML=`<span>Порівняння: <b>${n}</b> з 4</span><a class="go" href="#/cmp">Порівняти</a><button type="button" data-cmpclr aria-label="Очистити порівняння">✕</button>`}
+function cmpToggle(id){const i=CMP.indexOf(id);if(i>-1)CMP.splice(i,1);else{if(CMP.length>=4){toast("Можна порівнювати до 4 товарів. Приберіть один.");return}CMP.push(id)}SV("te_cmp",CMP);cmpDraw();if(curH()==="#/cmp")viewCmp()}
+async function viewCmp(){document.title="Порівняння товарів — Trend Electro";const v=$("view"),cr='<nav class="crumbs"><a href="#/">Головна</a><span>›</span>Порівняння</nav><h1 class="ptitle">Порівняння товарів</h1>';
+ const l=cmpOn()?CMP.map(id=>M[id]).filter(Boolean):[];
+ if(!cmpOn()){v.innerHTML='<div class="empty">Сторінку не знайдено. <a href="#/">На головну</a></div>';return}
+ if(!l.length){v.innerHTML=cr+'<div class="empty">Додайте товари для порівняння кнопкою <b>⇄</b> на картці товару (до 4 штук). Так легко побачити різницю в потужності, кольорі світла, захисті та ціні.<br><br><a class="btn" href="#/c/">До каталогу</a></div>';return}
+ v.innerHTML=cr+'<div class="sku">Завантажуємо характеристики…</div>';
+ await Promise.all(l.map(pLoad));if(curH()!=="#/cmp")return;
+ const rows=l.map(p=>specRows(p.sp)),keys=[];rows.forEach(r=>r.forEach(x=>{if(keys.indexOf(x[0])<0)keys.push(x[0])}));
+ const val=(i,k)=>{const f=rows[i].find(x=>x[0]===k);return f?f[1]:""};
+ const prices=l.map(p=>priceInfo(p).pc||0),min=Math.min.apply(null,prices.filter(x=>x>0).concat([Infinity]));
+ const th=l.map((p,i)=>`<th><button type="button" class="cmpx" data-cmprm="${esc(p.id)}" aria-label="Прибрати">✕</button><a href="#/p/${encodeURIComponent(p.id)}" class="cmpi">${img(p.img,200,200,p.n)}</a><a class="name" href="#/p/${encodeURIComponent(p.id)}">${esc(p.n)}</a><div class="sku">Арт. ${esc(p.id)}</div>${priceHtml(priceInfo(p))}${prices[i]===min&&l.length>1?'<div class="cmpbest">Найвигідніша ціна</div>':""}${p.st?`<button class="add" data-cmpadd="${esc(p.id)}">${ico("cart")}У кошик</button>`:'<span class="stock no">Немає в наявності</span>'}</th>`).join("");
+ const body=keys.map(k=>{const vs=l.map((p,i)=>val(i,k)),df=new Set(vs.map(x=>x.toLowerCase())).size>1;return`<tr${df?' class="cdf"':""}><td>${esc(k)}</td>${vs.map(x=>`<td>${x?esc(x):"—"}</td>`).join("")}</tr>`}).join("");
+ v.innerHTML=cr+`<div class="cmpw"><table class="cmpt"><thead><tr><th></th>${th}</tr></thead><tbody>${body||`<tr><td colspan="${l.length+1}">Характеристики для цих товарів ще не заповнені.</td></tr>`}</tbody></table></div>${keys.length&&l.length>1?'<p class="sku">Рядки, де товари відрізняються, підсвічені.</p>':""}${l.length<2?'<p class="sku">Додайте ще хоча б один товар, щоб побачити різницю.</p>':""}<p><a class="btn" href="#/c/">Додати ще товари</a> <button type="button" class="btn" data-cmpclr>Очистити</button></p>`}
+document.addEventListener("click",e=>{let x;
+ if(x=e.target.closest("[data-cmp]")){e.preventDefault();e.stopPropagation();const id=x.dataset.cmp;cmpToggle(id);if(x.classList.contains("on"))toast("Додано до порівняння",0);return}
+ if(x=e.target.closest("[data-cmprm]")){cmpToggle(x.dataset.cmprm);return}
+ if(e.target.closest("[data-cmpclr]")){CMP=[];SV("te_cmp",CMP);cmpDraw();if(curH()==="#/cmp")viewCmp();return}
+ if(x=e.target.closest("[data-cmpadd]")){const id=x.dataset.cmpadd;if(M[id]){cart[id]=(cart[id]||0)+1;save();drawCart();toast("Додано в кошик",1)}return}
+},true);
+/* банер «Встановити додаток» */
+const instHidden=()=>{try{const t=+localStorage.getItem("te_inst")||0;return Date.now()-t<2592e6}catch(e){return false}};
+const instMute=()=>{try{localStorage.setItem("te_inst",String(Date.now()))}catch(e){}const b=$("instb");if(b)b.remove()};
+function instShow(txt,btn,fn){if(SHOP.inst_off||STANDALONE||instHidden()||$("instb")||/^#\/l\//.test(curH()))return;const b=document.createElement("div");b.id="instb";b.className="instb";b.innerHTML=`<img src="${BASE}icon-192.png" alt="" width="40" height="40"><span>${txt}</span>${btn?`<button type="button" class="go" id="instgo">${btn}</button>`:""}<button type="button" class="instx" id="instno" aria-label="Закрити">✕</button>`;document.body.appendChild(b);$("instno").onclick=instMute;if(btn)$("instgo").onclick=()=>{instMute();fn()}}
+function instSoon(){setTimeout(()=>{if(INSTEV)instShow("Встановіть Trend Electro на телефон: відкривається в один дотик","Встановити",()=>{const ev=INSTEV;INSTEV=null;if(ev)ev.prompt()})},15000)}
+function instIos(){toast("Натисніть «Поділитися» внизу екрана → «На початковий екран».")}
+addEventListener("appinstalled",instMute);
+if(IOS&&!STANDALONE)setTimeout(()=>instShow("Додайте Trend Electro на екран iPhone: «Поділитися» → «На початковий екран»","",null),20000);
+/* офлайн */
+function netBar(){let b=$("netb");if(navigator.onLine){if(b)b.remove();return}if(!b){b=document.createElement("div");b.id="netb";b.className="netb";b.textContent="Немає інтернету. Показуємо збережене на телефоні. Замовити можна, коли зв’язок повернеться.";document.body.appendChild(b)}}
+addEventListener("online",netBar);addEventListener("offline",netBar);netBar();
