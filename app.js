@@ -167,6 +167,9 @@ function route(){
  document.body.classList.toggle("pv",h.indexOf("#/p/")===0);
  if(h.indexOf("#/p/")===0)viewProduct(decodeURIComponent(h.slice(4)));
  else if(h==="#/cmp")viewCmp();
+ else if(h.indexOf("#/est")===0)viewEst(h==="#/est/fav");
+ else if(h==="#/check")viewCheck();
+ else if(h==="#/light")viewLight();
  else if(h.indexOf("#/c")===0)viewList(h.slice(4).split("/").filter(Boolean).map(decodeURIComponent));
  else if(h==="#/fav")viewFav();
  else if(h.indexOf("#/sel/")===0)viewSel(h.slice(6));
@@ -264,7 +267,7 @@ function viewHome(){
 <section class="hero" id="home"><div><span class="eyebrow">Trend Electro · ${plural(P.length,"товар","товари","товарів")} у каталозі</span><h1>Світло й електрика <em>для дому та бізнесу</em></h1><p>${esc(s.tagline||"Світильники, LED-лампи, розетки, кабель, автоматика та все для монтажу. Допоможемо підібрати й швидко відправимо по Україні.")}</p><div class="cta"><a class="btn" href="#/c/">Перейти до каталогу ${ico("r")}</a><a class="btn ghost" href="#/page/coop">Оптовим клієнтам</a></div></div>
 <div class="hcats">${tops.slice(0,4).map(k=>`<a href="${href(k.path)}"><b>${esc(k.name)}</b><small>${plural(k.count,"товар","товари","товарів")}</small></a>`).join("")}</div></section>
 ${bdHome()}${sets}${statsHtml()}<section class="perks">${perks.map(x=>`<div>${ico(x[0])}<span><b>${esc(x[1])}</b>${esc(x[2])}</span></div>`).join("")}</section>
-<section class="promos" id="promos"></section>
+${toolsHtml()}<section class="promos" id="promos"></section>
 <section class="sec"><div class="sech"><div><h2>Каталог</h2></div><a href="#/c/">Усі товари →</a></div><div class="ctiles">${tops.map(tile).join("")||'<div class="empty">Каталог порожній.</div>'}</div></section>
 ${pop}${rvHtml()}
 ${promoForm()}<section class="sec" id="hguides" hidden><div class="sech"><div><h2>Поради та статті</h2><p>Як вибрати лампу, кабель, розетки й захист</p></div><a href="#/guide/">Усі статті →</a></div><div class="gcards"></div></section>
@@ -359,7 +362,7 @@ function renderGrid(){
 function moreBtn(){const rest=CUR.list.length-F.lim,b=$("more");if(!b)return;b.hidden=rest<=0;b.textContent="Показати ще "+Math.min(24,Math.max(rest,0))}
 function viewFav(){
  const l=P.filter(p=>fav[p.id]);
- $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a><span>›</span>Обране</nav><h1 class="ptitle">Обрані товари</h1>${l.length?`<div class="grid">${l.map(card).join("")}</div>`:'<div class="empty">Тут з’являться товари, які ви позначите сердечком ♡. Так зручно порівнювати й повертатися до них пізніше.<br><br><a class="btn" href="#/c/">До каталогу</a></div>'}`;
+ $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a><span>›</span>Обране</nav><h1 class="ptitle">Обрані товари</h1>${l.length&&estOn()?'<p><a class="btn" href="#/est/fav">Кошторис у PDF</a></p>':""}${l.length?`<div class="grid">${l.map(card).join("")}</div>`:'<div class="empty">Тут з’являться товари, які ви позначите сердечком ♡. Так зручно порівнювати й повертатися до них пізніше.<br><br><a class="btn" href="#/c/">До каталогу</a></div>'}`;
 }
 function viewSel(k){
  const s=SELS[k];if(!s)return viewHome();const l=P.filter(s[2]);
@@ -564,7 +567,7 @@ function drawFooter(){
  if(s.address)c.push(`<span style="display:block;padding:3px 0">${esc(s.address)}</span>`);
  $("foot").innerHTML=`<div><img src="logo2.webp" alt="Trend Electro — Professional Electrical Solutions" width="180" height="91" loading="lazy">${esc(s.tagline||"Електротовари, LED-освітлення та електрофурнітура для дому, офісу й об’єктів.")}${m.length?`<div class="fmsg">${m.map(x=>`<a href="${esc(x[1])}" target="_blank" rel="noopener">${esc(x[0])}</a>`).join("")}</div>`:""}</div>
 <div><b>Каталог</b>${tops.map(k=>`<a href="${href(k.path)}">${esc(k.name)}</a>`).join("")}</div>
-<div><b>Покупцям</b><a href="#/page/delivery">Оплата і доставка</a><a href="#/page/exchange">Обмін та повернення</a><a href="#/page/coop">Співпраця та опт</a><a href="#/guide/">Поради та статті</a><a href="#" data-install="1">Встановити додаток</a>${SHOP.help_on?'<a href="#/help">Помічник підбору</a>':""}<a href="#/page/privacy">Політика конфіденційності</a><a href="#/page/about">Про нас</a><a href="#/page/contacts">Контакти</a></div>
+<div><b>Покупцям</b><a href="#/page/delivery">Оплата і доставка</a><a href="#/page/exchange">Обмін та повернення</a><a href="#/page/coop">Співпраця та опт</a><a href="#/guide/">Поради та статті</a>${simOn()?'<a href="#/light">Підбір кольору світла</a>':""}${chkOn()?'<a href="#/check">Чек-лист для ремонту</a>':""}<a href="#" data-install="1">Встановити додаток</a>${SHOP.help_on?'<a href="#/help">Помічник підбору</a>':""}<a href="#/page/privacy">Політика конфіденційності</a><a href="#/page/about">Про нас</a><a href="#/page/contacts">Контакти</a></div>
 <div><b>${c.length?"Зв’язатися з нами":"Допомога"}</b>${c.join("")||`<a href="#/page/contacts">Контакти та підтримка</a>`}</div>`;
  $("fbot").textContent="© "+new Date().getFullYear()+" Trend Electro. Ціни на сайті вказані в гривнях.";
 }
@@ -1028,3 +1031,77 @@ addEventListener("online",netBar);addEventListener("offline",netBar);netBar();
 /* кнопка «Назад» для встановленого додатка (PWA) */
 function backDraw(){const b=$("backBtn");if(!b)return;const h=curH();b.hidden=!STANDALONE;b.style.visibility=(h==="#/"||h==="")?"hidden":"visible"}
 document.addEventListener("click",e=>{if(e.target.closest("#backBtn")){e.preventDefault();if(history.length>1)history.back();else location.hash="#/"}});
+/* ===== Кошторис у PDF, чек-лист ремонту, симулятор кольору світла ===== */
+const estOn=()=>!SHOP.est_off,chkOn=()=>!SHOP.check_off,simOn=()=>!SHOP.sim_off;
+const NF='<div class="empty">Сторінку не знайдено. <a href="#/">На головну</a></div>';
+function toolsHtml(){const t=[];
+ if(simOn())t.push(['#/light','Підбір кольору світла','Тепле чи холодне? Подивіться, як змінюється кімната']);
+ if(chkOn())t.push(['#/check','Чек-лист для ремонту','Нічого не забути: від блока живлення до рамок']);
+ if(cmpOn())t.push(['#/cmp','Порівняння товарів','Відмічайте ⇄ на картках і порівнюйте характеристики']);
+ if(SHOP.help_on)t.push(['#/help','Помічник підбору','Калькулятори: скільки світильників, кабелю, стрічки']);
+ return t.length?`<section class="sec"><div class="sech"><div><h2>Корисні інструменти</h2><p>Допомагають обрати правильно й не помилитись</p></div></div><div class="tools">${t.map(x=>`<a href="${x[0]}"><b>${x[1]}</b><span>${x[2]}</span></a>`).join("")}</div></section>`:""}
+/* --- кошторис --- */
+let EST=null;
+const dmy=d=>String(d.getDate()).padStart(2,"0")+"."+String(d.getMonth()+1).padStart(2,"0")+"."+d.getFullYear();
+function viewEst(fromFav){document.title="Кошторис — Trend Electro";if(!estOn()){$("view").innerHTML=NF;return}
+ const src=fromFav?Object.keys(fav).reduce((o,id)=>(o[id]=1,o),{}):cart;EST={fav:fromFav,obj:"",q:{}};Object.keys(src).forEach(id=>{if(M[id])EST.q[id]=Math.max(1,+src[id]||1)});drawEst()}
+function estTotals(){let t=0;Object.keys(EST.q).forEach(id=>{t+=Math.round(priceInfo(M[id]).pc*EST.q[id]*100)/100});return Math.round(t*100)/100}
+function drawEst(){const v=$("view"),ids=Object.keys(EST.q),s=shop(),back=EST.fav?"#/fav":"#/c/";
+ if(!ids.length){v.innerHTML=`<nav class="crumbs noprint"><a href="#/">Головна</a><span>›</span>Кошторис</nav><h1 class="ptitle">Кошторис</h1><div class="empty">Додайте товари в кошик${EST.fav?"":" (або в обране)"} і поверніться сюди. Кошторис збереться сам.<br><br><a class="btn" href="#/c/">До каталогу</a></div>`;return}
+ const rows=ids.map((id,i)=>{const p=M[id],pc=priceInfo(p).pc,q=EST.q[id];return`<tr><td>${i+1}</td><td>${esc(p.n)}</td><td>${esc(id)}</td><td class="r"><input class="estq" type="number" min="1" max="9999" value="${q}" data-eq="${esc(id)}" aria-label="Кількість"></td><td class="r">${money(pc)}</td><td class="r" data-es="${esc(id)}">${money(Math.round(pc*q*100)/100)}</td><td class="noprint"><button type="button" class="estx" data-erm="${esc(id)}" aria-label="Прибрати">✕</button></td></tr>`}).join("");
+ const ct=[s.phone,s.phone2,s.email,s.address,s.hours,s.telegram?"Telegram: "+s.telegram:""].filter(Boolean);
+ v.innerHTML=`<nav class="crumbs noprint"><a href="#/">Головна</a><span>›</span>Кошторис</nav><div class="estp"><div class="esth"><img src="${esc(BASE)}logo1.webp" alt="Trend Electro" width="107" height="60"><div><h1>Кошторис</h1><div>від ${dmy(new Date())}</div></div></div>
+<label class="estf">Об’єкт або клієнт: <input id="eobj" type="text" maxlength="120" placeholder="наприклад: Квартира, вул. Лесі Українки, 5" value="${esc(EST.obj)}"></label>
+<div class="cmpw"><table class="estt"><thead><tr><th>№</th><th>Назва</th><th>Арт.</th><th class="r">К-сть</th><th class="r">Ціна, ₴</th><th class="r">Сума, ₴</th><th class="noprint"></th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="5" class="r"><b>Разом</b></td><td class="r"><b id="etot">${money(estTotals())}</b></td><td class="noprint"></td></tr></tfoot></table></div>
+<div class="estc"><b>Trend Electro</b> · trendelectro.com.ua${ct.length?"<br>"+ct.map(esc).join(" · "):""}</div>
+<p class="estn">Ціни та наявність актуальні на дату складання, уточнюйте перед замовленням. Документ має інформаційний характер і не є рахунком чи публічною офертою.</p></div>
+<p class="noprint"><button type="button" class="go estgo" id="eprint">Зберегти PDF / Друк</button> <a class="btn" href="${back}">Назад</a></p><p class="sku noprint">На телефоні: натисніть кнопку, потім «Поділитися» → «Зберегти у файли». На комп’ютері: у вікні друку оберіть «Зберегти як PDF».</p>`}
+document.addEventListener("input",e=>{const t=e.target;if(t.id==="eobj"&&EST){EST.obj=t.value;return}
+ if(t.dataset&&t.dataset.eq&&EST){const id=t.dataset.eq,q=Math.max(1,Math.min(9999,Math.floor(+t.value)||1));EST.q[id]=q;const c=document.querySelector(`[data-es="${CSS.escape(id)}"]`);if(c)c.textContent=money(Math.round(priceInfo(M[id]).pc*q*100)/100);const T=$("etot");if(T)T.textContent=money(estTotals())}});
+document.addEventListener("click",e=>{let x;if(x=e.target.closest("[data-erm]")){if(EST){delete EST.q[x.dataset.erm];drawEst()}return}
+ if(e.target.closest("#eprint")){const o=document.title;document.title="Кошторис Trend Electro "+dmy(new Date());window.print();setTimeout(()=>{document.title=o},1500)}});
+{const o=drawCart;drawCart=function(){o.apply(this,arguments);const a=$("estl");if(a)a.hidden=!(estOn()&&Object.keys(cart).length)}}
+/* --- чек-лист --- */
+const CHKS=[
+ {id:"led",t:"LED-стрічка",items:[["LED-стрічка","Порахуйте довжину з запасом. Стрічки продаються бухтами.","стрічка",p=>/стрічк/i.test(p.n)],["Блок живлення","Потужність беріть із запасом 20–30% від сумарної потужності стрічки.","блок живлення",p=>/блок живлення/i.test(p.n)],["Профіль або екран","Відводить тепло, захищає стрічку й робить світіння рівним.","профіль",p=>/профіль/i.test(p.n)],["Конектори","З’єднують відрізки стрічки без паяння.","конектор",p=>/конектор/i.test(p.n)],["Контролер або димер","Для регулювання яскравості й кольору.","контролер",p=>/контролер|ди?м{1,2}ер/i.test(p.n)],["Клеми","Щоб надійно підключити блок живлення до мережі.","клема",p=>/клем/i.test(p.n)]]},
+ {id:"room",t:"Освітлення кімнати",items:[["Світильники","Підберіть кількість під площу кімнати (є калькулятор у «Помічнику підбору»).","світильник",p=>/світильник/i.test(p.n)],["Лампи","Перевірте цоколь (E27, E14, GU10) і колір світла: 3000K тепле, 4000K нейтральне.","лампа",p=>/лампа/i.test(p.n)],["Патрони","Якщо світильник без патрона або потрібен підвіс.","патрон",p=>/патрон/i.test(p.n)],["Вимикач","Один або прохідний, якщо світло вмикають із двох місць.","вимикач",p=>/вимикач/i.test(p.n)],["Датчик руху","Зручно для коридорів, комор і санвузлів.","датчик",p=>/датчик/i.test(p.n)],["Кабель","Для проводки до світильників.","кабель",p=>/кабел/i.test(p.n)],["Клеми","Надійне з’єднання проводів у коробці.","клема",p=>/клем/i.test(p.n)]]},
+ {id:"sock",t:"Розетки та вимикачі",items:[["Розетки","Скільки точок потрібно в кожній кімнаті.","розетка",p=>/розетк/i.test(p.n)],["Вимикачі","Одно-, дво- або прохідні.","вимикач",p=>/вимикач/i.test(p.n)],["Рамки","Рамка має підходити до серії механізмів.","рамка",p=>/рамк/i.test(p.n)],["Монтажні коробки","Для встановлення механізмів у стіну.","коробка",p=>/коробк/i.test(p.n)],["Діммер","Плавне регулювання яскравості.","діммер",p=>/ди?м{1,2}ер/i.test(p.n)],["Кабель","Для живлення нових точок.","кабель",p=>/кабел/i.test(p.n)],["Клеми","З’єднання проводів у коробках.","клема",p=>/клем/i.test(p.n)]]},
+ {id:"board",t:"Електрощит",items:[["Бокс або щит","Оберіть за кількістю модулів, із запасом на майбутнє.","бокс",p=>/бокс|щит/i.test(p.n+" "+p.c.join(" "))],["Автоматичні вимикачі","Номінал підбирають під переріз кабелю й навантаження.","автоматичний",p=>/автоматичн/i.test(p.n+" "+p.c.join(" "))],["Реле та захист","Захист від перепадів напруги.","реле",p=>/реле|захист/i.test(p.n+" "+p.c.join(" "))],["Шини й клемні колодки","Для розподілу фаз і нуля в щиті.","шина",p=>/шин|клемн/i.test(p.n+" "+p.c.join(" "))],["Кабель","Для вводу й відводів.","кабель",p=>/кабел/i.test(p.n)],["Кабель-канал","Щоб красиво сховати проводку.","кабель-канал",p=>/кабель-канал/i.test(p.n)]]},
+ {id:"cab",t:"Кабель і монтаж",items:[["Кабель","Продається бухтами. Перевірте переріз під навантаження.","кабель",p=>/кабел/i.test(p.n)],["Кабель-канал","Для відкритої проводки.","кабель-канал",p=>/кабель-канал/i.test(p.n)],["Гофра","Захищає кабель у стіні.","гофра",p=>/гофр/i.test(p.n)],["Металорукав","Для захисту кабелю від пошкоджень.","металорукав",p=>/металорукав/i.test(p.n)],["Хомути та кріплення","Щоб надійно закріпити кабель.","хомут",p=>/хомут|кріплен/i.test(p.n+" "+p.c.join(" "))],["Клеми","З’єднання проводів.","клема",p=>/клем/i.test(p.n)],["Ізоляція","Ізострічка для захисту з’єднань.","ізострічка",p=>/ізоляц|ізострічк/i.test(p.n+" "+p.c.join(" "))]]}];
+let CKS=CHKS[0].id;
+const ckGet=()=>{const o=LS("te_chk",{});return o&&typeof o==="object"?o:{}};
+function viewCheck(){document.title="Чек-лист для ремонту — Trend Electro";if(!chkOn()){$("view").innerHTML=NF;return}
+ const set=CHKS.find(x=>x.id===CKS)||CHKS[0],st=ckGet()[set.id]||[];
+ const items=set.items.map(it=>({it,n:P.filter(it[3]).length})).filter(x=>x.n>0);
+ const done=items.filter(x=>st.indexOf(x.it[0])>-1).length;
+ $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a><span>›</span>Чек-лист</nav><h1 class="ptitle">Чек-лист для ремонту</h1><p class="lead">Оберіть тип робіт і відмічайте, що вже враховано. Невідмічене підсвічене: перевірте, чи воно вам не потрібне.</p>
+<div class="chkt">${CHKS.map(x=>`<button type="button" class="${x.id===set.id?"on":""}" data-chks="${x.id}">${x.t}</button>`).join("")}</div>
+<div class="chkp">Відмічено ${done} з ${items.length}</div>
+<div class="chkl">${items.map(({it,n})=>{const on=st.indexOf(it[0])>-1;return`<div class="chki${on?" on":""}"><label><input type="checkbox" data-chkc="${esc(it[0])}"${on?" checked":""}><span><b>${esc(it[0])}</b><small>${esc(it[1])}</small></span></label><button type="button" class="chkb" data-chkf="${esc(it[2])}">Знайти (${n}) →</button></div>`}).join("")||'<div class="empty">Для цього розділу в каталозі ще немає товарів.</div>'}</div>
+<p class="sku">Кількість у дужках: скільки відповідних товарів зараз є в каталозі.</p>`}
+document.addEventListener("click",e=>{let x;if(x=e.target.closest("[data-chks]")){CKS=x.dataset.chks;viewCheck();return}
+ if(x=e.target.closest("[data-chkf]")){$("q").value=x.dataset.chkf;goSearch();return}});
+document.addEventListener("change",e=>{const t=e.target;if(t.dataset&&t.dataset.chkc!==undefined){const o=ckGet(),a=o[CKS]||[],i=a.indexOf(t.dataset.chkc);if(t.checked&&i<0)a.push(t.dataset.chkc);if(!t.checked&&i>-1)a.splice(i,1);o[CKS]=a;SV("te_chk",o);viewCheck()}});
+/* --- симулятор кольору світла --- */
+const SIMR=[["kitchen","Кухня",3000,4000,"Для кухні зазвичай обирають 3000–4000K: тепле-нейтральне світло, у якому їжа виглядає натурально."],["bedroom","Спальня",2700,3000,"Для спальні радять 2700–3000K: тепле світло розслабляє й налаштовує на сон."],["office","Офіс",4000,5000,"Для офісу й роботи вдома підходить 4000–5000K: нейтральне денне світло допомагає зосередитись."]];
+const SIMP=[[2700,"Тепле"],[3000,"Тепле біле"],[4000,"Нейтральне"],[5000,"Денне"],[6500,"Холодне"]];
+let SIMRM="kitchen",SIMK=4000,SIMI=null,SIMB=null;
+function kRGB(k){k/=100;const r=k<=66?255:329.698727446*Math.pow(k-60,-.1332047592),g=k<=66?99.4708025861*Math.log(k)-161.1195681661:288.1221695283*Math.pow(k-60,-.0755148492),b=k>=66?255:k<=19?0:138.5177312231*Math.log(k-10)-305.0447927307;return[r,g,b].map(x=>Math.max(1,Math.min(255,x)))}
+function simName(k){return k<3200?"Тепле світло: затишок і відпочинок":k<4500?"Нейтральне біле: універсальне, для більшості кімнат":k<5600?"Денне світло: для роботи й зосередження":"Холодне світло: для гаражів і складів, у житлі втомлює"}
+function simDraw(){const c=$("simc");if(!c||!SIMB)return;const ctx=c.getContext("2d"),r0=kRGB(5000),r1=kRGB(SIMK);let g=[0,1,2].map(i=>{const q=r1[i]/r0[i];return 1+(q-1)*.85}),m=Math.max(g[0],g[1],g[2]);g=g.map(x=>x/m);
+ const o=SIMB.data,d=ctx.createImageData(c.width,c.height),n=d.data,L=o.length;for(let i=0;i<L;i+=4){n[i]=o[i]*g[0];n[i+1]=o[i+1]*g[1];n[i+2]=o[i+2]*g[2];n[i+3]=255}ctx.putImageData(d,0,0)}
+let simRaf=0;const simSoon=()=>{cancelAnimationFrame(simRaf);simRaf=requestAnimationFrame(simDraw)};
+function simLabels(){const room=SIMR.find(x=>x[0]===SIMRM),k=SIMK;$("simk").textContent=k+"K";$("simn").textContent=simName(k);
+ const ok=k>=room[2]&&k<=room[3];$("simt").innerHTML=`${esc(room[4])}<br><b class="${ok?"simok":""}">${ok?"✓ Це рекомендований діапазон для цієї кімнати.":"Рекомендовано для цієї кімнати: "+room[2]+"–"+room[3]+"K."}</b>`;
+ const term=k<3500?"3000K":k<5200?"4100K":"6500K",n=P.filter(p=>p.n.indexOf(term)>-1).length;$("simf").innerHTML=n?`<button type="button" class="go" data-simf="${term}">Знайти лампи ${term} (${n}) →</button>`:"";
+ document.querySelectorAll("[data-simk]").forEach(b=>b.classList.toggle("on",+b.dataset.simk===k))}
+function simLoad(){const im=new Image();SIMB=null;im.onload=()=>{if(!$("simc"))return;const c=$("simc");c.width=im.naturalWidth;c.height=im.naturalHeight;const x=c.getContext("2d");x.drawImage(im,0,0);SIMB=x.getImageData(0,0,c.width,c.height);simDraw()};im.onerror=()=>{const f=$("simf");if(f)f.textContent="Не вдалося завантажити зображення."};im.src=BASE+"sim-"+SIMRM+".webp"}
+function viewLight(){document.title="Підбір кольору світла — Trend Electro";if(!simOn()){$("view").innerHTML=NF;return}
+ $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a><span>›</span>Підбір кольору світла</nav><h1 class="ptitle">Підбір кольору світла</h1><p class="lead">3000K, 4000K чи 6500K? Пересувайте повзунок і дивіться, як змінюється кімната.</p>
+<div class="chkt">${SIMR.map(r=>`<button type="button" class="${r[0]===SIMRM?"on":""}" data-simr="${r[0]}">${r[1]}</button>`).join("")}</div>
+<div class="simw"><canvas id="simc" width="1264" height="848" aria-label="Кімната з вибраним кольором світла"></canvas></div>
+<div class="simc"><div class="simh"><b id="simk"></b><span id="simn"></span></div><input type="range" id="simr" min="2700" max="6500" step="100" value="${SIMK}" aria-label="Колірна температура, Кельвіни"><div class="simp">${SIMP.map(x=>`<button type="button" data-simk="${x[0]}">${x[0]}K<small>${x[1]}</small></button>`).join("")}</div><p class="simt" id="simt"></p><div id="simf"></div><p class="sku">Орієнтовна візуалізація: кольори залежать від екрана вашого пристрою. Колірна температура вказана в характеристиках кожної лампи.</p></div>`;simLabels();simLoad()}
+document.addEventListener("input",e=>{if(e.target.id==="simr"){SIMK=+e.target.value;simLabels();simSoon()}});
+document.addEventListener("click",e=>{let x;if(x=e.target.closest("[data-simr]")){SIMRM=x.dataset.simr;const r=SIMR.find(q=>q[0]===SIMRM);SIMK=Math.round((r[2]+r[3])/200)*100;viewLight();return}
+ if(x=e.target.closest("[data-simk]")){SIMK=+x.dataset.simk;const s=$("simr");if(s)s.value=SIMK;simLabels();simSoon();return}
+ if(x=e.target.closest("[data-simf]")){$("q").value=x.dataset.simf;goSearch()}});
