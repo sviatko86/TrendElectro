@@ -38,6 +38,7 @@ label{font-size:13px;color:var(--mute);display:block;margin-bottom:3px}h2{margin
 .pact:not(.on) .psrch,.pact:not(.on) #pax{display:none}.pact:not(.on){box-shadow:none;padding:8px 10px}
 .tbl{width:100%;border-collapse:collapse}.tbl td,.tbl th{padding:8px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}
 .pwf{position:relative;display:block;width:100%}.pwf input{padding-right:46px!important;width:100%;box-sizing:border-box}.pwe{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:40px;height:40px;border:0;background:none;color:#6b7780;cursor:pointer;display:grid;place-items:center;border-radius:50%;padding:0}.pwe:hover{color:#0ABAB5}
+.ltpl{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:6px}.ltpl button{display:grid;gap:6px;text-align:left;padding:8px;border:2px solid #8884;background:transparent;color:inherit;border-radius:12px}.ltpl button.on{border-color:#0ABAB5;box-shadow:0 0 0 2px #0ABAB544}.ltpl i{display:block;height:44px;border-radius:8px}.ltpl span{font-size:13px;font-weight:700}
 </style>
 </head>
 <body>
@@ -575,55 +576,19 @@ document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target&&e.target.i
 /* ---------- лендінги ---------- */
 const LSITE="https://trendelectro.com.ua/";
 let LLIST=[],LED=null,LST={};
-const LBT={hero:"Головний екран",products:"Товари (картки зі знижкою)",compare:"Порівняння цін: на сайті / за посиланням",bundle:"Набір «Разом дешевше» (2–5 товарів)",calc:"Калькулятор / помічник підбору",benefits:"Переваги",timer:"Таймер до дати",video:"Відео YouTube / TikTok",text:"Текст",gallery:"Галерея фото",steps:"Як замовити (кроки)",faq:"Питання та відповіді",delivery:"Доставка та оплата",order:"Форма швидкого замовлення",contacts:"Кнопки Viber / Telegram / дзвінок",cta:"Заклик із кнопкою"};
-const LBF={hero:[["badge","Плашка зверху (напр. «−20%»)"],["title","Великий заголовок"],["sub","Підзаголовок"],["btn","Текст кнопки (веде до форми замовлення)"],["img","Фон",1]],
- products:[["title","Заголовок блоку"],["ids","Артикули через кому",2],["cat","Або вся категорія",3],["n","Скільки показати (до 40)"]],
- compare:[["title","Заголовок"],["ids","Артикули через кому",2],["cat","Або вся категорія",3],["n","Скільки показати (до 8)"]],
- calc:[["kind","Який калькулятор",7,[["garland","Гірлянда: скільки метрів"],["light","Освітлення: лампи, світильники, трек, стрічка"],["strip","LED-стрічка і блок живлення"],["furn","Розетки, вимикачі, прохідні й перехресні (зі схемою)"],["cable","Кабель і автомат за потужністю"],["panel","Щиток: автомати, захист від ураження струмом, реле, таймери"]]],["title","Заголовок (порожньо = стандартний)"],["pid","Артикул товару для кнопки «Додати в кошик» (тільки для гірлянди, необов’язково)"],["per","Довжина однієї гірлянди, м (необов’язково)"]],
- bundle:[["title","Заголовок"],["ids","Артикули набору через кому (2–5)",2],["btn","Текст кнопки"]],
- benefits:[["title","Заголовок"],["items","Кожен рядок: емодзі | заголовок | текст",4]],
- timer:[["title","Напис над таймером"],["until","Дата завершення (порожньо — береться «Знижка діє до» з налаштувань лендінгу)",5]],
- video:[["title","Заголовок"],["url","Посилання на відео YouTube або TikTok"]],
- text:[["title","Заголовок"],["text","Текст (абзаци з нового рядка)",4]],
- gallery:[["title","Заголовок"],["imgs","Фото",6]],
- steps:[["title","Заголовок"],["items","Кожен рядок: крок | пояснення",4]],
- faq:[["title","Заголовок"],["items","Кожен рядок: питання | відповідь",4]],
- delivery:[["title","Заголовок"],["text","Текст (порожньо = стандартний)",4]],
- order:[["title","Заголовок"],["sub","Підпис"],["btn","Текст кнопки"],["ids","Додатково показати товари тут (необов’язково)",2]],
- contacts:[["title","Заголовок"]],
- cta:[["title","Заголовок"],["sub","Текст"],["btn","Текст кнопки"]]};
-const LTPL={
- simple:["⚡ Простий: товар + знижка + дата (рекомендовано)",{simple:true,c:"#0ABAB5",style:"festive",fx:"none",disc:10},[]],
- empty:["Порожній",{fx:"none"},[{t:"hero",title:"Назва акції",sub:"",btn:"Замовити"},{t:"products",title:"Товари"},{t:"order"}]],
- xmas:["Новорічні LED-гірлянди",{fx:"snow",lights:true,c:"#0ABAB5",disc:20},[
-  {t:"hero",badge:"Новий рік",title:"Новорічні LED-гірлянди",sub:"Святковий настрій для дому, ялинки та вулиці",btn:"Обрати гірлянду"},
-  {t:"calc",kind:"garland",title:"Скільки гірлянди потрібно?"},
-  {t:"benefits",title:"Чому LED-гірлянди",items:"💡 | Економні | Споживають у рази менше, ніж лампи розжарювання\n❄️ | Для вулиці й дому | Є моделі з захистом від вологи\n🎄 | Різні режими | Миготіння, плавне світіння, статичний режим\n🚚 | Швидка доставка | Новою поштою по всій Україні"},
-  {t:"products",title:"Оберіть гірлянду",n:"24"},
-  {t:"compare",title:"Порівняйте ціни",n:"6"},
-  {t:"bundle",title:"Набір: усе потрібне разом",ids:""},
-  {t:"timer",title:"Встигніть замовити до свят"},
-  {t:"steps",title:"Як замовити",items:"Оберіть гірлянду | Вкажіть ім’я й телефон у формі\nМи зателефонуємо | Підтвердимо замовлення й доставку\nОтримайте на пошті | Оплата при отриманні або на рахунок"},
-  {t:"faq",items:"Чи можна вішати на вулиці? | Так, якщо в описі вказано захист IP44 або вище.\nЯк обрати довжину? | Для ялинки 1,5–2 м зазвичай достатньо 10–15 м гірлянди.\nСкільки йде доставка? | Зазвичай 1–3 дні Новою поштою."},
-  {t:"order",title:"Швидке замовлення",btn:"Замовити гірлянду"},{t:"delivery"}]],
- one:["Один товар",{fx:"sparks",disc:20},[{t:"hero",badge:"",title:"Назва товару",sub:"Головна перевага в одному реченні",btn:"Замовити"},{t:"products",title:"Товар",ids:""},{t:"compare",title:"Порівняйте ціни",ids:""},{t:"benefits",title:"Переваги",items:"✔ | Перевага 1 | Пояснення\n✔ | Перевага 2 | Пояснення\n✔ | Перевага 3 | Пояснення"},{t:"video"},{t:"faq"},{t:"order"},{t:"contacts"}]],
- sale:["Розпродаж категорії",{fx:"sparks",c:"#e53935",disc:20},[{t:"hero",badge:"Знижки",title:"Розпродаж",sub:"Обмежена кількість товару",btn:"Дивитись товари"},{t:"timer",title:"До кінця розпродажу"},{t:"products",title:"Товари зі знижкою",cat:"",n:"24"},{t:"compare",title:"Порівняйте ціни",cat:"",n:"6"},{t:"cta",title:"Не знайшли потрібне?",sub:"Напишіть нам, підберемо",btn:"Замовити"},{t:"order"},{t:"contacts"}]]};
 const lSlug=t=>{const m={а:"a",б:"b",в:"v",г:"h",ґ:"g",д:"d",е:"e",є:"ie",ж:"zh",з:"z",и:"y",і:"i",ї:"i",й:"i",к:"k",л:"l",м:"m",н:"n",о:"o",п:"p",р:"r",с:"s",т:"t",у:"u",ф:"f",х:"kh",ц:"ts",ч:"ch",ш:"sh",щ:"shch",ь:"",ю:"iu",я:"ia","'":"","’":"","ʼ":""};return String(t||"").toLowerCase().split("").map(c=>m[c]!==undefined?m[c]:c).join("").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60)||"akciia"};
 const lUrl=s=>LSITE+"promo/"+s+"/";
-function lWarn(l,st){const t=l.theme||{},now=Date.now(),e=Date.parse(t.endsIso||t.ends||""),w=[],dd=st.d||[],since=ms=>dd.filter(x=>Date.parse(x[0]+"T23:59:59")>=ms).reduce((s,x)=>s+(+x[1]||0),0),miss=dd.filter(x=>Date.parse(x[0]+"T00:00:00")>=now-7*864e5).reduce((s,x)=>s+(+x[2]||0),0);
- if(l.active&&+t.disc>0&&e){if(e>now&&e-now<2*864e5){const h=Math.ceil((e-now)/36e5);w.push(["#b26a00","⏰ Знижка закінчиться через "+(h>=24?Math.round(h/24)+" дн":h+" год")+". Після цього сторінка показує «Знижка завершилась»."])}
-  if(e<=now){const v=since(e-864e5);w.push(["#c62828","⚠️ Знижка закінчилась "+new Date(e).toLocaleString("uk-UA",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})+". Переглядів після цього: "+since(e)+(since(e)?". Вимкніть рекламу, що веде сюди, або продовжіть дату":"")+"."])}}
- if(!l.active&&miss)w.push(["#c62828","⚠️ Лендінг вимкнений, але за 7 днів на нього зайшли людей: "+miss+". Вони бачать «Акція завершилась». Вимкніть рекламу або посилання, що ведуть сюди."]);
- if(+t.disc>0&&(l.blocks||[]).some(b=>Object.values(b).some(v=>typeof v==="string"&&/\d\s?%/.test(v)&&v.indexOf("{знижка}")<0)))w.push(["#b26a00","💡 У текстах сторінки є відсоток, вписаний руками. Після завершення знижки він лишиться. Замініть на {знижка}: сайт сам підставить −"+(+t.disc)+"% і прибере його, коли акція закінчиться."]);
- return w.map(x=>`<div class="mut" style="color:${x[0]};font-weight:600;margin:4px 0">${x[1]}</div>`).join("")}
+function lWarn(l,st){const t=l.theme||{},now=Date.now(),e=Date.parse(t.endsIso||t.ends||"");if(!l.active||!(+t.disc>0)||!e)return"";
+ if(e>now&&e-now<2*864e5)return'<div class="mut" style="color:#b26a00;font-weight:600">⏰ Акція закінчується менше ніж за 2 доби</div>';
+ if(e<=now)return'<div class="mut" style="color:#c62828;font-weight:600">⚠️ Акція закінчилась. Вимкніть сторінку або продовжіть дату.</div>';return""}
 async function tLand(){
  const [r,s,so]=await Promise.all([sb.from("landings").select("id,slug,title,active,updated_at,theme,blocks").order("updated_at",{ascending:false}),sb.from("landing_stats").select("*"),sb.from("orders").select("total,promo_code,status").like("promo_code","LND-%").limit(5000)]);const LREV={};((so&&so.data)||[]).forEach(o=>{if(o.status!=="cancelled")LREV[o.promo_code]=(LREV[o.promo_code]||0)+(+o.total||0)});
  if(r.error)return fail(/landings|schema cache|does not exist/i.test(r.error.message)?{message:"Спочатку запустіть у Supabase файл schema_v18_landings.sql"}:r.error);
  LLIST=r.data;LST={};(s.data||[]).forEach(x=>{const o=LST[x.slug]||(LST[x.slug]={v:0,c:0,o:0,d:[],m:0});o.v+=x.views;o.c+=x.clicks;o.o+=x.orders||0;(o.d=o.d||[]).push([x.day,x.views,x.missed||0])});
- $("pane").innerHTML=`<div class="box"><h2>Новий лендінг</h2><p class="mut">Окрема рекламна сторінка для будь-якого товару чи категорії. Спочатку створюється вимкненою: налаштуйте, перегляньте й увімкніть.</p><input id="lnt" placeholder="Назва, напр. Новорічні гірлянди"><label>Шаблон</label><select id="lntp">${Object.keys(LTPL).sort((a,b)=>(a==="empty")-(b==="empty")).map(k=>`<option value="${k}"${k==="simple"?" selected":""}>${LTPL[k][0]}</option>`).join("")}</select><button id="lnew">Створити</button><div class="msg" id="fm"></div></div>`+
- (LLIST.length?LLIST.map(l=>{const st=LST[l.slug]||{v:0,c:0,o:0};return`<div class="box"><div class="rw"><b>${esc(l.title)}</b><span class="mut">${l.active?"🟢 Увімкнено":"⚪ Вимкнено"}</span></div>${lWarn(l,st)}<div class="mut">${esc(lUrl(l.slug))}</div><div class="mut">Перегляди: <b>${st.v}</b> · Натискання: <b>${st.c}</b> · Замовлення: <b>${st.o}</b>${st.v?" · Конверсія: <b>"+(Math.round(st.o/st.v*1000)/10)+"%</b>":""}${LREV["LND-"+l.slug.toUpperCase()]?" · Продано на: <b>"+money(LREV["LND-"+l.slug.toUpperCase()])+"</b>":""}</div><div class="rw" style="justify-content:flex-start"><button data-ln="edit" data-id="${l.id}">Редагувати</button><a class="btn2" href="${esc(lUrl(l.slug))}" target="_blank" rel="noopener">Відкрити</a><a class="btn2" href="https://github.com/sviatko86/TrendElectro/actions/workflows/seo.yml" target="_blank" rel="noopener" title="Натисніть Run workflow → Run workflow: за 1–2 хвилини з’явиться гарне превʼю для Facebook і Telegram">Опублікувати превʼю</a><button data-act="copy" data-t="${encodeURIComponent(lUrl(l.slug))}">Копіювати посилання</button><a class="btn2" href="https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=10&data=${encodeURIComponent(lUrl(l.slug))}" target="_blank" rel="noopener">QR-код</a><button data-ln="tog" data-id="${l.id}">${l.active?"Вимкнути":"Увімкнути"}</button><button data-ln="dup" data-id="${l.id}">Копія</button><button data-ln="del" data-id="${l.id}" style="background:#d23c3c;color:#fff">Видалити</button></div></div>`}).join(""):'<div class="box mut">Лендінгів ще немає.</div>');
+$("pane").innerHTML=`<div class="box"><h2>Новий лендінг</h2><p class="mut">Назвіть акцію й натисніть «Створити». Далі оберіть товар, дату й дизайн.</p><input id="lnt" placeholder="Назва, напр. Новорічні гірлянди"><button id="lnew">Створити</button><div class="msg" id="fm"></div></div>`+
+ (LLIST.length?LLIST.map(l=>{const st=LST[l.slug]||{v:0,c:0,o:0};return`<div class="box"><div class="rw"><b>${esc(l.title)}</b><span class="mut">${l.active?"🟢 Увімкнено":"⚪ Вимкнено"}</span></div>${lWarn(l,st)}<div class="mut" style="word-break:break-all">${esc(lUrl(l.slug))}</div><div class="mut">Переглядів: <b>${st.v}</b> · Замовлень: <b>${st.o}</b>${LREV["LND-"+l.slug.toUpperCase()]?" · Продано на: <b>"+money(LREV["LND-"+l.slug.toUpperCase()])+"</b>":""}</div><div class="rw" style="justify-content:flex-start"><button data-ln="edit" data-id="${l.id}">Редагувати</button><a class="btn2" href="${esc(lUrl(l.slug))}" target="_blank" rel="noopener">Відкрити</a><button data-act="copy" data-t="${encodeURIComponent(lUrl(l.slug))}">Копіювати посилання</button><button data-ln="tog" data-id="${l.id}">${l.active?"Вимкнути":"Увімкнути"}</button><button data-ln="del" data-id="${l.id}" style="background:#d23c3c;color:#fff">Видалити</button></div></div>`}).join(""):'<div class="box mut">Лендінгів ще немає.</div>');
 }
-async function lOpen(id){const r=await sb.from("landings").select("*").eq("id",id).maybeSingle();if(r.error||!r.data)return fail(r.error||"Не знайдено");LED=r.data;LED.theme=LED.theme||{};LED.blocks=LED.blocks||[];if(!TREE.length)try{await loadTree()}catch(e){}drawLE()}
+async function lOpen(id){const r=await sb.from("landings").select("*").eq("id",id).maybeSingle();if(r.error||!r.data)return fail(r.error||"Не знайдено");LED=r.data;LED.theme=LED.theme||{};LED.blocks=LED.blocks||[];lToSimple(LED);if(!TREE.length)try{await loadTree()}catch(e){}drawLE()}
 function lField(b,i,f){const [k,l,ty]=f,v=b[k]==null?"":String(b[k]),a=`data-bi="${i}" data-bk="${k}"`;
  if(ty===1)return`<div><label>${l}</label>${v?`<img src="${esc(v)}" style="max-width:220px;border-radius:8px;display:block">`:""}<input type="file" accept="image/*" data-lup="${i}" data-bk="${k}">${v?`<button data-ln="clr" data-bi="${i}" data-bk="${k}">Прибрати фото</button>`:""}</div>`;
  if(ty===2)return`<div><label>${l}</label><textarea rows="2" ${a}>${esc(v)}</textarea><input placeholder="🔍 Пошук товару за назвою чи артикулом" data-lsq="${i}"><div data-lsr="${i}"></div><button data-ln="brw" data-bi="${i}">📂 Вибрати з каталогу (по меню)</button><div data-lbr="${i}"></div></div>`;
@@ -634,34 +599,21 @@ function lField(b,i,f){const [k,l,ty]=f,v=b[k]==null?"":String(b[k]),a=`data-bi=
  if(ty===6)return`<div><label>${l}</label><textarea rows="3" ${a} placeholder="Посилання на фото, кожне з нового рядка">${esc(v)}</textarea><input type="file" accept="image/*" multiple data-lup="${i}" data-bk="${k}" data-add="1"></div>`;
  return`<div><label>${l}</label><input ${a} value="${esc(v)}"></div>`}
 const lDay=d=>{const x=new Date(d);return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0")};
-/* простий лендінг: перший блок — товари, далі форма замовлення й доставка */
+const LTP=[["teal","Бірюзовий","#0ABAB5","linear-gradient(135deg,#052b31,#0ABAB5)","none"],["ocean","Синій","#1e6fd9","linear-gradient(135deg,#0d2b5e,#1e6fd9)","none"],["fire","Яскравий розпродаж","#e64a19","linear-gradient(135deg,#b71c1c,#ff7043)","sparks"],["xmas","Новорічний","#c62828","linear-gradient(135deg,#0b3d2e,#14633f)","snow"],["dark","Темний преміум","#b8860b","linear-gradient(135deg,#0b0f12,#26323d)","none"],["light","Світлий мінімал","#0ABAB5","#ffffff","none"]];
+/* усі лендінги — прості: товари, форма замовлення, доставка; решту прибираємо */
+function lToSimple(L){const th=L.theme;if(th.simple)return;const ids=[],cats=[];(L.blocks||[]).forEach(b=>{if(["products","compare","bundle","order"].includes(b.t)){String(b.ids||"").split(/[\s,;]+/).filter(Boolean).forEach(x=>{if(!ids.includes(x))ids.push(x)});if(b.cat&&!cats.length)cats.push(b.cat)}});
+ th.simple=true;delete th.win;L.blocks=[{t:"products",ids:ids.join(", "),cat:cats[0]||""}]}
 function lFixSimple(L){const th=L.theme;let pb=(L.blocks||[]).find(b=>b.t==="products")||{t:"products"};
- L.blocks=[Object.assign(pb,{t:"products",title:L.title||"",n:"40",off:false}),{t:"order",title:"Оформити замовлення"},{t:"delivery"}];if(!th.ends&&!th._noend)th.ends=lDay(Date.now()+7*864e5)+"T23:59"}
+ L.blocks=[Object.assign(pb,{t:"products",title:L.title||"",n:"40",off:false}),{t:"order",title:"Оформити замовлення"}];if(!th.tpl)th.tpl="teal";if(!th.ends&&!th._noend)th.ends=lDay(Date.now()+7*864e5)+"T23:59"}
 function drawLS(){const L=LED,th=L.theme;lFixSimple(L);const b=L.blocks[0];
- $("pane").innerHTML=`<div class="box"><div class="rw"><button data-ln="back">← До списку</button><span class="mut">${L.active?"🟢 Увімкнено — сторінку бачать усі":"⚪ Вимкнено — бачите тільки ви"}</span></div>
- <h2>Лендінг</h2>
- <label><b>1. Назва акції</b> (великий заголовок на сторінці)</label><input data-lt="title" value="${esc(L.title)}">
- <label>Короткий текст під назвою (необов’язково)</label><input data-bi="0" data-bk="sub" value="${esc(b.sub||"")}" placeholder="напр. Встигніть до свят — доставка по всій Україні">
- </div>
- <div class="box"><label><b>2. Товари, які рекламуємо</b></label><div class="mut">Знайдіть пошуком або відкрийте каталог і відмітьте потрібні. Один товар — велика вітрина. Кілька — картки поруч.</div>${lField(b,0,["ids","",2])}<details${b.cat?" open":""}><summary class="mut" style="cursor:pointer;margin-top:8px">або показати весь розділ каталогу</summary>${lField(b,0,["cat","Розділ",3])}</details></div>
- <div class="box"><div class="grid2"><div><label><b>3. Знижка, %</b></label><input type="number" min="0" max="90" data-th="disc" value="${esc(th.disc||0)}"><div class="mut">Від цін на сайті. 0 — без знижки.</div></div><div><label><b>4. Акція діє до</b></label><input type="date" data-sd="1" value="${esc((th.ends||"").slice(0,10))}"><div class="mut">До кінця цього дня. Потім знижка вимкнеться сама.</div></div></div>
- <label style="margin-top:10px"><input type="checkbox" data-lt="active" ${L.active?"checked":""} style="width:auto"> <b>5. Увімкнути сторінку</b> (видно всім)</label></div>
- <div class="box"><div class="mut">Посилання на сторінку:</div><div style="word-break:break-all"><b>${esc(lUrl(L.slug))}</b></div><div class="rw" style="justify-content:flex-start;margin-top:6px"><button data-act="copy" data-t="${encodeURIComponent(lUrl(L.slug))}">Копіювати посилання</button><a class="btn2" href="https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=10&data=${encodeURIComponent(lUrl(L.slug))}" target="_blank" rel="noopener">QR-код</a></div>
- <div style="margin-top:10px"><button data-ln="adv" class="btn2" style="font-size:13px">⚙️ Розширені налаштування (оформлення, додаткові блоки, реклама, особистий таймер)</button></div></div>
+ $("pane").innerHTML=`<div class="box"><div class="rw"><button data-ln="back">← До списку</button><span class="mut">${L.active?"🟢 Сторінку бачать усі":"⚪ Вимкнено, бачите тільки ви"}</span></div>
+ <label><b>1. Назва акції</b></label><input data-lt="title" value="${esc(L.title)}"></div>
+ <div class="box"><label><b>2. Товар (або кілька)</b></label><div class="mut">Знайдіть пошуком або відкрийте каталог і відмітьте товари.</div>${lField(b,0,["ids","",2])}<details${b.cat?" open":""}><summary class="mut" style="cursor:pointer;margin-top:8px">або весь розділ каталогу</summary>${lField(b,0,["cat","Розділ",3])}</details></div>
+ <div class="box"><div class="grid2"><div><label><b>3. Знижка, %</b></label><input type="number" min="0" max="90" data-th="disc" value="${esc(th.disc||0)}"></div><div><label><b>Акція діє до</b></label><input type="date" data-sd="1" value="${esc((th.ends||"").slice(0,10))}"></div></div><div class="mut">Стара ціна перекреслюється, поруч нова зі знижкою. Після цієї дати знижка вимкнеться сама.</div></div>
+ <div class="box"><label><b>4. Дизайн</b></label><div class="ltpl">${LTP.map(t=>`<button type="button" data-tpl="${t[0]}" class="${(th.tpl||"teal")===t[0]?"on":""}"><i style="background:${t[3]};${t[0]==="light"?"border:1px solid #ccc":""}"></i><span>${t[1]}</span></button>`).join("")}</div></div>
+ <div class="box"><label><input type="checkbox" data-lt="active" ${L.active?"checked":""} style="width:auto"> <b>5. Увімкнути сторінку</b> (видно всім)</label><div class="mut" style="margin-top:6px;word-break:break-all">${esc(lUrl(L.slug))}</div></div>
  <div class="box" style="position:sticky;bottom:0"><div class="rw"><button data-ln="save">💾 Зберегти</button><a class="btn2" href="${esc(lUrl(L.slug))}" target="_blank" rel="noopener">Переглянути</a></div><div class="msg" id="fm"></div></div>`;{const ta=document.querySelector('textarea[data-bk="ids"]');if(ta)ta.style.display="none"}lSelAll()}
-function drawLE(){const L=LED,th=L.theme;if(th.simple)return drawLS();
- $("pane").innerHTML=`<div class="box"><div class="rw"><button data-ln="back">← До списку</button><span class="mut">${L.active?"🟢 Увімкнено":"⚪ Вимкнено (бачите тільки ви)"}</span></div><h2>Налаштування</h2><button data-ln="simp" class="btn2" style="font-size:13px">⚡ Перейти в простий режим</button>
- <label>Назва</label><input data-lt="title" value="${esc(L.title)}">
- <label>Адреса сторінки (латиницею)</label><input data-lt="slug" value="${esc(L.slug)}"><div class="mut">${esc(lUrl(L.slug))}</div>
- <label><input type="checkbox" data-lt="active" ${L.active?"checked":""} style="width:auto"> Лендінг увімкнено (видно всім)</label>
- <div class="grid2"><div><label>Колір</label><input type="color" data-th="c" value="${esc(th.c||"#0ABAB5")}" style="height:42px"></div><div><label>Анімація</label><select data-th="fx">${[["none","Без анімації"],["snow","Сніг"],["sparks","Вогники"]].map(o=>`<option value="${o[0]}"${(th.fx||"none")===o[0]?" selected":""}>${o[1]}</option>`).join("")}</select></div></div>
- <label><input type="checkbox" data-th="lights" ${th.lights?"checked":""} style="width:auto"> Гірлянда-лампочки зверху головного екрана</label>
- <label>Стиль сторінки</label><select data-th="style">${[["festive","Святковий (кольоровий)"],["minimal","Мінімалізм (чорно-білий)"],...(th.dark||th.style==="dark"?[["dark","Темний преміум (застарілий)"]]:[])].map(o=>`<option value="${o[0]}"${(th.dark?"dark":(th.style||"festive"))===o[0]?" selected":""}>${o[1]}</option>`).join("")}</select>
- <div class="box" style="margin:0"><label><input type="checkbox" data-px="on" ${(th.px||{}).on?"checked":""} style="width:auto"> Реклама: підключити коди відстеження (необов’язково, вимкнено за замовчуванням)</label><div class="mut">Потрібні тільки якщо ви запускаєте рекламу. Порожнє поле = цей сервіс не підключається. Зніміть галочку, щоб вимкнути все разом.</div><label>Facebook / Instagram Pixel ID (цифри)</label><input data-px="fb" value="${esc((th.px||{}).fb||"")}" placeholder="напр. 123456789012345"><label>TikTok Pixel ID</label><input data-px="tt" value="${esc((th.px||{}).tt||"")}" placeholder="напр. C1A2B3C4D5E6F7G8H9"><label>Google (GA4 або Ads) ID</label><input data-px="ga" value="${esc((th.px||{}).ga||"")}" placeholder="напр. G-ABC123XYZ"></div>
- <label>Знижка на цьому лендінгу, % від цін сайту (0 = без знижки)</label><input type="number" min="0" max="90" data-th="disc" value="${esc(th.disc||0)}"><label>Знижка діє до (порожньо — без обмеження)</label><input type="datetime-local" data-th="ends" value="${esc(th.ends||"")}"><div class="mut">Після цієї дати знижка вимикається сама, а таймер на сторінці бере цю дату автоматично.</div><label>Особистий таймер: скільки годин діє знижка для кожного відвідувача з моменту відкриття (0 — вимкнено). Доба = 24, три доби = 72</label><input type="number" min="0" max="720" data-th="win" value="${esc(th.win||0)}"><div class="mut">Відвідувач відкрив сторінку — пішов його особистий відлік, видимий на сторінці. Коли час вийшов, знижка зникає, а сервер не прийме її навіть зі старого кошика. Потрібен SQL v25. Відлік привʼязаний до браузера (інший браузер чи анонімне вікно — новий відлік).</div><div class="mut">У текстах блоків можна писати <b>{знижка}</b> (покаже «−20%», а після завершення зникне) і <b>{до}</b> (покаже «завтра о 14:35»). Так текст ніколи не застаріє.</div><div class="mut">Ціни на сторінці показуються зі знижкою й старою ціною. Знижка діє тільки для замовлень з цього лендінгу (код створюється автоматично).</div></div>`+
- L.blocks.map((b,i)=>`<div class="box"${b.off?' style="opacity:.55"':""}><div class="rw"><b>${i+1}. ${esc(LBT[b.t]||b.t)}</b><span><button data-ln="up" data-bi="${i}">↑</button> <button data-ln="dn" data-bi="${i}">↓</button> <button data-ln="off" data-bi="${i}">${b.off?"Показати":"Сховати"}</button> <button data-ln="rm" data-bi="${i}">✕</button></span></div>${(LBF[b.t]||[]).map(f=>lField(b,i,f)).join("")}</div>`).join("")+
- `<div class="box"><label>Додати блок</label><select id="lnb">${Object.keys(LBT).filter(k=>!["gallery","cta","contacts"].includes(k)).map(k=>`<option value="${k}">${LBT[k]}</option>`).join("")}</select><button data-ln="add">Додати блок унизу</button></div>
- <div class="box" style="position:sticky;bottom:0"><div class="rw"><button data-ln="save">💾 Зберегти</button><a class="btn2" href="${esc(lUrl(L.slug))}" target="_blank" rel="noopener">Переглянути</a></div><div class="msg" id="fm"></div></div>`}
+function drawLE(){drawLS()}
 async function lSave(){const L=LED;L.slug=lSlug(L.slug);if(L.theme.simple){lFixSimple(L);if(!String(L.blocks[0].ids||"").trim()&&!L.blocks[0].cat)flash("Підказка: ще не вибрано жодного товару.")}
  const r=await sb.from("landings").update({title:L.title||"Лендінг",slug:L.slug,active:!!L.active,theme:Object.assign({},L.theme,{endsIso:L.theme.ends?new Date(L.theme.ends).toISOString():""}),blocks:L.blocks,updated_at:new Date().toISOString()}).eq("id",L.id);
  if(!r.error){const dc=Math.min(90,Math.max(0,+L.theme.disc||0)),code="LND-"+L.slug.toUpperCase();const q=await sb.from("promo_codes").select("code").eq("code",code).maybeSingle();
@@ -670,7 +622,7 @@ async function lSave(){const L=LED;L.slug=lSlug(L.slug);if(L.theme.simple){lFixS
  if(r.error)return flash(/duplicate|unique/i.test(r.error.message)?"Така адреса вже зайнята, змініть її.":/check/i.test(r.error.message)?"Адреса: тільки латинські літери, цифри та дефіс, від 2 символів.":"Помилка: "+r.error.message);
  flash("Збережено ✓ Відкрийте «Переглянути», щоб побачити зміни.",true)}
 async function lCreate(title,tpl,src){let base=lSlug(title),slug=base,n=2;const ex=new Set(LLIST.map(l=>l.slug));while(ex.has(slug))slug=base+"-"+n++;
- const t=src||{theme:LTPL[tpl][1],blocks:LTPL[tpl][2]};
+ const t=src||{theme:{simple:true,tpl:"teal",c:"#0ABAB5",fx:"none",disc:10},blocks:[]};
  const r=await sb.from("landings").insert({title,slug,active:false,theme:JSON.parse(JSON.stringify(t.theme)),blocks:JSON.parse(JSON.stringify(t.blocks))}).select().single();if(r.error)return flash("Помилка: "+r.error.message);LLIST.push(r.data);lOpen(r.data.id)}
 let LSQT=null,LPRC=null;
 /* вибрані товари блоку: фото, назва, ціна на сайті і ціна на лендінгу */
@@ -688,7 +640,6 @@ async function lSelDraw(i){const b=LED&&LED.blocks[i],box=document.querySelector
  box.innerHTML=h?`<div class="mut" style="margin-top:8px"><b>Вибрано на цій сторінці${ids.length?" ("+ids.length+")":""}:</b></div>`+h:'<div class="mut" style="margin-top:8px">Поки нічого не вибрано. Знайдіть товар пошуком нижче або відкрийте каталог і відмітьте потрібні.</div>'}
 function lSelAll(){document.querySelectorAll('textarea[data-bk="ids"]').forEach(ta=>{const i=+ta.dataset.bi;if(!document.querySelector(`[data-lsel="${i}"]`))ta.insertAdjacentHTML("afterend",`<div data-lsel="${i}"></div>`);lSelDraw(i)})
  document.querySelectorAll('select[data-bk="cat"]').forEach(s=>{const i=+s.dataset.bi;if(!document.querySelector(`[data-lsel="${i}"]`))s.parentElement.insertAdjacentHTML("beforeend",`<div data-lsel="${i}"></div>`);lSelDraw(i)})}
-{const _d=drawLE;drawLE=function(){_d.apply(this,arguments);lSelAll()}}
 let LSELT=null;document.addEventListener("input",e=>{const t=e.target;if(!LED||t.dataset.bk!=="ids"||t.dataset.bi==null)return;clearTimeout(LSELT);LSELT=setTimeout(()=>lSelDraw(+t.dataset.bi),500)});
 document.addEventListener("change",e=>{const t=e.target;if(LED&&t.dataset&&t.dataset.bk==="cat"&&t.dataset.bi!=null)lSelDraw(+t.dataset.bi)});
 document.addEventListener("input",e=>{const t=e.target;if(LED&&t.dataset&&t.dataset.th==="disc"){clearTimeout(LSELT);LSELT=setTimeout(()=>document.querySelectorAll("[data-lsel]").forEach(b=>lSelDraw(+b.dataset.lsel)),500)}});
@@ -702,8 +653,6 @@ document.addEventListener("input",e=>{const t=e.target;if(!LED||!$("pane").conta
   LSQT=setTimeout(async()=>{const s=q.replace(/[%,()]/g," ");const r=await sb.from("products").select("id,name,price,in_stock").or(`name.ilike.%${s}%,id.ilike.%${s}%`).limit(12);const box=document.querySelector(`[data-lsr="${i}"]`);if(!box)return;
    box.innerHTML=(r.data||[]).map(p=>`<button data-ln="pick" data-bi="${i}" data-pid="${esc(p.id)}" style="display:block;width:100%;text-align:left;margin-top:4px">＋ ${esc(p.id)} · ${esc(p.name)}${p.in_stock===false?" (немає)":""}</button>`).join("")||'<div class="mut">Нічого не знайдено</div>'},300)}
 });
-document.addEventListener("change",async e=>{const t=e.target;if(!LED||t.dataset.lup==null)return;const i=+t.dataset.lup,k=t.dataset.bk;
- try{flash("Завантажую фото…",true);const urls=[];for(const f of t.files)urls.push(await putImage(f,1600,"landing"));const b=LED.blocks[i];b[k]=t.dataset.add?[(b[k]||"").trim()].concat(urls).filter(Boolean).join("\n"):urls[0];drawLE();flash("Фото додано. Натисніть «Зберегти».",true)}catch(er){flash("Не вдалося завантажити фото: "+(er.message||er))}});
 document.addEventListener("click",async e=>{const t=e.target.closest("[data-ln]");if(!t)return;const a=t.dataset.ln,i=+t.dataset.bi,B=LED&&LED.blocks;
  if(a==="edit")return lOpen(t.dataset.id);
  if(a==="back"){LED=null;return tLand()}
@@ -711,17 +660,9 @@ document.addEventListener("click",async e=>{const t=e.target.closest("[data-ln]"
  if(a==="del"){if(!confirm("Видалити лендінг назавжди?"))return;const r=await sb.from("landings").delete().eq("id",t.dataset.id);if(r.error)return flash("Помилка: "+r.error.message);return tLand()}
  if(a==="dup"){const r=await sb.from("landings").select("*").eq("id",t.dataset.id).single();if(r.error)return flash("Помилка: "+r.error.message);return lCreate(r.data.title+" (копія)",null,r.data)}
  if(a==="save")return lSave();
- if(a==="adv"){if(!confirm("Відкрити розширені налаштування? Тут багато блоків і опцій. Повернутися в простий режим можна кнопкою зверху."))return;LED.theme.simple=false;drawLE();return}
- if(a==="simp"){if(!confirm("Простий режим: на сторінці залишаться тільки товари, форма замовлення й доставка. Інші блоки буде прибрано після збереження. Продовжити?"))return;LED.theme.simple=true;delete LED.theme.win;drawLE();return}
- if(a==="up"&&i>0){[B[i-1],B[i]]=[B[i],B[i-1]];return drawLE()}
- if(a==="dn"&&i<B.length-1){[B[i+1],B[i]]=[B[i],B[i+1]];return drawLE()}
- if(a==="off"){B[i].off=!B[i].off;return drawLE()}
- if(a==="rm"){if(confirm("Прибрати цей блок?")){B.splice(i,1);drawLE()}return}
- if(a==="add"){if($("lnb").value==="calc"&&B.some(x=>x.t==="calc"))return flash("У лендінгу може бути лише один калькулятор — оберіть під тему товару.");B.push({t:$("lnb").value});drawLE();window.scrollTo(0,document.body.scrollHeight);return}
- if(a==="clr"){B[i][t.dataset.bk]="";return drawLE()}
  if(a==="pick"){const cur=String(B[i].ids||"").split(/[\s,;]+/).filter(Boolean);if(!cur.includes(t.dataset.pid))cur.push(t.dataset.pid);B[i].ids=cur.join(", ");const ta=document.querySelector(`textarea[data-bi="${i}"][data-bk="ids"]`);if(ta)ta.value=B[i].ids;t.remove();lSelDraw(i);return}
 });
-document.addEventListener("click",e=>{if(e.target.id==="lnew"){const n=$("lnt").value.trim();if(n.length<2)return flash("Вкажіть назву лендінгу.");lCreate(n,$("lntp").value)}});
+document.addEventListener("click",e=>{const tp=e.target.closest&&e.target.closest("[data-tpl]");if(tp&&LED){const t=LTP.find(x=>x[0]===tp.dataset.tpl);if(t){LED.theme.tpl=t[0];LED.theme.c=t[2];LED.theme.fx=t[4];document.querySelectorAll("[data-tpl]").forEach(b=>b.classList.toggle("on",b===tp))}return}if(e.target.id==="lnew"){const n=$("lnt").value.trim();if(n.length<2)return flash("Вкажіть назву лендінгу.");lCreate(n)}});
 
 /* огляд каталогу для лендінгу */
 let LBR={i:-1,path:[]};

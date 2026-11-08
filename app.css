@@ -490,3 +490,17 @@ body.lndon{padding-bottom:84px}
 
 @media(max-width:700px){.lxh{grid-template-columns:1fr;padding:20px;gap:20px;text-align:left}.lxim{order:-1;max-width:340px;margin:0 auto;width:100%}.lxpk{grid-template-columns:1fr 1fr}.lxg{grid-template-columns:1fr}.lxbtn{width:100%}.lxcta{display:grid;justify-items:center;width:100%}.lxbadge{right:0;width:62px;height:62px;font-size:18px}.lxt div{min-width:54px}.lxt b{font-size:22px}}
 .lprow{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.lprow .lxo{font-size:15px;color:var(--mute);opacity:1}.lprow b{font-size:24px}
+
+/* ===== готові дизайни (змінні) ===== */
+.lxh{--hb:linear-gradient(135deg,#052b31 0%,#0ABAB5 130%);--hf:#fff;--hk:rgba(255,255,255,.16);--hkb:rgba(255,255,255,.32);--hck:#9ff3ee;--hbb:#fff;--hbc:#052b31;--hp:#ffd23f;--hpc:#3a2a00;background:var(--hb);color:var(--hf)}
+.lxh h1,.lxn,.lxt b,.lxlnk,.lxk{color:var(--hf)}.lxk{background:var(--hk);border-color:var(--hkb)}.lxk2{background:var(--hf);color:var(--hbc)}
+.lxsv,.lxt div{background:var(--hk);border-color:var(--hkb)}.lxb li:before{color:var(--hck)}.lxbtn{background:var(--hbb)!important;color:var(--hbc)!important}.lxp{background:var(--hp);color:var(--hpc)}
+.lxh:before,.lxh:after{background:var(--hk);opacity:.5}
+.lt-ocean .lxh{--hb:linear-gradient(135deg,#0d2b5e 0%,#1e6fd9 130%);--hck:#a6d0ff}
+.lt-fire .lxh{--hb:linear-gradient(135deg,#a31515 0%,#ff7043 130%);--hck:#ffe082;--hbc:#a31515}
+.lt-xmas .lxh{--hb:linear-gradient(135deg,#0b3d2e 0%,#14633f 130%);--hck:#ffd23f;--hp:#e53935;--hpc:#fff;--hbb:#e53935;--hbc:#fff}
+.lt-dark .lxh{--hb:linear-gradient(135deg,#0b0f12 0%,#26323d 130%);--hck:#f5c542;--hp:#f5c542;--hpc:#2a2000;--hbb:#f5c542;--hbc:#1a1400;--hk:rgba(245,197,66,.12);--hkb:rgba(245,197,66,.4)}
+.lt-light .lxh{--hb:#fff;--hf:#10242b;--hk:rgba(10,186,181,.1);--hkb:rgba(10,186,181,.35);--hck:#0ABAB5;--hbb:#0ABAB5;--hbc:#fff;--hp:#e53935;--hpc:#fff;border:1px solid var(--line);box-shadow:0 10px 40px rgba(0,0,0,.08)}
+.lt-light .lxh .lxo{color:#8a979c}.lt-light .lxh:before,.lt-light .lxh:after{background:rgba(10,186,181,.08)}.lt-light .lxlnk{color:#0a8f8b}
+.lxw{display:grid;gap:2px}.lxw small{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;opacity:.75}.lxpr{align-items:flex-end;gap:16px}.lxpr .lxp{align-self:center}
+.lprow{align-items:flex-end;gap:14px}.lprow .lxw small{color:var(--mute);font-size:11px}.lprow .lxo{font-size:17px}.lprow b{font-size:26px}
