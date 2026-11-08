@@ -528,3 +528,7 @@ body.fxon button:active,body.fxon .go:active,body.fxon .btn:active{transform:sca
 body.fxon .grid .card:nth-child(-n+12),body.fxon .hrow .card:nth-child(-n+8){animation:cardin .45s cubic-bezier(.2,.7,.2,1) backwards}
 body.fxon .grid .card:nth-child(2),body.fxon .hrow .card:nth-child(2){animation-delay:.04s}body.fxon .grid .card:nth-child(3),body.fxon .hrow .card:nth-child(3){animation-delay:.08s}body.fxon .grid .card:nth-child(4),body.fxon .hrow .card:nth-child(4){animation-delay:.12s}body.fxon .grid .card:nth-child(n+5){animation-delay:.16s}
 @keyframes cardin{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+/* без білого «відскоку» зверху, кнопка назад */
+html{background:var(--nav);overscroll-behavior-y:none}body{min-height:100vh;min-height:100dvh;overscroll-behavior-y:none}
+.backbtn{grid-column:2;grid-row:1;justify-self:start;height:36px;padding:0 14px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:var(--nav2);color:var(--navink);font:700 14px Manrope,system-ui,sans-serif;cursor:pointer}.backbtn[hidden]{display:none}
+@media (min-width:860px){.backbtn{grid-column:auto;grid-row:auto}}
