@@ -22,23 +22,25 @@ button.sec{background:var(--card);color:var(--ink);border:1px solid var(--line)}
 .tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;position:sticky;top:var(--hh,52px);z-index:4;background:var(--bg,#f4f6f8);padding:8px 0;scrollbar-width:thin}.tabs button{background:var(--card);color:var(--ink);border:1px solid var(--line);white-space:nowrap}.tabs button.on{background:var(--acc);color:#1d2023;border-color:var(--acc)}
 .box.onew{background:rgba(10,186,181,.15);border-color:rgba(10,186,181,.45);animation:onp 2.6s ease-in-out infinite}@keyframes onp{0%,100%{background:rgba(10,186,181,.05)}50%{background:rgba(10,186,181,.15)}}@media(prefers-reduced-motion:reduce){.box.onew{animation:none}}
 .box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;display:grid;gap:8px}
-.rw{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-@media (max-width:560px){.grid3{grid-template-columns:1fr}}
+.rw{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}.grid3{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:8px}
+@media (max-width:560px){.grid3{grid-template-columns:minmax(0,1fr)}}
 .mut{color:var(--mute);font-size:13px}.msg{font-size:14px}.msg.bad{color:var(--bad)}.msg.ok{color:var(--ok)}
 label{font-size:13px;color:var(--mute);display:block;margin-bottom:3px}h2{margin:6px 0 4px;font-size:18px}
 .nd{background:var(--card);border:1px solid var(--line);border-radius:8px;margin-bottom:6px;padding:0 10px}.nd summary{padding:10px 0;cursor:pointer}.ndb{display:grid;gap:6px;padding:0 0 10px 8px;border-left:3px solid var(--acc);margin-left:2px}
-.psrch{display:grid;grid-template-columns:1fr auto auto;gap:8px}@media (max-width:600px){.psrch{grid-template-columns:1fr 1fr}.psrch input{grid-column:1/-1}}
+.psrch{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px}@media (max-width:600px){.psrch{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.psrch input{grid-column:1/-1}}
 .pfl{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}.chip2{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-weight:600;font-size:13px;white-space:nowrap}.chip2.on{background:var(--acc);border-color:var(--acc);color:#1d2023}
 .ck{display:flex;gap:8px;align-items:center;margin:0;color:var(--ink);font-size:14px}.ck input{width:auto}.selall{margin:4px 2px 8px}
-.prow{display:grid;grid-template-columns:auto 48px 1fr auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:6px}.prow input{width:auto}.prow img{width:48px;height:48px;object-fit:contain;background:#fff;border-radius:6px}
+.prow{display:grid;grid-template-columns:auto 48px minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin-bottom:6px}.prow input{width:auto}.prow img{width:48px;height:48px;object-fit:contain;background:#fff;border-radius:6px}
 .pinf{min-width:0;display:grid;gap:2px;cursor:pointer}.pinf b{font-size:14px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}.pinf .mut{font-size:12px}.pinf s{opacity:.7}
 .tgs{display:flex;flex-wrap:wrap;gap:4px}.tg{font-style:normal;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;color:#fff;background:#888}.tg.h{background:#15191c}.tg.n{background:#2f6fd6}.tg.p{background:#8a1fe0}.tg.s{background:#e23b1c}.tg.g{background:#9aa0a6}
-.pact{position:sticky;bottom:0;z-index:5;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:10px;margin-top:10px;display:grid;gap:8px;box-shadow:0 -6px 20px rgba(0,0,0,.08)}.pact[hidden]{display:none}.pact.on{border-color:var(--acc)}.pact .psrch{grid-template-columns:1fr auto}.pager{margin:6px 0}
-@media (max-width:600px){.prow{grid-template-columns:auto 44px 1fr 14px}.prow>button{display:none}.prow:after{content:"›";font-size:22px;color:var(--mute)}.prow img{width:44px;height:44px}}
+.pact{position:sticky;bottom:0;z-index:5;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:10px;margin-top:10px;display:grid;gap:8px;box-shadow:0 -6px 20px rgba(0,0,0,.08)}.pact[hidden]{display:none}.pact.on{border-color:var(--acc)}.pact .psrch{grid-template-columns:minmax(0,1fr) auto}.pager{margin:6px 0}
+@media (max-width:600px){.prow{grid-template-columns:auto 44px minmax(0,1fr) 14px}.prow>button{display:none}.prow:after{content:"›";font-size:22px;color:var(--mute)}.prow img{width:44px;height:44px}}
 .pact:not(.on) .psrch,.pact:not(.on) #pax{display:none}.pact:not(.on){box-shadow:none;padding:8px 10px}
 .tbl{width:100%;border-collapse:collapse}.tbl td,.tbl th{padding:8px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}
 .pwf{position:relative;display:block;width:100%}.pwf input{padding-right:46px!important;width:100%;box-sizing:border-box}.pwe{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:40px;height:40px;border:0;background:none;color:#6b7780;cursor:pointer;display:grid;place-items:center;border-radius:50%;padding:0}.pwe:hover{color:#0ABAB5}
-.ltpl{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:6px}.ltpl button{display:grid;gap:6px;text-align:left;padding:8px;border:2px solid #8884;background:transparent;color:inherit;border-radius:12px}.ltpl button.on{border-color:#0ABAB5;box-shadow:0 0 0 2px #0ABAB544}.ltpl i{display:block;height:44px;border-radius:8px}.ltpl span{font-size:13px;font-weight:700}
+.ltpl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:6px}.ltpl button{display:grid;gap:6px;text-align:left;padding:8px;border:2px solid #8884;background:transparent;color:inherit;border-radius:12px}.ltpl button.on{border-color:#0ABAB5;box-shadow:0 0 0 2px #0ABAB544}.ltpl i{display:block;height:44px;border-radius:8px}.ltpl span{font-size:13px;font-weight:700}
+html,body{max-width:100%;overflow-x:clip}input,select,textarea{min-width:0;max-width:100%;box-sizing:border-box}#app,#pane,.box,.rw{min-width:0}
+.scsum{position:sticky;bottom:0;z-index:5;background:var(--card);border:2px solid var(--acc);border-radius:12px;padding:10px;margin-top:10px;display:grid;gap:8px;box-shadow:0 -6px 20px rgba(0,0,0,.08)}.scsum[hidden]{display:none}.scpr{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.scpr input{width:90px}.prow.sc:after{display:none}
 </style>
 </head>
 <body>
@@ -66,7 +68,7 @@ function login(msg){
 }
 async function logout(){await sb.auth.signOut();$("out").hidden=true;login()}
 $("out").onclick=logout;
-const T={dash:"Огляд",orders:"Замовлення",products:"Товари",cats:"Категорії",price:"Ціни",clients:"Клієнти",mkt:"Маркетинг",shop:"Налаштування"};
+const T={dash:"Огляд",orders:"Замовлення",products:"Товари",show:"Вітрини",cats:"Категорії",price:"Ціни",clients:"Клієнти",mkt:"Маркетинг",shop:"Налаштування"};
 const GR={mkt:{promos:"Акції",codes:"Промокоди",banners:"Банери",leads:"Підписники",bdays:"Іменинники",land:"Лендінги",loy:"Картки"},shop:{shop:"Магазин",pages:"Сторінки",import:"Імпорт",backup:"Резервна копія"}};
 const SUB={mkt:"promos",shop:"shop"},LEAFG={};Object.keys(GR).forEach(g=>Object.keys(GR[g]).forEach(k=>LEAFG[k]=g));
 const setCur=k=>{if(LEAFG[k]&&k!=="shop"){SUB[LEAFG[k]]=k;cur=LEAFG[k]}else cur=k};
@@ -78,7 +80,7 @@ function shell(){
   const a=document.querySelector('.tabs .on');if(a)a.scrollIntoView({block:'nearest',inline:'center'})}
  const g=GR[cur],leaf=g?SUB[cur]:cur;
  $("subt").innerHTML=g?'<div class="subt">'+Object.keys(g).map(k=>`<button data-sub="${k}" class="${k===leaf?"on":""}">${g[k]}</button>`).join("")+'</div>':"";
- ({dash:tDash,orders:tOrders,products:tProducts,cats:tCats,import:tImport,price:tPrice,promos:tPromos,bdays:tBdays,land:tLand,loy:tLoy,codes:tCodes,clients:tClients,leads:tLeads,banners:tBanners,pages:tPages,shop:tShop,backup:tBackup})[leaf]();
+ ({dash:tDash,orders:tOrders,products:tProducts,show:tShow,cats:tCats,import:tImport,price:tPrice,promos:tPromos,bdays:tBdays,land:tLand,loy:tLoy,codes:tCodes,clients:tClients,leads:tLeads,banners:tBanners,pages:tPages,shop:tShop,backup:tBackup})[leaf]();
 }
 const fail=e=>{$("pane").innerHTML=`<div class="box"><div class="msg bad">Помилка: ${esc(e.message||e)}</div></div>`};
 const flash=(t,ok)=>{const m=$("fm");if(m){m.className="msg "+(ok?"ok":"bad");m.textContent=t}};
@@ -725,6 +727,62 @@ document.addEventListener("click",async e=>{const t=e.target.closest("[data-ladj
  function wrap(i){if(i.dataset.eye)return;i.dataset.eye=1;const w=document.createElement("div");w.className="pwf";i.parentNode.insertBefore(w,i);w.appendChild(i);const b=document.createElement("button");b.type="button";b.className="pwe";b.setAttribute("aria-label","Показати пароль");b.innerHTML=E;b.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();const show=i.type==="password";i.type=show?"text":"password";b.innerHTML=show?X:E;b.setAttribute("aria-label",show?"Сховати пароль":"Показати пароль");i.focus()});w.appendChild(b)}
  const scan=()=>document.querySelectorAll('input[type="password"]').forEach(wrap);
  new MutationObserver(scan).observe(document.documentElement,{childList:true,subtree:true});scan()})();
+/* ===== Вітрини: хіти, новинки, спецпропозиції ===== */
+const SCD={hit:["Хіти продажу","is_hit"],new:["Новинки","is_new"],spec:["Спецпропозиції","special"]};
+let SC={k:"hit",q:"",cat:"",view:"sel",page:0,total:0,cnt:{},add:new Set(),rem:new Set(),noSpecial:false};
+const scOn=(p,k)=>k==="spec"?!!p.special:!!p[SCD[k][1]];
+async function scCounts(){for(const k of Object.keys(SCD)){let q=sb.from("products").select("id",{count:"exact",head:true});q=k==="spec"?q.not("special","is",null):q.eq(SCD[k][1],true);const r=await q;SC.cnt[k]=r.error?null:(r.count||0);if(k==="spec"&&r.error)SC.noSpecial=true}}
+async function tShow(){
+ if(!TREE.length){try{await loadTree()}catch(e){return fail(e)}}
+ const tops=sk(treeModel()).map(n=>n.name);SC.add.clear();SC.rem.clear();SC.page=0;await scCounts();
+ SC.view=SC.cnt[SC.k]>0?"sel":"cat";
+ $("pane").innerHTML=`<div class="box"><h2 style="margin:0 0 4px">Вітрини на головній</h2><p class="mut" style="margin:0 0 10px">1. Оберіть вітрину. 2. Позначте товари галочками. 3. Натисніть «Зберегти».</p><div class="pfl" id="scchips"></div></div>
+<div class="box" id="scbox"></div><div class="msg" id="fm"></div><div id="sclist"></div>
+<div class="scsum" id="scsum" hidden></div>`;
+ $("scbox").dataset.tops=JSON.stringify(tops);scDraw();scLoad()}
+function scDraw(){const tops=JSON.parse($("scbox").dataset.tops||"[]");
+ $("scchips").innerHTML=Object.keys(SCD).map(k=>`<button type="button" class="chip2${SC.k===k?" on":""}" data-sca="chip" data-k="${k}">${SCD[k][0]}${SC.cnt[k]!=null?" ("+SC.cnt[k]+")":""}</button>`).join("");
+ $("scbox").innerHTML=`<div class="pfl" style="margin-bottom:8px"><button type="button" class="chip2${SC.view==="sel"?" on":""}" data-sca="view" data-v="sel">Вже у вітрині (${SC.cnt[SC.k]==null?"?":SC.cnt[SC.k]})</button><button type="button" class="chip2${SC.view==="cat"?" on":""}" data-sca="view" data-v="cat">Весь каталог: додати</button></div>
+<div class="psrch"><input id="scq" type="search" placeholder="Пошук: назва або артикул" value="${esc(SC.q)}"><select id="scc"><option value="">Усі категорії</option>${tops.map(c=>`<option${SC.cat===c?" selected":""}>${esc(c)}</option>`).join("")}</select><button type="button" data-sca="search">Знайти</button></div>
+${SC.k==="spec"?`<div class="scpr" style="margin-top:10px"><label for="scp"><b>Знижка для доданих, %</b></label><input id="scp" type="number" min="0" max="90" value="${esc(SC.pct==null?10:SC.pct)}" inputmode="numeric"><span class="mut">0 = лише позначка «Спецпропозиція», без зміни ціни. Інакше стара ціна стане перекресленою, а нова буде нижчою.</span></div>`:""}
+<div class="rw" style="margin-top:8px"><span class="mut" id="scfound"></span></div>`}
+function scQ(sel,opt){let q=sb.from("products").select(sel,opt);const s=SC.q.replace(/[,()%*\\]/g," ").trim();if(s)q=q.or(`name.ilike.*${s}*,id.ilike.*${s}*`);if(SC.cat)q=q.eq("category",SC.cat);
+ if(SC.view==="sel"){q=SC.k==="spec"?q.not("special","is",null):q.eq(SCD[SC.k][1],true)}return q}
+async function scLoad(){const cols="id,name,price,old_price,image_url,active,category,subcategory,subcategory2,is_hit,is_new,in_stock,special";
+ if(SC.k==="spec"&&SC.noSpecial)return $("sclist").innerHTML='<div class="box"><div class="msg bad">Для спецпропозицій спершу виконайте schema_v11.sql у Supabase.</div></div>';
+ const r=await scQ(cols,{count:"exact"}).order("name").range(SC.page*30,SC.page*30+29);if(r.error)return fail(r.error);
+ const L=r.data;SC.total=r.count||0;const f=$("scfound");if(f)f.textContent=(SC.view==="sel"?"У вітрині: ":"Знайдено: ")+SC.total;
+ const on=p=>(scOn(p,SC.k)&&!SC.rem.has(p.id))||SC.add.has(p.id);
+ $("sclist").innerHTML=(L.length?`<label class="ck selall"><input type="checkbox" id="scall"> Позначити всі на сторінці</label>`+L.map(p=>`<div class="prow sc" style="grid-template-columns:auto 48px minmax(0,1fr)"><input type="checkbox" data-scc="${esc(p.id)}"${on(p)?" checked":""} aria-label="У вітрині"><img src="${esc(aThumb(p.image_url))}" alt=""><div class="pinf"><b>${esc(p.name)}</b><span class="mut">${esc(p.id)} · ${money(p.price)}${p.old_price?" <s>"+money(p.old_price)+"</s>":""}${p.special?" · "+esc(p.special):""}</span><span class="tgs">${pTags(p)}</span></div></div>`).join(""):`<div class="box">${SC.view==="sel"?"У цій вітрині ще немає товарів. Натисніть «Весь каталог: додати» і позначте товари галочками.":"Нічого не знайдено. Змініть пошук."}</div>`)+(SC.total>30?`<div class="rw pager"><button class="sec" data-sca="prev"${SC.page?"":" disabled"}>‹ Назад</button><span class="mut">Сторінка ${SC.page+1} з ${Math.ceil(SC.total/30)}</span><button class="sec" data-sca="next"${(SC.page+1)*30>=SC.total?" disabled":""}>Далі ›</button></div>`:"");scBar()}
+function scBar(){const b=$("scsum");if(!b)return;const a=SC.add.size,r=SC.rem.size;b.hidden=!(a||r);b.innerHTML=`<b>Змін: додати ${a}, прибрати ${r}</b><div class="psrch" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)"><button type="button" data-sca="save">Зберегти</button><button type="button" class="sec" data-sca="cancel">Скасувати</button></div>`}
+const scChunks=(a,n)=>{const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o};
+async function scSave(btn){const add=[...SC.add],rem=[...SC.rem];if(!add.length&&!rem.length)return;btn.disabled=true;flash("Зберігаю…",true);const now=new Date().toISOString();
+ try{
+  if(SC.k==="hit"||SC.k==="new"){const f=SCD[SC.k][1];for(const [ids,val] of [[add,true],[rem,false]])for(const part of scChunks(ids,200)){const u=await sb.from("products").update({[f]:val,updated_at:now}).in("id",part);if(u.error)throw u.error}}
+  else{
+   const pct=Math.max(0,Math.min(90,Math.round(+($("scp")||{}).value||0)));SC.pct=pct;
+   for(const part of scChunks(add,150)){const g=await sb.from("products").select("id,price,old_price").in("id",part);if(g.error)throw g.error;
+    for(const grp of scChunks(g.data,10))await Promise.all(grp.map(async p=>{const upd={special:pct>0?"Знижка −"+pct+"%":"Спеціальна пропозиція",updated_at:now};if(pct>0){const base=+p.old_price||+p.price;upd.old_price=base;upd.price=Math.max(.01,Math.round(base*(100-pct))/100)}const u=await sb.from("products").update(upd).eq("id",p.id);if(u.error)throw u.error}))}
+   const back=[],plain=[];for(const part of scChunks(rem,150)){const g=await sb.from("products").select("id,price,old_price,special").in("id",part);if(g.error)throw g.error;g.data.forEach(p=>(/^Знижка −\d+%$/.test(p.special||"")&&+p.old_price>0?back:plain).push(p))}
+   let restore=false;if(back.length)restore=confirm(`У ${back.length} товар(ів) діяла знижка з цієї вітрини. Повернути їм стару ціну? OK = повернути стару ціну, Скасувати = лишити поточну ціну.`);
+   if(plain.length||(back.length&&!restore)){const ids=plain.map(p=>p.id).concat(restore?[]:back.map(p=>p.id));for(const part of scChunks(ids,200)){const u=await sb.from("products").update({special:null,updated_at:now}).in("id",part);if(u.error)throw u.error}}
+   if(restore)for(const grp of scChunks(back,10))await Promise.all(grp.map(async p=>{const u=await sb.from("products").update({special:null,price:p.old_price,old_price:null,updated_at:now}).eq("id",p.id);if(u.error)throw u.error}))}
+ }catch(e){btn.disabled=false;return flash("Помилка: "+(e.message||e),false)}
+ SC.add.clear();SC.rem.clear();await scCounts();scDraw();await scLoad();flash("Готово ✓ Вітрину збережено.",true)}
+document.addEventListener("click",async e=>{const t=e.target.closest("[data-sca]");if(!t||!$("sclist"))return;const a=t.dataset.sca;
+ if(a==="chip"){SC.k=t.dataset.k;SC.add.clear();SC.rem.clear();SC.page=0;SC.view=SC.cnt[SC.k]>0?"sel":"cat";scDraw();return scLoad()}
+ if(a==="view"){SC.view=t.dataset.v;SC.page=0;scDraw();return scLoad()}
+ if(a==="search"){SC.q=$("scq").value.trim();SC.cat=$("scc").value;SC.page=0;scDraw();return scLoad()}
+ if(a==="prev"){if(SC.page>0){SC.page--;scLoad()}return}
+ if(a==="next"){SC.page++;scLoad();return}
+ if(a==="cancel"){SC.add.clear();SC.rem.clear();return scLoad()}
+ if(a==="save")return scSave(t)});
+document.addEventListener("change",e=>{const t=e.target;if(!$("sclist"))return;
+ const tog=(id,on)=>{const was=false;if(on){if(SC.rem.has(id))SC.rem.delete(id);else SC.add.add(id)}else{if(SC.add.has(id))SC.add.delete(id);else SC.rem.add(id)}};
+ if(t.dataset&&t.dataset.scc!==undefined){const id=t.dataset.scc,db=t.checked;
+  if(db){if(SC.rem.has(id))SC.rem.delete(id);else if(!SC.add.has(id)&&!t.dataset.was)SC.add.add(id)}else{if(SC.add.has(id))SC.add.delete(id);else SC.rem.add(id)}scBar();return}
+ if(t.id==="scall"){document.querySelectorAll("[data-scc]").forEach(c=>{if(c.checked!==t.checked){c.checked=t.checked;c.dispatchEvent(new Event("change",{bubbles:true}))}})}});
+
 </script>
 </body>
 </html>
