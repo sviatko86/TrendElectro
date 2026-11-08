@@ -16,7 +16,7 @@ let P=[],PALL=[],M={},ROOT={kids:{},count:0,path:[]},PR={m:0,d:0,c:{}},CI={},CM=
 let cart=LS("te_cart",{}),fav=LS("te_fav",{}),F={brand:"",min:"",max:"",sort:"def",q:"",lim:24,a:{},stock:false,fo:innerWidth>=860},SCR={},CUR={path:[],list:[],key:null},PTAB="info",QTY=1;
 
 /* ---------- зображення ---------- */
-const thumb=(u,w,h)=>!u?"":u.indexOf(".supabase.co/")>-1?u:"https://wsrv.nl/?url="+encodeURIComponent(u)+"&w="+w+"&h="+(h||Math.round(w*.75))+"&fit=contain&output=webp&q=75";
+const thumb=(u,w,h)=>!u?"":(u.indexOf(".supabase.co/")>-1||u.indexOf(BASE)===0)?u:"https://wsrv.nl/?url="+encodeURIComponent(u)+"&w="+w+"&h="+(h||Math.round(w*.75))+"&fit=contain&output=webp&q=75";
 function bad(im){if(!im.dataset.f){im.dataset.f=1;im.src=im.dataset.o}else im.style.display="none"}
 const img=(u,w,h,alt)=>u?`<img loading="lazy" decoding="async" src="${esc(thumb(u,w,h))}" data-o="${esc(u)}" alt="${esc(alt||"")}" onerror="bad(this)">`:"";
 
@@ -65,11 +65,16 @@ function card(p){
 
 /* ---------- дані ---------- */
 let NOSP=false;
+let CATBG=0;
 async function loadProducts(){
+ let all=[];{let c=null;try{c=JSON.parse(localStorage.getItem("te_cat")||"null")}catch(e){}if(c&&c.rows&&c.rows.length&&Date.now()-c.t<864e5){all=c.rows;NOSP=c.n||0;CATBG=Date.now()-c.t>6e4?1:0}}
+ if(!all.length)all=await fetchProducts();
+ mapRows(all)
+}
+async function fetchProducts(){
  let all=[];const step=1000,FULL=",special,pack_qty,in_pack,in_box,stock",cols="id,name,category,subcategory,subcategory2,brand,price,old_price,image_url,in_stock,is_hit,is_new";
- {const c=LS("te_cat",null);if(c&&c.rows&&Date.now()-c.t<6e5){all=c.rows;NOSP=c.n||0}}
- if(!all.length){const N=+LS("te_pc",0)||0;
-  if(N){try{const pg=Math.ceil(N/step)+1,rs=await Promise.all(Array.from({length:pg},(_,i)=>sb.from("products").select(cols+FULL).eq("active",true).order("id").range(i*step,i*step+step-1)));if(!rs.some(r=>r.error))all=rs.flatMap(r=>r.data)}catch(e){all=[]}}
+ {const N=+LS("te_pc",0)||3000;
+  if(N){try{const pg=Math.ceil(N/step)+1,rs=await Promise.all(Array.from({length:pg},(_,i)=>sb.from("products").select(cols+FULL).eq("active",true).order("id").range(i*step,i*step+step-1)));if(!rs.some(r=>r.error)){all=rs.flatMap(r=>r.data);let f=pg*step;while(rs.length&&rs[rs.length-1].data.length===step){const r=await sb.from("products").select(cols+FULL).eq("active",true).order("id").range(f,f+step-1);if(r.error){all=[];break}all.push(...r.data);rs.push(r);f+=step}}}catch(e){all=[]}}
   if(!all.length){let from=0;
  for(;;){
   const cols="id,name,category,subcategory,subcategory2,brand,price,old_price,image_url,in_stock,is_hit,is_new";let r=null;for(const ex of NOSP===2?[""]:NOSP===1?[",special",""]:[",special,pack_qty,in_pack,in_box,stock",",special,pack_qty,in_pack,in_box",",special",""]){r=await sb.from("products").select(cols+ex).eq("active",true).order("id").range(from,from+step-1);if(!r.error){NOSP=ex===""?2:ex===",special"?1:0;break}}
@@ -78,6 +83,9 @@ async function loadProducts(){
   }
   SV("te_pc",all.length);try{localStorage.setItem("te_cat",JSON.stringify({t:Date.now(),n:NOSP||0,rows:all}))}catch(e){try{localStorage.removeItem("te_cat")}catch(x){}}
  }
+ return all
+}
+function mapRows(all){
  PALL=all.map(r=>({id:r.id,n:r.name,c:[r.category,r.subcategory,r.subcategory2].filter(x=>x&&x!=="Усі"),b:r.brand||"",pr0:+r.price||0,old:r.old_price!=null?+r.old_price:0,img:r.image_url||"",hit:!!r.is_hit,nw:!!r.is_new,ofr:r.special||"",sk:r.stock==null?null:+r.stock,pq:+r.pack_qty||0,ip:+r.in_pack||0,ib:+r.in_box||0,st:r.in_stock!==false,d:null,sp:null}));
 }
 
@@ -481,9 +489,12 @@ async function placeOrder(btn){if(SHOP.orders_off)return;
 }
 
 /* ---------- кабінет ---------- */
+let PFP=null,PFU=null;
 async function loadProf(){
- prof=null;if(me){try{const r=await sb.from("profiles").select("*").eq("id",me.id).maybeSingle();prof=r.data}catch(e){}}
+ const u=me?me.id:null;if(PFP&&PFU===u)return PFP;PFU=u;PFP=(async()=>{
+ let pr=null;if(me){try{const r=await sb.from("profiles").select("*").eq("id",me.id).maybeSingle();pr=r.data}catch(e){}}prof=pr;
  $("accL").textContent=me?"Кабінет":"Увійти";drawCart();if($("acc").classList.contains("on"))drawAcc();setTimeout(bdPopup,300);setTimeout(loyPop,900);
+ })();const my=PFP;try{await my}finally{if(PFP===my)PFP=null}
 }
 const lbl=s=>({new:"Нове",confirmed:"Підтверджено",shipped:"Відправлено",done:"Виконано",cancelled:"Скасовано"}[s]||s);
 function drawAcc(msg){
@@ -633,11 +644,20 @@ async function boot(){
  sb=supabase.createClient(TE.url,TE.key);
  sb.auth.onAuthStateChange((_e,s)=>{me=s?s.user:null;if(_e==="PASSWORD_RECOVERY"){RECOV=true;setTimeout(()=>{drawAcc();panel("acc",true)},400)}setTimeout(loadProf,0)});
  loadBanners();loadPromos();
- try{await Promise.all([loadProducts(),loadSettings(),loadCats(),fetch(BASE+"img/map.json").then(r=>r.ok?r.json():[]).then(a=>{IMG=new Set(a)}).catch(()=>{})]);PALL.forEach(p=>{const k=safeId(p.id);if(IMG.has(k))p.img=BASE+"img/"+k+".webp"})}catch(e){$("view").innerHTML='<div class="empty">Не вдалося завантажити каталог. Перевірте інтернет і оновіть сторінку.</div>';return}
+ const pf=(async()=>{try{const g=await sb.auth.getSession();me=g.data.session?g.data.session.user:null;await loadProf()}catch(e){}})();
+ try{await Promise.all([loadProducts(),loadSettings(),loadCats(),fetch(BASE+"img/map.json").then(r=>r.ok?r.json():[]).then(a=>{IMG=new Set(a)}).catch(()=>{})]);imgMap()}catch(e){$("view").innerHTML='<div class="empty">Не вдалося завантажити каталог. Перевірте інтернет і оновіть сторінку.</div>';return}
  applyOrders();applyLayout();build();ALLN=[];collectN(ROOT);initChat();drawFooter();
- try{const g=await sb.auth.getSession();me=g.data.session?g.data.session.user:null;await loadProf()}catch(e){}
+ await pf;
  route();
+ if(CATBG)setTimeout(catRefresh,1500);
 }
+function imgMap(){PALL.forEach(p=>{const k=safeId(p.id);if(IMG.has(k))p.img=BASE+"img/"+k+".webp"})}
+/* каталог з памʼяті телефону показується одразу, а свіжі дані тихо підтягуються у фоні */
+async function catRefresh(){try{const old=localStorage.getItem("te_cat")||"";const rows=await fetchProducts();if(!rows.length)return;const now=localStorage.getItem("te_cat")||"";
+ const strip=x=>x.replace(/^\{"t":\d+,/,"");if(strip(old)===strip(now))return;
+ mapRows(rows);imgMap();build();ALLN=[];collectN(ROOT);
+ const h=curH(),ae=document.activeElement;if(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName))return;drawCart();
+ if(/^#\/(c\/|$|search|q)/.test(h)||h===""||h==="#"){const y=scrollY;route();scrollTo(0,y)}}catch(e){}}
 document.addEventListener("DOMContentLoaded",boot);
 
 /* ---------- анімації (легкі) ---------- */
