@@ -529,7 +529,7 @@ body.fxon .grid .card:nth-child(-n+12),body.fxon .hrow .card:nth-child(-n+8){ani
 body.fxon .grid .card:nth-child(2),body.fxon .hrow .card:nth-child(2){animation-delay:.04s}body.fxon .grid .card:nth-child(3),body.fxon .hrow .card:nth-child(3){animation-delay:.08s}body.fxon .grid .card:nth-child(4),body.fxon .hrow .card:nth-child(4){animation-delay:.12s}body.fxon .grid .card:nth-child(n+5){animation-delay:.16s}
 @keyframes cardin{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
 /* без білого «відскоку» зверху, кнопка назад */
-html{background:var(--nav);overscroll-behavior-y:none}body{min-height:100vh;min-height:100dvh;overscroll-behavior-y:none}
+html{background:var(--nav)}body{min-height:100vh;min-height:100dvh}
 .backbtn{grid-column:2;grid-row:1;justify-self:start;height:36px;padding:0 14px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:var(--nav2);color:var(--navink);font:700 14px Manrope,system-ui,sans-serif;cursor:pointer}.backbtn[hidden]{display:none}
 @media (min-width:860px){.backbtn{grid-column:auto;grid-row:auto}}
 
@@ -553,3 +553,4 @@ html{background:var(--nav);overscroll-behavior-y:none}body{min-height:100vh;min-
 .simp{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.simp button{border:1px solid var(--line);background:var(--card);color:inherit;border-radius:10px;padding:8px 2px;font:700 14px Manrope,system-ui,sans-serif;cursor:pointer}.simp button small{display:block;font-weight:400;font-size:11px;color:var(--mute)}.simp button.on{border-color:#0ABAB5;background:rgba(10,186,181,.12)}
 .simt{margin:12px 0}.simok{color:#0a8a86}
 @media print{.estf input::placeholder{color:transparent}}
+.ptr{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 6px);transform:translate(-50%,0);z-index:300;opacity:0;pointer-events:none;background:#0ABAB5;color:#062826;font:700 13px Manrope,system-ui,sans-serif;padding:7px 14px;border-radius:999px;white-space:nowrap}.ptr.go{background:#fff;color:#062826}

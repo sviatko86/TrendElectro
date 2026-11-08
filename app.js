@@ -267,9 +267,9 @@ function viewHome(){
 <section class="hero" id="home"><div><span class="eyebrow">Trend Electro · ${plural(P.length,"товар","товари","товарів")} у каталозі</span><h1>Світло й електрика <em>для дому та бізнесу</em></h1><p>${esc(s.tagline||"Світильники, LED-лампи, розетки, кабель, автоматика та все для монтажу. Допоможемо підібрати й швидко відправимо по Україні.")}</p><div class="cta"><a class="btn" href="#/c/">Перейти до каталогу ${ico("r")}</a><a class="btn ghost" href="#/page/coop">Оптовим клієнтам</a></div></div>
 <div class="hcats">${tops.slice(0,4).map(k=>`<a href="${href(k.path)}"><b>${esc(k.name)}</b><small>${plural(k.count,"товар","товари","товарів")}</small></a>`).join("")}</div></section>
 ${bdHome()}${sets}${statsHtml()}<section class="perks">${perks.map(x=>`<div>${ico(x[0])}<span><b>${esc(x[1])}</b>${esc(x[2])}</span></div>`).join("")}</section>
-${toolsHtml()}<section class="promos" id="promos"></section>
+<section class="promos" id="promos"></section>
 <section class="sec"><div class="sech"><div><h2>Каталог</h2></div><a href="#/c/">Усі товари →</a></div><div class="ctiles">${tops.map(tile).join("")||'<div class="empty">Каталог порожній.</div>'}</div></section>
-${pop}${rvHtml()}
+${pop}${rvHtml()}${toolsHtml()}
 ${promoForm()}<section class="sec" id="hguides" hidden><div class="sech"><div><h2>Поради та статті</h2><p>Як вибрати лампу, кабель, розетки й захист</p></div><a href="#/guide/">Усі статті →</a></div><div class="gcards"></div></section>
 <section class="band"><div><h2>Електрикам, монтажникам і дизайнерам</h2><p>Оптові ціни, підбір під об’єкт і консультація з технічних питань. Напишіть — підготуємо пропозицію.</p></div><div class="cta" style="margin:0"><a class="btn" href="#/page/coop">Умови співпраці</a>${msg[0]?`<a class="btn ghost" href="${esc(msg[0][1])}" target="_blank" rel="noopener">${esc(msg[0][0])}</a>`:s.phone?`<a class="btn ghost" href="${esc(tel(s.phone))}">${esc(s.phone)}</a>`:""}</div></section>`;
  drawSlider();drawPromos();runCounters();
@@ -1105,3 +1105,11 @@ document.addEventListener("input",e=>{if(e.target.id==="simr"){SIMK=+e.target.va
 document.addEventListener("click",e=>{let x;if(x=e.target.closest("[data-simr]")){SIMRM=x.dataset.simr;const r=SIMR.find(q=>q[0]===SIMRM);SIMK=Math.round((r[2]+r[3])/200)*100;viewLight();return}
  if(x=e.target.closest("[data-simk]")){SIMK=+x.dataset.simk;const s=$("simr");if(s)s.value=SIMK;simLabels();simSoon();return}
  if(x=e.target.closest("[data-simf]")){$("q").value=x.dataset.simf;goSearch()}});
+
+/* потягнути вниз, щоб оновити (iPhone у встановленому додатку) */
+if(IOS&&STANDALONE){let y0=0,x0=0,dy=0,on=false,bar=null;
+ const mk=()=>{if(!bar){bar=document.createElement("div");bar.className="ptr";bar.innerHTML="<span></span>";document.body.appendChild(bar)}return bar};
+ const hide=()=>{if(bar){bar.classList.remove("on","go");bar.style.opacity=0}};
+ addEventListener("touchstart",e=>{on=false;dy=0;if(window.scrollY>0||e.touches.length!==1||e.target.closest("aside,[role=dialog],input,textarea,select,.hrow,.chkt,.cmpw,.drawer,.panel"))return;y0=e.touches[0].clientY;x0=e.touches[0].clientX;on=true},{passive:true});
+ addEventListener("touchmove",e=>{if(!on)return;const t=e.touches[0];dy=t.clientY-y0;if(window.scrollY>0||dy<=0||Math.abs(t.clientX-x0)>dy){hide();return}const b=mk(),p=Math.min(1,dy/90);b.style.opacity=p;b.style.transform=`translate(-50%,${Math.min(dy,110)*.5}px)`;b.classList.toggle("go",dy>90);b.firstChild.textContent=dy>90?"Відпустіть, щоб оновити":"Потягніть вниз, щоб оновити"},{passive:true});
+ addEventListener("touchend",()=>{if(on&&dy>90&&window.scrollY<=0){const b=mk();b.classList.add("on");b.firstChild.textContent="Оновлюємо…";setTimeout(()=>location.reload(),150)}else hide();on=false;dy=0},{passive:true})}
