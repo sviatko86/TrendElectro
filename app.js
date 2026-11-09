@@ -274,7 +274,7 @@ ${pop}${rvHtml()}${toolsHtml()}
 ${promoForm()}<section class="sec" id="hguides" hidden><div class="sech"><div><h2>Поради та статті</h2><p>Як вибрати лампу, кабель, розетки й захист</p></div><a href="#/guide/">Усі статті →</a></div><div class="gcards"></div></section>
 <section class="band"><div><h2>Електрикам, монтажникам і дизайнерам</h2><p>Оптові ціни, підбір під об’єкт і консультація з технічних питань. Напишіть — підготуємо пропозицію.</p></div><div class="cta" style="margin:0"><a class="btn" href="#/page/coop">Умови співпраці</a>${msg[0]?`<a class="btn ghost" href="${esc(msg[0][1])}" target="_blank" rel="noopener">${esc(msg[0][0])}</a>`:s.phone?`<a class="btn ghost" href="${esc(tel(s.phone))}">${esc(s.phone)}</a>`:""}</div></section>`;
  drawSlider();drawPromos();runCounters();
- arts().then(L=>{const e=$("hguides");if(e&&L.length){e.hidden=false;e.querySelector(".gcards").innerHTML=L.slice(0,3).map(gcard).join("")}});
+ arts().then(L=>{const e=$("hguides");if(e&&L.length){e.hidden=false;const g=e.querySelector(".gcards");if(hsOn()){g.classList.add("hs","pcg");g.innerHTML=L.map(gcard).join("");g.insertAdjacentHTML("afterend",hsBtn("усі статті"))}else g.innerHTML=L.slice(0,3).map(gcard).join("")}});
 }
 const tile=k=>{const sub=kids(k).slice(0,3).map(x=>esc(x.name)).join(" · ");return `<a class="ctile" href="${href(k.path)}"><span class="th">${img(nodeImg(k),360,270,k.name)}</span><span class="cb"><b>${esc(k.name)}</b><small>${plural(k.count,"товар","товари","товарів")}</small>${sub?`<span class="subs">${sub}</span>`:""}</span></a>`};
 /* ---------- розумний пошук ---------- */
@@ -384,13 +384,16 @@ function tilesHtml(list){if(!list.length)return"";const S=SHOP||{},c=innerWidth<
  return `<div class="stiles">${list.map((k,i)=>lim&&i>=lim?stile(k).replace('class="stile"','class="stile xt" hidden'):stile(k)).join("")}</div>${lim&&list.length>lim?`<button class="more xtb" data-xt="1">Показати всі ${list.length} ↓</button>`:""}`}
 const ytU=q=>"https://www.youtube.com/results?search_query="+encodeURIComponent(q);
 const ytBox=a=>`<div class="box vid"><h2>Відео за темою</h2>${(a.vid||[]).map(v=>`<button class="yt" data-yt="${esc(v)}" style="background-image:url(https://i.ytimg.com/vi/${esc(v)}/hqdefault.jpg)" aria-label="Дивитись відео">▶</button>`).join("")}<p>Краще один раз побачити? Короткі відео за темою «${esc(a.title)}»:</p><div class="cta"><a class="btn" href="${esc(ytU(a.yt||a.title))}" target="_blank" rel="noopener">▶ YouTube</a><a class="btn" href="${esc("https://www.tiktok.com/search?q="+encodeURIComponent(a.yt||a.title))}" target="_blank" rel="noopener">♪ TikTok</a><a class="btn" href="${esc("https://www.google.com/search?q="+encodeURIComponent("site:instagram.com/reel "+(a.yt||a.title)))}" target="_blank" rel="noopener">◎ Instagram Reels</a></div></div>`;
-const gcard=a=>`<a class="gcard" href="#/guide/${a.slug}"><b>${esc(a.title)}</b><span>${esc(a.description)}</span><em>Читати →</em></a>`;
+const hsOn=()=>!SHOP.hs_off;
+const gcard=a=>hsOn()&&a.img?`<a class="gcard pc" href="#/guide/${a.slug}"><span class="gi">${img(BASE+a.img,400,300,a.title)}</span><b>${esc(a.title)}</b><span>${esc(a.description)}</span><em>Читати →</em></a>`:`<a class="gcard" href="#/guide/${a.slug}"><b>${esc(a.title)}</b><span>${esc(a.description)}</span><em>Читати →</em></a>`;
+function hsTog(b){const e=b.previousElementSibling;if(!e)return;const on=e.classList.toggle("hs");b.textContent=on?b.dataset.o:b.dataset.c;if(on)e.scrollLeft=0;else e.scrollIntoView({behavior:"smooth",block:"start"})}
+const hsBtn=w=>`<button class="more hstog" data-o="Розгорнути ${w} ↓" data-c="Згорнути ↑" onclick="hsTog(this)">Розгорнути ${w} ↓</button>`;
 async function viewGuide(slug){
  const L=await arts(),a=slug?L.find(x=>x.slug===slug):null;
  if(a){document.title=a.title+" — Trend Electro";
-  $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a><span>›</span><a href="#/guide/">Поради</a><span>›</span>${esc(a.title)}</nav><article class="art"><h1 class="ptitle">${esc(a.title)}</h1><p class="cdesc">${esc(a.description)}</p><div class="box txt">${a.body}</div>${ytBox(a)}${shareBox(a)}</article><section class="sec"><div class="sech"><h2>Читайте також</h2></div><div class="gcards">${L.filter(x=>x.slug!==slug).sort((x,y)=>(y.category===a.category)-(x.category===a.category)).slice(0,3).map(gcard).join("")}</div></section>`;return}
+  $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a><span>›</span><a href="#/guide/">Поради</a><span>›</span>${esc(a.title)}</nav><article class="art"><h1 class="ptitle">${esc(a.title)}</h1><p class="cdesc">${esc(a.description)}</p><div class="box txt">${a.body}</div>${ytBox(a)}${shareBox(a)}</article><section class="sec"><div class="sech"><h2>Читайте також</h2></div><div class="gcards${hsOn()?" hs pcg":""}">${L.filter(x=>x.slug!==slug).sort((x,y)=>(y.category===a.category)-(x.category===a.category)).slice(0,hsOn()?8:3).map(gcard).join("")}</div>${hsOn()?hsBtn("ще статті"):""}</section>`;return}
  document.title="Поради з вибору електротоварів — Trend Electro";
- $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a><span>›</span>Поради</nav><h1 class="ptitle">Поради з вибору електротоварів</h1><p class="cdesc">Короткі практичні статті: як вибрати лампу, кабель, розетки й захист.</p>${L.length?`<div class="gcards">${L.map(gcard).join("")}</div>`:'<div class="empty">Статті з’являться незабаром.</div>'}`;
+ $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a><span>›</span>Поради</nav><h1 class="ptitle">Поради з вибору електротоварів</h1><p class="cdesc">Короткі практичні статті: як вибрати лампу, кабель, розетки й захист.</p>${L.length?`<div class="gcards${hsOn()?" pcg":""}">${L.map(gcard).join("")}</div>`:'<div class="empty">Статті з’являться незабаром.</div>'}`;
 }
 function viewPage(key){
  const d=PDEF[key],c=PAGES[key]||{},title=c.title||(d?d[0]:"Сторінка"),text=c.text||(d?d[1]:"");
@@ -1040,12 +1043,12 @@ document.addEventListener("click",e=>{if(e.target.closest("#backBtn")){e.prevent
 const estOn=()=>!SHOP.est_off,chkOn=()=>!SHOP.check_off,simOn=()=>!SHOP.sim_off;
 const NF='<div class="empty">Сторінку не знайдено. <a href="#/">На головну</a></div>';
 function toolsHtml(){const t=[];
- if(simOn())t.push(['#/light','Підбір кольору світла','Тепле чи холодне? Подивіться, як змінюється кімната']);
- if(frameOn())t.push(['#/frame','Конструктор рамки','Зберіть блок розеток і вимикачів і подивіться, як він виглядатиме']);
- if(chkOn())t.push(['#/check','Чек-лист для ремонту','Нічого не забути: від блока живлення до рамок']);
- if(cmpOn())t.push(['#/cmp','Порівняння товарів','Відмічайте ⇄ на картках і порівнюйте характеристики']);
- if(SHOP.help_on)t.push(['#/help','Помічник підбору','Калькулятори: скільки світильників, кабелю, стрічки']);
- return t.length?`<section class="sec"><div class="sech"><div><h2>Корисні інструменти</h2><p>Допомагають обрати правильно й не помилитись</p></div></div><div class="tools">${t.map(x=>`<a href="${x[0]}"><b>${x[1]}</b><span>${x[2]}</span></a>`).join("")}</div></section>`:""}
+ if(simOn())t.push(['#/light','Підбір кольору світла','Тепле чи холодне? Подивіться, як змінюється кімната','sim-kitchen.webp']);
+ if(frameOn())t.push(['#/frame','Конструктор рамки','Зберіть блок розеток і вимикачів і подивіться, як він виглядатиме','img/46-90-34.webp']);
+ if(chkOn())t.push(['#/check','Чек-лист для ремонту','Нічого не забути: від блока живлення до рамок','img/60-29-35.webp']);
+ if(cmpOn())t.push(['#/cmp','Порівняння товарів','Відмічайте ⇄ на картках і порівнюйте характеристики','img/11-11-41.webp']);
+ if(SHOP.help_on)t.push(['#/help','Помічник підбору','Калькулятори: скільки світильників, кабелю, стрічки','img/13-75-28.webp']);
+ return t.length?`<section class="sec"><div class="sech"><div><h2>Корисні інструменти</h2><p>Допомагають обрати правильно й не помилитись</p></div></div>${hsOn()?`<div class="tools hs pct">${t.map(x=>`<a href="${x[0]}"><span class="gi">${img(BASE+x[3],400,300,x[1])}</span><b>${x[1]}</b><span>${x[2]}</span></a>`).join("")}</div>${t.length>2?hsBtn("усі інструменти"):""}`:`<div class="tools">${t.map(x=>`<a href="${x[0]}"><b>${x[1]}</b><span>${x[2]}</span></a>`).join("")}</div>`}</section>`:""}
 /* --- кошторис --- */
 let EST=null,ESTPRE=null;
 const dmy=d=>String(d.getDate()).padStart(2,"0")+"."+String(d.getMonth()+1).padStart(2,"0")+"."+d.getFullYear();

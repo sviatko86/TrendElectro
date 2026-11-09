@@ -163,7 +163,7 @@ if (ART.length) {
   for (const a of ART) {
     const rel = `poradu/${a.slug}/`, url = `${SITE}/${rel}`;
     fs.mkdirSync(rel, { recursive: true });
-    fs.writeFileSync(rel + "index.html", page({ title: `${a.title} — Trend Electro`, desc: a.description, url, hash: "#/guide/" + a.slug, body: `<h1>${esc(a.title)}</h1>${a.body}`, ld: { "@context": "https://schema.org", "@type": "Article", headline: a.title, description: a.description, mainEntityOfPage: url, author: { "@type": "Organization", name: "Trend Electro" }, publisher: { "@type": "Organization", name: "Trend Electro" } } }));
+    fs.writeFileSync(rel + "index.html", page({ title: `${a.title} — Trend Electro`, desc: a.description, url, hash: "#/guide/" + a.slug, body: `<h1>${esc(a.title)}</h1>${a.body}`, ld: { "@context": "https://schema.org", "@type": "Article", headline: a.title, description: a.description, mainEntityOfPage: url, author: { "@type": "Organization", name: "Trend Electro" }, publisher: { "@type": "Organization", name: "Trend Electro" }, ...(a.img ? { image: `${SITE}/${a.img}` } : {}) }, image: a.img ? `${SITE}/${a.img}` : undefined }));
     urls.push([url, 0.6]);
   }
 }
