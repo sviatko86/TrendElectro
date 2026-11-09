@@ -1024,9 +1024,10 @@ document.addEventListener("click",e=>{let x;
 const instHidden=()=>{try{const t=+localStorage.getItem("te_inst")||0;return Date.now()-t<2592e6}catch(e){return false}};
 const instMute=()=>{try{localStorage.setItem("te_inst",String(Date.now()))}catch(e){}const b=$("instb");if(b)b.remove()};
 function instShow(txt,btn,fn){if(SHOP.inst_off||STANDALONE||instHidden()||$("instb")||/^#\/l\//.test(curH()))return;const b=document.createElement("div");b.id="instb";b.className="instb";b.innerHTML=`<img src="${BASE}icon-192.png" alt="" width="40" height="40"><span>${txt}</span>${btn?`<button type="button" class="go" id="instgo">${btn}</button>`:""}<button type="button" class="instx" id="instno" aria-label="Закрити">✕</button>`;document.body.appendChild(b);$("instno").onclick=instMute;if(btn)$("instgo").onclick=()=>{instMute();fn()}}
-function instSoon(){setTimeout(()=>{if(INSTEV)instShow("Встановіть Trend Electro на телефон: відкривається в один дотик","Встановити",()=>{const ev=INSTEV;INSTEV=null;if(ev)ev.prompt()})},15000)}
+function instSoon(){setTimeout(()=>{if(INSTEV)instShow("Встановіть Trend Electro на телефон: відкривається в один дотик","Встановити",()=>{const ev=INSTEV;INSTEV=null;if(ev)ev.prompt()})},8000)}
 function instIos(){toast("Натисніть «Поділитися» внизу екрана → «На початковий екран».")}
 addEventListener("appinstalled",instMute);
+if(/android/i.test(navigator.userAgent)&&!STANDALONE)setTimeout(()=>{if(INSTEV)return;const inapp=/FBAN|FBAV|Instagram|Telegram|Viber|; wv\)|Line\//i.test(navigator.userAgent);instShow(inapp?"Щоб додати Trend Electro на екран, відкрийте сайт у Chrome (меню ⋮ → «Відкрити в браузері»)":"Додайте Trend Electro на екран: меню браузера ⋮ → «Додати на головний екран» або «Встановити застосунок»","",null)},20000);
 if(IOS&&!STANDALONE)setTimeout(()=>instShow("Додайте Trend Electro на екран iPhone: «Поділитися» → «На початковий екран»","",null),20000);
 /* офлайн */
 function netBar(){let b=$("netb");if(navigator.onLine){if(b)b.remove();return}if(!b){b=document.createElement("div");b.id="netb";b.className="netb";b.textContent="Немає інтернету. Показуємо збережене на телефоні. Замовити можна, коли зв’язок повернеться.";document.body.appendChild(b)}}
