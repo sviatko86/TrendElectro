@@ -27,7 +27,7 @@ const hiddenPath=c=>{for(let i=1;i<=c.length;i++){const m=CM[c.slice(0,i).join(S
 function build(){
  P=PALL.filter(p=>!hiddenPath(p.c));M={};P.forEach(p=>M[p.id]=p);
  ROOT={name:"",path:[],kids:{},count:0};
- P.forEach(p=>{p.nn=nrm(p.n);p.in=nrm(p.id);p.h=nrm(p.n+" "+p.id+" "+p.b+" "+p.c.join(" "));p.A=null;let n=ROOT;n.count++;p.c.forEach((nm,i)=>{let k=n.kids[nm];if(!k)k=n.kids[nm]={name:nm,path:p.c.slice(0,i+1),kids:{},count:0};k.count++;if(!k.img&&p.img)k.img=p.img;n=k})});
+ P.forEach(p=>{p.nn=nrm(p.n);p.in=nrm(p.id);p.h=nrm(p.n+" "+p.id+" "+p.b+" "+p.c.join(" "));p.A=null;let n=ROOT;n.count++;p.c.forEach((nm,i)=>{let k=n.kids[nm];if(!k)k=n.kids[nm]={name:nm,path:p.c.slice(0,i+1),kids:{},count:0};k.count++;if(p.img&&(!k.img||(!(SHOP&&SHOP.cat_img_first)&&p.pr0>k.imp))){k.img=p.img;k.imp=p.pr0}n=k})});
 }
 function kids(n){
  const a=Object.keys(n.kids).map(k=>n.kids[k]),so=x=>{const s=cmeta(x.path).sort;return s==null?1e4:+s};
@@ -317,6 +317,7 @@ function baseList(path){
 function listP(path,base){
  const l=(base||baseList(path)).filter(p=>{if(F.stock&&!p.st)return false;const A=F.a||{};for(const k in A)if(A[k]&&A[k].length&&A[k].indexOf(attrs(p)[k])<0)return false;return true});
  if(F.sort==="asc")l.sort((a,b)=>price(a)-price(b));else if(F.sort==="desc")l.sort((a,b)=>price(b)-price(a));else if(F.sort==="name")l.sort((a,b)=>a.n.localeCompare(b.n,"uk"));
+ if(!(SHOP&&SHOP.nophoto_last_off)){const w=l.filter(p=>p.img),nw=l.filter(p=>!p.img);if(nw.length&&w.length)return w.concat(nw)}
  return l;
 }
 function drawFacets(base){
