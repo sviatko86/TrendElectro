@@ -658,7 +658,7 @@ async function boot(){
  route();
  if(CATBG)setTimeout(catRefresh,1500);
 }
-function imgMap(){PALL.forEach(p=>{const k=safeId(p.id);if(IMG.has(k))p.img=BASE+"img/"+k+".webp"})}
+function imgMap(){PALL.forEach(p=>{const k=safeId(p.id);if(IMG.has(k)&&!/^https?:\/\/(www\.)?trendelectro\.com\.ua\//i.test(p.img||""))p.img=BASE+"img/"+k+".webp"})}
 /* каталог з памʼяті телефону показується одразу, а свіжі дані тихо підтягуються у фоні */
 async function catRefresh(){try{const old=localStorage.getItem("te_cat")||"";const rows=await fetchProducts();if(!rows.length)return;const now=localStorage.getItem("te_cat")||"";
  const strip=x=>x.replace(/^\{"t":\d+,/,"");if(strip(old)===strip(now))return;
