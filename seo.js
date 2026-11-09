@@ -141,6 +141,17 @@ for (const [k, n] of nodes) {
   fs.writeFileSync(rel + "index.html", page({ title: meta.seo_title || `${ctitle(name)} — купити в Trend Electro`, desc, url, hash: "#/c/" + n.path.map(encodeURIComponent).join("/"), body: `<h1>${esc(name)}</h1><p>${esc(desc)}</p><ul>${list}</ul>`, ld }));
   urls.push([url, n.path.length === 1 ? 0.9 : 0.8]);
 }
+/* старі адреси категорій → нові (GitHub Pages не вміє 301: canonical + миттєвий перехід) */
+try {
+  const RD = JSON.parse(fs.readFileSync("c-redirects.json", "utf8"));
+  const cp = a => "c/" + a.map(x => slug(x)).join("/") + "/";
+  for (const [o, t] of RD) {
+    const rel = cp(o); if (fs.existsSync(rel + "index.html")) continue;
+    const to = `${SITE}/${cp(t)}`;
+    fs.mkdirSync(rel, { recursive: true });
+    fs.writeFileSync(rel + "index.html", `<!doctype html><html lang="uk"><head><meta charset="utf-8"><title>${esc(t[t.length - 1])} — Trend Electro</title><link rel="canonical" href="${to}"><meta http-equiv="refresh" content="0;url=${to}"><script>location.replace(${JSON.stringify(to)})</script></head><body><a href="${to}">${esc(t[t.length - 1])}</a></body></html>`);
+  }
+} catch (e) { console.log("redirects:", e.message) }
 /* ---------- поради (articles.json) ---------- */
 let ART = []; try { ART = JSON.parse(fs.readFileSync("articles.json", "utf8")) } catch (e) { }
 fs.rmSync("poradu", { recursive: true, force: true });
