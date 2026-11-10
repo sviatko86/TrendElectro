@@ -516,6 +516,8 @@ function relFor(p){
  /* S. DIN: шини й гребінки → автомати; датчик руху → прожектор */
  if(/Шини та клемники/.test(leaf))add(uq(ch(L(x=>lf(x)==="Автоматичні вимикачі"&&/1р|1p/.test(N(x)))),x=>(N(x).match(/(\d+)\s*а(?![а-яі])/)||[])[1]),60,"Автомат",3);
  if(sec==="Датчики руху та світла"&&!/механізм/.test(n))add(ch(L(x=>x.c[1]==="Прожектори"&&!/датчик/.test(N(x)))),50,"Прожектор",3);
+ /* якщо сумісних мало — додаємо схожі з того ж розділу (замість окремого блоку «Схожі товари») */
+ if(C.size<6){const k=6-C.size;add(ch(L(x=>x.c.join(SEP)===c.join(SEP))),5,"Схожий товар",k);if(C.size<6)add(ch(L(x=>c.length&&x.c[0]===c[0]&&x.c[1]===c[1])),4,"Схожий товар",6-C.size)}
  return [...C.values()].sort((a,b)=>b.s-a.s).slice(0,9);
 }
 let XS=[];
@@ -532,8 +534,6 @@ async function viewProduct(id){
  if(!p){$("view").innerHTML='<div class="empty">Товар не знайдено або він прихований. <a href="#/c/">До каталогу</a></div>';return}
  QTY=1;PTAB="info";document.title=p.n+" — Trend Electro";
  const pi=priceInfo(p),o=pi.base,pc=pi.pc,disc=pi.disc;
- const sim=P.filter(x=>x.id!==p.id&&p.c.length&&x.c.join(SEP)===p.c.join(SEP)).slice(0,15);
- const sim2=sim.length<4?P.filter(x=>x.id!==p.id&&p.c.length&&x.c[0]===p.c[0]&&(!p.c[1]||x.c[1]===p.c[1])).slice(0,15):sim;
  $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a>${p.c.map((n,i)=>`<span>›</span><a href="${href(p.c.slice(0,i+1))}">${esc(n)}</a>`).join("")}</nav>
 <div class="pgrid"><div><div class="pimg" id="pmain">${img(p.img,900,900,p.n)}</div><div class="thumbs" id="pthumbs"></div></div><div class="pinfo"><h1>${esc(p.n)}</h1>
 <div class="meta"><span>Артикул: <b>${esc(p.id)}</b></span>${p.b?`<span>Бренд: <a href="#/c/" data-brand="${esc(p.b)}">${esc(p.b)}</a></span>`:""}</div>
@@ -543,7 +543,7 @@ async function viewProduct(id){
 <div class="ptrust"><a href="#/page/delivery">${ico("truck")}<span><b>Доставка по Україні</b>Нова пошта, Укрпошта</span></a><a href="#/page/delivery">${ico("wallet")}<span><b>Оплата при отриманні</b>або карткою</span></a><a href="#/page/exchange">${ico("swap")}<span><b>Обмін та повернення</b>за законом, без зайвих питань</span></a></div>
 <div class="box" style="margin:14px 0 0"><h3>Основні характеристики</h3><div id="pkey"><div class="sku">Завантаження…</div></div></div></div></div>
 ${relHtml(p)}<div class="tabsb"><button data-pt="info" class="on">Опис</button><button data-pt="spec">Усі характеристики</button></div><div class="box" id="pdet"><div class="sku">Завантаження…</div></div>
-${sim2.length?`<section class="sec"><div class="sech"><div><h2>Схожі товари</h2></div><a href="${href(p.c)}">Уся категорія →</a></div>${hsc("hsim",sim2)}</section>`:""}${rvHtml(p.id)}<section class="sec" id="btog" hidden></section>`;
+${rvHtml(p.id)}<section class="sec" id="btog" hidden></section>`;
  rvPush(p.id);loadBT(p.id);
  const sbx=$("sbuy");sbx.innerHTML=`<div><b>${money(pc)}</b><small>${p.st?"В наявності":""}</small></div><button class="buybtn" data-sb="${esc(p.id)}"${p.st?"":" disabled"}>${p.st?ico("cart")+"Купити":"Немає в наявності"}</button>`;sbx.hidden=false;
  if(p.d===null&&sb){try{let r=await sb.from("products").select("description,specs,images").eq("id",id).maybeSingle();if(r.error)r=await sb.from("products").select("description,specs").eq("id",id).maybeSingle();p.d=(r.data&&r.data.description)||"";p.sp=(r.data&&r.data.specs)||"";p.ims=(r.data&&Array.isArray(r.data.images)?r.data.images:[]).filter(Boolean)}catch(e){p.d="";p.sp=""}}
