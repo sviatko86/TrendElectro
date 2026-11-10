@@ -797,3 +797,59 @@ html{background:var(--nav)}body{min-height:100vh;min-height:100dvh}
  #acc .acol{grid-template-columns:minmax(0,7fr) minmax(360px,5fr)}
  #acc .aR{order:1}#acc .aL{order:2}
 }
+
+/* v80: напис про реєстрацію й знижку (для тих, хто не увійшов) */
+.regbar{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;width:100%;border:0;margin:0;padding:7px 14px;background:linear-gradient(90deg,#0ABAB5,#7c5cff 60%,#f06bd8);color:#fff;font-weight:600;font-size:13px;line-height:1.3;font-family:inherit;cursor:pointer;text-align:center}
+.regbar b{background:rgba(255,255,255,.22);border-radius:99px;padding:3px 12px;font-weight:700;white-space:nowrap}
+.regbar:hover b{background:rgba(255,255,255,.36)}
+@media (min-width:1024px) and (hover:hover) and (pointer:fine){.regbar{justify-content:flex-end;padding:7px max(24px,calc((100vw - var(--W,1280px))/2 + 24px));font-size:14px}}
+
+/* v81: кролик ганяється за лампочкою біля підвалу (тільки комп'ютер, вмикається в кінці сторінки) */
+.chase{display:none}
+@media (min-width:1024px) and (hover:hover) and (pointer:fine){
+ body.hasch footer{position:relative;margin-top:160px}
+ .chase{display:block;position:absolute;left:0;right:0;bottom:100%;width:100%;max-width:var(--W,1380px);margin:0 auto;height:160px;pointer-events:none;z-index:3;opacity:0;transition:opacity .6s}
+ .chase.on{opacity:1}
+ .chase .lane{position:absolute;left:24px;right:24px;bottom:0;height:100%;--T:16s}
+ .chase .cb,.chase .cr{position:absolute;bottom:-1px;left:0;width:92px;animation-play-state:paused}
+ .chase.on .cb,.chase.on .cr,.chase.on .cb *,.chase.on .cr *{animation-play-state:running}
+ .chase .cb *,.chase .cr *{animation-play-state:paused}
+ .chase .cb{width:56px;margin-left:14px;animation:chB var(--T) linear infinite}
+ .chase .cr{animation:chR var(--T) linear infinite}
+ .chase .bflip,.chase .rflip{transform-origin:50% 50%}
+ .chase .bflip{animation:chBf var(--T) steps(1,end) infinite}
+ .chase .rflip{animation:chRf var(--T) steps(1,end) infinite}
+ .chase .barc{animation:chArc var(--T) linear infinite}
+ .chase .bbob{animation:chBob .32s ease-in-out infinite;transform-origin:50% 100%}
+ .chase .rhop{animation:chHop .5s cubic-bezier(.3,.1,.5,1) infinite;transform-origin:50% 100%}
+ .chase .rbsvg{display:block;width:92px;height:auto;overflow:visible;user-select:none;filter:drop-shadow(0 5px 5px rgba(0,0,0,.16))}
+ .chase .rbsvg g{transform-box:fill-box}
+ .chase .e1{transform-origin:85% 95%;animation:chEar .5s ease-in-out infinite alternate}
+ .chase .e2{transform-origin:50% 100%;animation:chEar2 .5s ease-in-out infinite alternate}
+ .chase .hl{transform-origin:55% 20%;animation:chHl .5s ease-in-out infinite}
+ .chase .fl{transform-origin:50% 5%;animation:chFl .5s ease-in-out infinite}
+ .chase .tl{animation:chTl .25s ease-in-out infinite alternate}
+ .chase .ey{transform-origin:50% 50%;animation:chBlink 3.2s infinite}
+ .chase .bsvg{display:block;width:56px;height:auto;overflow:visible;filter:drop-shadow(0 0 14px rgba(255,214,60,.85))}
+ .chase .lgA,.chase .lgB{transform-box:fill-box;transform-origin:50% 0;animation:chLeg .32s ease-in-out infinite}
+ .chase .lgB{animation-delay:-.16s}
+ .chase .blg{animation:chGlow .8s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center}
+ .chase .swt{animation:chSw .8s ease-in infinite}
+}
+@keyframes chB{0%{transform:translateX(calc(var(--d)*.30))}40%,46%{transform:translateX(var(--d))}52%{transform:translateX(calc(var(--d)*.76))}92%,96%{transform:translateX(0)}100%{transform:translateX(calc(var(--d)*.30))}}
+@keyframes chR{0%{transform:translateX(calc(var(--d)*.12))}40%{transform:translateX(calc(var(--d)*.86))}46%,52%{transform:translateX(calc(var(--d)*.92))}92%{transform:translateX(calc(var(--d)*.14))}96%{transform:translateX(calc(var(--d)*.08))}100%{transform:translateX(calc(var(--d)*.12))}}
+@keyframes chBf{0%,45.9%{transform:scaleX(1)}46%,95.9%{transform:scaleX(-1)}96%,100%{transform:scaleX(1)}}
+@keyframes chRf{0%,51.9%{transform:scaleX(1)}52%,97.9%{transform:scaleX(-1)}98%,100%{transform:scaleX(1)}}
+@keyframes chArc{0%,46%{transform:translateY(0)}49%{transform:translateY(-120px)}52%,96%{transform:translateY(0)}98%{transform:translateY(-120px)}100%{transform:translateY(0)}}
+@keyframes chBob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-7px) rotate(3deg)}}
+@keyframes chHop{0%{transform:translateY(0) scale(1.06,.92) rotate(0)}18%{transform:translateY(-6px) scale(.96,1.05) rotate(-2deg)}50%{transform:translateY(-38px) scale(.97,1.04) rotate(-4deg)}82%{transform:translateY(-4px) scale(1,1) rotate(-1deg)}100%{transform:translateY(0) scale(1.06,.92) rotate(0)}}
+@keyframes chLeg{0%,100%{transform:rotate(32deg)}50%{transform:rotate(-32deg)}}
+@keyframes chGlow{from{transform:scale(.85);opacity:.5}to{transform:scale(1.25);opacity:1}}
+@keyframes chSw{0%{transform:translate(0,0);opacity:0}30%{opacity:1}100%{transform:translate(-4px,14px);opacity:0}}
+@media (max-width:1023px){.regbar{padding:6px 12px;font-size:12px}.regbar b{display:none}}
+@keyframes chEar{from{transform:rotate(-8deg)}to{transform:rotate(10deg)}}
+@keyframes chEar2{from{transform:rotate(5deg)}to{transform:rotate(-9deg)}}
+@keyframes chHl{0%,100%{transform:rotate(14deg)}50%{transform:rotate(-26deg)}}
+@keyframes chFl{0%,100%{transform:rotate(-18deg)}50%{transform:rotate(16deg)}}
+@keyframes chTl{from{transform:translateX(0) scale(1)}to{transform:translateX(-2px) scale(1.12)}}
+@keyframes chBlink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
