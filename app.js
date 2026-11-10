@@ -162,6 +162,7 @@ function drawSlider(){
  if(!BN.length){s.hidden=true;if(h)h.hidden=false;return}
  if(h)h.hidden=true;s.hidden=false;
  s.innerHTML='<div class="strack" id="strack">'+BN.map((b,i)=>{const t=(b.title||b.subtitle)?`<div class="slt">${b.title?`<b>${esc(b.title)}</b>`:""}${esc(b.subtitle||"")}</div>`:"";const im=`<img src="${esc(b.image_url)}" alt="${esc(b.title||"")}"${i?' loading="lazy"':""}>`;return b.link?`<a class="sl" href="${esc(b.link)}" draggable="false">${im}${t}</a>`:`<div class="sl">${im}${t}</div>`}).join("")+'</div>'+(BN.length>1?`<button type="button" class="sarr l" data-sa="-1" aria-label="Попередній банер">‹</button><button type="button" class="sarr r" data-sa="1" aria-label="Наступний банер">›</button><div class="dots">${BN.map((_,i)=>`<button data-b="${i}" aria-label="Банер ${i+1}"></button>`).join("")}</div>`:"");
+ s.querySelectorAll(".sl").forEach((e,i)=>e.style.setProperty("--bg",`url("${String(BN[i].image_url||"").replace(/["\\\n]/g,encodeURIComponent)}")`));{const fi=s.querySelector(".sl img"),ar=()=>{if(fi&&fi.naturalWidth)s.style.setProperty("--bar",(fi.naturalWidth/fi.naturalHeight).toFixed(3))};if(fi)fi.complete?ar():fi.addEventListener("load",ar,{once:true})}
  showB(0,false);const tr=$("strack");
  if(BN.length>1&&tr){let st=null;tr.addEventListener("scroll",()=>{clearTimeout(st);st=setTimeout(()=>{const k=Math.round(tr.scrollLeft/Math.max(1,tr.clientWidth));if(k!==bix)setBcls(k)},80)},{passive:true});["touchstart","pointerdown","wheel"].forEach(ev=>tr.addEventListener(ev,()=>{lastTouch=Date.now()},{passive:true}));
   btm=setInterval(()=>{if(Date.now()-lastTouch>9000&&document.visibilityState==="visible")showB((bix+1)%BN.length)},6000)}
@@ -172,7 +173,7 @@ function drawPromos(){const e=$("promos");if(e)e.innerHTML=PROMOS.map(x=>`<div c
 function route(){
  if(!/^#\/l\//.test(curH())&&Object.keys(LCART).length){Object.keys(LCART).forEach(id=>{if(M[id])cart[id]=Math.min(999,(cart[id]||0)+LCART[id])});LCART={};save();drawCart()}
  closeAll();lStop();{const v=$("view");v.classList.remove("pg");void v.offsetWidth;v.classList.add("pg")}$("sbuy").hidden=true;const h=curH();
- document.body.classList.toggle("pv",h.indexOf("#/p/")===0);
+ document.body.classList.toggle("pv",h.indexOf("#/p/")===0);document.body.classList.toggle("hm",!h||h==="#"||h==="#/");
  if(h.indexOf("#/p/")===0)viewProduct(decodeURIComponent(h.slice(4)));
  else if(h==="#/cmp")viewCmp();
  else if(h.indexOf("#/est")===0)viewEst(h==="#/est/fav");
@@ -284,7 +285,7 @@ ${promoForm()}<section class="sec" id="hguides" hidden><div class="sech"><div><h
  drawSlider();drawPromos();runCounters();
  arts().then(L=>{const e=$("hguides");if(e&&L.length){e.hidden=false;const g=e.querySelector(".gcards");if(hsOn()){g.classList.add("hs","pcg");g.innerHTML=L.map(gcard).join("");g.insertAdjacentHTML("afterend",hsBtn("усі статті"))}else g.innerHTML=L.slice(0,3).map(gcard).join("")}});
 }
-const tile=k=>{const sub=kids(k).slice(0,3).map(x=>esc(x.name)).join(" · ");return `<a class="ctile" href="${href(k.path)}"><span class="th">${img(nodeImg(k),360,270,k.name)}</span><span class="cb"><b>${esc(k.name)}</b><small>${plural(k.count,"товар","товари","товарів")}</small>${sub?`<span class="subs">${sub}</span>`:""}</span></a>`};
+const tile=k=>{const kk=kids(k),sub=kk.slice(0,3).map(x=>esc(x.name)).join(" · "),subl=kk.length?`<span class="subl">${kk.slice(0,5).map(x=>`<i>${esc(x.name)}</i>`).join("")}${kk.length>5?`<i class="mr">+ ще ${kk.length-5}</i>`:""}</span>`:"";return `<a class="ctile" href="${href(k.path)}"><span class="th${cmeta(k.path).image_url?" ph":""}">${img(nodeImg(k),360,270,k.name)}</span><span class="cb"><b>${esc(k.name)}</b><small>${plural(k.count,"товар","товари","товарів")}</small>${sub?`<span class="subs">${sub}</span>`:""}${subl}</span></a>`};
 /* ---------- розумний пошук ---------- */
 const LAT={"а":"a","е":"e","о":"o","р":"p","с":"c","х":"x","у":"y","і":"i","ї":"i","є":"e","к":"k","м":"m","т":"t","в":"b","н":"h","ё":"e"};
 const nrm=t=>String(t||"").toLowerCase().replace(/(\d)\s*(?:вт|w)(?![a-z\u0430-\u044f])/g,"$1w").replace(/(\d{4})\s*[kк](?![a-z\u0430-\u044f])/g,"$1k").replace(/[а-яіїєё]/g,c=>LAT[c]||c).replace(/[^a-z0-9\u0430-\u044f\u0491.]+/g," ").replace(/\.(?=\s|$)/g,"");
@@ -387,7 +388,7 @@ const DICO={list:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentC
 function dens(){let d="";try{d=localStorage.getItem("te_dens")||""}catch(e){}if(!DENS.some(x=>x[0]===d))d=DENS.some(x=>x[0]===(SHOP||{}).grid_def)?SHOP.grid_def:"l";return d}
 function setDens(d){try{localStorage.setItem("te_dens",d)}catch(e){}const g=$("grid");if(g)g.dataset.d=d;document.querySelectorAll(".dsw button").forEach(b=>b.classList.toggle("on",b.dataset.dn===d))}
 function applyLayout(){const S=SHOP||{},r=document.documentElement.style,c=Math.min(6,Math.max(2,+S.cat_cols||4)),m=Math.min(3,Math.max(2,+S.cat_cols_m||2));r.setProperty("--tc",c);r.setProperty("--tcm",m)}
-const stile=k=>`<a class="stile" href="${href(k.path)}"><span class="th pic">${img(nodeImg(k),300,300,k.name)}</span><b>${esc(k.name)}</b><small>${k.count}</small></a>`;
+const stile=k=>`<a class="stile" href="${href(k.path)}"><span class="th pic${cmeta(k.path).image_url?" ph":""}">${img(nodeImg(k),300,300,k.name)}</span><b>${esc(k.name)}</b><small>${k.count}</small></a>`;
 function tilesHtml(list){if(!list.length)return"";const S=SHOP||{},c=innerWidth<700?Math.min(3,Math.max(2,+S.cat_cols_m||2)):Math.min(6,Math.max(2,+S.cat_cols||4)),rw=Math.min(8,Math.max(0,+S.cat_rows||0)),lim=rw?c*rw:0;
  return `<div class="stiles">${list.map((k,i)=>lim&&i>=lim?stile(k).replace('class="stile"','class="stile xt" hidden'):stile(k)).join("")}</div>${lim&&list.length>lim?`<button class="more xtb" data-xt="1">Показати всі ${list.length} ↓</button>`:""}`}
 const ytU=q=>"https://www.youtube.com/results?search_query="+encodeURIComponent(q);
@@ -706,6 +707,7 @@ function drawFooter(){
 <div><b>Покупцям</b><a href="#/page/delivery">Оплата і доставка</a><a href="#/page/exchange">Обмін та повернення</a><a href="#/page/coop">Співпраця та опт</a><a href="#/guide/">Поради та статті</a>${simOn()?'<a href="#/light">Підбір кольору світла</a>':""}${chkOn()?'<a href="#/check">Чек-лист для ремонту</a>':""}${frameOn()?'<a href="#/frame">Конструктор рамки</a>':""}<a href="#" data-install="1">Встановити додаток</a>${SHOP.help_on?'<a href="#/help">Помічник підбору</a>':""}<a href="#/page/privacy">Політика конфіденційності</a><a href="#/page/about">Про нас</a><a href="#/page/contacts">Контакти</a></div>
 <div><b>${c.length?"Зв’язатися з нами":"Допомога"}</b>${c.join("")||`<a href="#/page/contacts">Контакти та підтримка</a>`}</div>`;
  $("fbot").textContent="© "+new Date().getFullYear()+" Trend Electro. Ціни на сайті вказані в гривнях.";
+ {const n=$("dnav");if(n)n.innerHTML=`<a href="#/c/">Усі товари</a><a href="#/page/delivery">Оплата і доставка</a><a href="#/page/exchange">Обмін та повернення</a><a href="#/page/coop">Співпраця та опт</a><a href="#/guide/">Поради та статті</a><a href="#/page/about">Про нас</a><a href="#/page/contacts">Контакти</a><span class="dsp"></span>${s.hours?`<span class="dh">${esc(s.hours)}</span>`:""}${s.phone?`<a class="dph" href="${esc(tel(s.phone))}">${esc(s.phone)}</a>`:""}`}
 }
 
 /* ---------- події ---------- */
