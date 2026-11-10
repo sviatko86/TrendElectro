@@ -632,12 +632,6 @@ html{background:var(--nav)}body{min-height:100vh;min-height:100dvh}
  .dnav a{color:var(--navink);opacity:.85;text-decoration:none;padding:7px 12px;border-radius:8px;font-weight:600;transition:background .15s,opacity .15s}
  .dnav a:hover{opacity:1;background:var(--nav2)}
  .dnav .dsp{flex:1}.dnav .dh{color:var(--navink);opacity:.6;font-size:13px;margin-right:4px}.dnav .dph{opacity:1;font-weight:800;color:var(--acc)}
- :root[data-theme="light"] header{background:#fff;color:var(--ink);box-shadow:0 1px 0 var(--line),0 8px 24px rgba(16,24,32,.06)}
- :root[data-theme="light"] .ib,:root[data-theme="light"] .dnav a,:root[data-theme="light"] .dnav .dh{color:var(--ink)}
- :root[data-theme="light"] .ib:hover,:root[data-theme="light"] .dnav a:hover{background:var(--bg)}
- :root[data-theme="light"] .dnav{border-top-color:var(--line)}
- :root[data-theme="light"] .dnav .dph{color:var(--accd)}
- :root[data-theme="light"] .search input{background:var(--bg);border-color:var(--line)}
  .hm .sech{justify-content:center;text-align:center;position:relative;margin-bottom:22px}
  .hm .sech>div{display:flex;flex-direction:column;align-items:center}
  .hm .sech h2{display:inline-block;background:var(--acc);color:#fff;padding:8px 22px;border-radius:12px;font-size:19px;box-shadow:0 8px 18px rgba(10,186,181,.28)}
@@ -804,3 +798,31 @@ html{background:var(--nav)}body{min-height:100vh;min-height:100dvh}
 .regbar:hover b{background:#2dd4cf}
 @media (min-width:1024px) and (hover:hover) and (pointer:fine){.regbar{justify-content:flex-end;padding:7px max(24px,calc((100vw - var(--W,1280px))/2 + 24px));font-size:14px}}
 @media (max-width:1023px){.regbar{padding:6px 12px;font-size:12px}.regbar b{display:none}}
+
+/* v87: компактні інструменти, шапка як підвал, дрібніший напис про реєстрацію (комп'ютер) */
+a.chkb{text-decoration:none;display:inline-block}
+.regbar span{font-size:11px;opacity:.92}.regbar b{font-size:14px}
+@media (max-width:1023px){.regbar span{font-size:10.5px}}
+.frgrid{display:block}
+@media (min-width:1024px) and (hover:hover) and (pointer:fine){
+ .tools.pct,.tools.pct.hs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;overflow:visible;padding:2px 0;margin:0}
+ .tools.pct.hs>*{flex:none;max-width:none;width:auto}
+ .tools.pct+.hstog{display:none}
+ .tpg .ptitle{font-size:24px;margin:0 0 2px}
+ .tpg .lead{margin:0 0 4px;font-size:14px}
+ .tpg .chkt{margin:8px 0}
+ .tpg .crumbs{margin-bottom:6px}
+ .simgrid{display:grid;grid-template-columns:minmax(520px,min(calc((100vh - 330px)*1.49),62%)) minmax(320px,1fr);gap:24px;align-items:start}
+ .simgrid .simc{margin:0}
+ .simgrid .simh b{font-size:26px}
+ .simgrid .simcmp{margin:10px 0}
+ .simgrid .simcmpg{gap:6px}
+ .frgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.85fr) minmax(0,1.1fr);gap:0 28px;align-items:start}
+ .frgrid .frctl{grid-column:1;grid-row:1}
+ .frgrid .frslots{grid-column:1;grid-row:2;grid-template-columns:1fr 1fr;margin-top:10px}
+ .frgrid .frprev{grid-column:2;grid-row:1/3;margin:12px 0 0;padding:14px}
+ .frgrid .frsum{grid-column:3;grid-row:1/3;margin:0}
+ .frgrid .frsum h3{margin:12px 0 6px}
+ .frsvg{max-height:230px}
+ .frctl b{margin:8px 0 5px}
+}
