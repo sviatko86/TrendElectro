@@ -18,7 +18,7 @@ let cart=LS("te_cart",{}),fav=LS("te_fav",{}),CMP=(a=>Array.isArray(a)?a.filter(
 /* ---------- зображення ---------- */
 const thumb=(u,w,h)=>!u?"":(u.indexOf(".supabase.co/")>-1||u.indexOf(BASE)===0)?u:"https://wsrv.nl/?url="+encodeURIComponent(u)+"&w="+w+"&h="+(h||Math.round(w*.75))+"&fit=contain&output=webp&q=75";
 function bad(im){if(!im.dataset.f){im.dataset.f=1;im.src=im.dataset.o}else im.style.display="none"}
-const img=(u,w,h,alt)=>u?`<img loading="lazy" decoding="async" src="${esc(thumb(u,w,h))}" data-o="${esc(u)}" alt="${esc(alt||"")}" onerror="bad(this)">`:"";
+const img=(u,w,h,alt,hi)=>u?`<img ${hi?'fetchpriority="high"':'loading="lazy"'} decoding="async" src="${esc(thumb(u,w,h))}" data-o="${esc(u)}" alt="${esc(alt||"")}" onerror="bad(this)">`:"";
 
 /* ---------- дерево категорій ---------- */
 const href=path=>"#/c/"+path.map(encodeURIComponent).join("/");
@@ -27,7 +27,7 @@ const hiddenPath=c=>{for(let i=1;i<=c.length;i++){const m=CM[c.slice(0,i).join(S
 function build(){
  P=PALL.filter(p=>!hiddenPath(p.c));M={};P.forEach(p=>M[p.id]=p);
  ROOT={name:"",path:[],kids:{},count:0};
- P.forEach(p=>{p.nn=nrm(p.n);p.in=nrm(p.id);p.h=nrm(p.n+" "+p.id+" "+p.b+" "+p.c.join(" "));p.A=null;let n=ROOT;n.count++;p.c.forEach((nm,i)=>{let k=n.kids[nm];if(!k)k=n.kids[nm]={name:nm,path:p.c.slice(0,i+1),kids:{},count:0};k.count++;if(p.img&&(!k.img||(!(SHOP&&SHOP.cat_img_first)&&p.pr0>k.imp))){k.img=p.img;k.imp=p.pr0}n=k})});
+ P.forEach(p=>{p.A=null;let n=ROOT;n.count++;p.c.forEach((nm,i)=>{let k=n.kids[nm];if(!k)k=n.kids[nm]={name:nm,path:p.c.slice(0,i+1),kids:{},count:0};k.count++;if(p.img&&(!k.img||(!(SHOP&&SHOP.cat_img_first)&&p.pr0>k.imp))){k.img=p.img;k.imp=p.pr0}n=k})});
 }
 function kids(n){
  const a=Object.keys(n.kids).map(k=>n.kids[k]),so=x=>{const s=cmeta(x.path).sort;return s==null?1e4:+s};
@@ -73,6 +73,8 @@ async function loadProducts(){
 }
 async function fetchProducts(){
  let all=[];const step=1000,FULL=",special,pack_qty,in_pack,in_box,stock,pack_only",cols="id,name,category,subcategory,subcategory2,brand,price,old_price,image_url,in_stock,is_hit,is_new";
+ if(window.__CAT){try{const rs=await window.__CAT;window.__CAT=null;if(rs&&rs.length&&rs.every(Array.isArray)&&rs[rs.length-1].length<step)all=rs.flat()}catch(e){all=[]}window.__CAT=null}
+ if(all.length){SV("te_pc",all.length);try{localStorage.setItem("te_cat",JSON.stringify({t:Date.now(),n:0,rows:all}))}catch(e){try{localStorage.removeItem("te_cat")}catch(x){}}return all}
  {const N=+LS("te_pc",0)||3000;
   if(N){try{const pg=Math.ceil(N/step)+1,rs=await Promise.all(Array.from({length:pg},(_,i)=>sb.from("products").select(cols+FULL).eq("active",true).order("id").range(i*step,i*step+step-1)));if(!rs.some(r=>r.error)){all=rs.flatMap(r=>r.data);let f=pg*step;while(rs.length&&rs[rs.length-1].data.length===step){const r=await sb.from("products").select(cols+FULL).eq("active",true).order("id").range(f,f+step-1);if(r.error){all=[];break}all.push(...r.data);rs.push(r);f+=step}}}catch(e){all=[]}}
   if(!all.length){let from=0;
@@ -85,8 +87,12 @@ async function fetchProducts(){
  }
  return all
 }
+/* пошуковий індекс рахується лише тоді, коли він потрібен (швидший старт сайту) */
+const lz=(o,k,v)=>{Object.defineProperty(o,k,{value:v,writable:true,configurable:true});return v};
+const PX={get nn(){return lz(this,"nn",nrm(this.n))},get in(){return lz(this,"in",nrm(this.id))},get h(){return lz(this,"h",nrm(this.n+" "+this.id+" "+this.b+" "+this.c.join(" ")))}};
+function idxWarm(){let i=0;const run=d=>{const t=Date.now();while(i<P.length&&(d&&d.timeRemaining?d.timeRemaining()>2:Date.now()-t<8)){const p=P[i++];p.nn;p.in;p.h}if(i<P.length)(window.requestIdleCallback||(f=>setTimeout(f,60)))(run)};(window.requestIdleCallback||(f=>setTimeout(f,1500)))(run)}
 function mapRows(all){
- PALL=all.map(r=>({id:r.id,n:r.name,c:[r.category,r.subcategory,r.subcategory2].filter(x=>x&&x!=="Усі"),b:r.brand||"",pr0:+r.price||0,old:r.old_price!=null?+r.old_price:0,img:r.image_url||"",hit:!!r.is_hit,nw:!!r.is_new,ofr:r.special||"",sk:r.stock==null?null:+r.stock,pq:+r.pack_qty||0,po:+r.pack_only||0,ip:+r.in_pack||0,ib:+r.in_box||0,st:r.in_stock!==false,d:null,sp:null}));
+ PALL=all.map(r=>Object.assign(Object.create(PX),{id:r.id,n:r.name,c:[r.category,r.subcategory,r.subcategory2].filter(x=>x&&x!=="Усі"),b:r.brand||"",pr0:+r.price||0,old:r.old_price!=null?+r.old_price:0,img:r.image_url||"",hit:!!r.is_hit,nw:!!r.is_new,ofr:r.special||"",sk:r.stock==null?null:+r.stock,pq:+r.pack_qty||0,po:+r.pack_only||0,ip:+r.in_pack||0,ib:+r.in_box||0,st:r.in_stock!==false,d:null,sp:null}));
 }
 
 /* ---------- персональні картки клієнта ---------- */
@@ -535,7 +541,7 @@ async function viewProduct(id){
  QTY=1;PTAB="info";document.title=p.n+" — Trend Electro";
  const pi=priceInfo(p),o=pi.base,pc=pi.pc,disc=pi.disc;
  $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a>${p.c.map((n,i)=>`<span>›</span><a href="${href(p.c.slice(0,i+1))}">${esc(n)}</a>`).join("")}</nav>
-<div class="pgrid"><div><div class="pimg" id="pmain">${img(p.img,900,900,p.n)}</div><div class="thumbs" id="pthumbs"></div></div><div class="pinfo"><h1>${esc(p.n)}</h1>
+<div class="pgrid"><div><div class="pimg" id="pmain">${img(p.img,900,900,p.n,1)}</div><div class="thumbs" id="pthumbs"></div></div><div class="pinfo"><h1>${esc(p.n)}</h1>
 <div class="meta"><span>Артикул: <b>${esc(p.id)}</b></span>${p.b?`<span>Бренд: <a href="#/c/" data-brand="${esc(p.b)}">${esc(p.b)}</a></span>`:""}</div>
 <div class="avail${p.st?"":" no"}">${p.st?ico("check")+stkTxt(p):"Немає в наявності"}</div>
 <div class="bigprice${disc>0?" sale":""}">${money(pc)}${pi.base>pc?`<s>${money(pi.base)}</s>`:""}${disc>0?`<span class="bds2">${saleBadges(pi)}</span>`:""}</div>${packHtml(p,1)}${p.ofr?`<div class="spbox"><span class="bd p">Спеціальна пропозиція</span><div>${esc(p.ofr)}</div></div>`:""}
@@ -780,7 +786,7 @@ async function boot(){
  try{await Promise.all([loadProducts(),loadSettings(),loadCats(),fetch(BASE+"img/map.json").then(r=>r.ok?r.json():[]).then(a=>{IMG=new Set(a)}).catch(()=>{})]);imgMap()}catch(e){$("view").innerHTML='<div class="empty">Не вдалося завантажити каталог. Перевірте інтернет і оновіть сторінку.</div>';return}
  applyOrders();document.body.classList.toggle("fxon",!SHOP.anim_off);applyLayout();build();ALLN=[];collectN(ROOT);initChat();drawFooter();
  await pf;
- route();
+ route();idxWarm();
  if(CATBG)setTimeout(catRefresh,1500);
 }
 function imgMap(){PALL.forEach(p=>{const k=safeId(p.id);if(IMG.has(k)&&!/^https?:\/\/(www\.)?trendelectro\.com\.ua\//i.test(p.img||""))p.img=BASE+"img/"+k+".webp"})}
@@ -795,7 +801,7 @@ document.addEventListener("DOMContentLoaded",boot);
 /* ---------- анімації (легкі) ---------- */
 (function(){
  const RV=".card,.gcard,.sec,.perk,.box.txt,.art,.cats a,.cat",io="IntersectionObserver"in window?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}}),{rootMargin:"0px 0px -6% 0px",threshold:.05}):null;
- function scan(root){if(!io)return;let i=0;root.querySelectorAll(RV).forEach(el=>{if(el.dataset.rv||el.closest("#drawer,#acc"))return;el.dataset.rv=1;if(el.getBoundingClientRect().top>innerHeight*1.5){el.classList.add("in");return}el.style.setProperty("--d",Math.min(i++,8)*45+"ms");el.classList.add("rv");io.observe(el)})}
+ function scan(root){if(!io)return;let i=0;const H=innerHeight*1.5,L=[];root.querySelectorAll(RV).forEach(el=>{if(el.dataset.rv||el.closest("#drawer,#acc"))return;L.push([el,el.getBoundingClientRect().top>H])});L.forEach(([el,far])=>{el.dataset.rv=1;if(far){el.classList.add("in");return}el.style.setProperty("--d",Math.min(i++,8)*45+"ms");el.classList.add("rv");io.observe(el)})}
  document.addEventListener("DOMContentLoaded",()=>{const v=document.getElementById("view");if(!v)return;let t=null;new MutationObserver(()=>{clearTimeout(t);t=setTimeout(()=>scan(v),30)}).observe(v,{childList:true,subtree:true});
   const c=document.getElementById("cnt");if(c){let last=0;new MutationObserver(()=>{const n=parseInt(c.textContent)||0;if(n>last){const b=document.getElementById("cartBtn");b.classList.remove("bump");void b.offsetWidth;b.classList.add("bump")}last=n}).observe(c,{childList:true,characterData:true,subtree:true})}});
  /* «летить у кошик» + пульс серця */
