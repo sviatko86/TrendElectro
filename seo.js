@@ -98,6 +98,19 @@ if (sharp && process.env.FIND !== "0") {
 const have = fs.readdirSync("img").filter(f => f.endsWith(".webp")).map(f => f.slice(0, -5));
 fs.writeFileSync("img/map.json", JSON.stringify(have));
 const HAVE = new Set(have); console.log("фото: нових", got, "помилок", fail, "усього у img/", have.length);
+/* легкі мініатюри (до 480 px) для карток і списків: у 4 рази менші за повне фото; сайт бере їх лише якщо вони є у img/smap.json */
+{
+  let smap = [];
+  if (sharp) {
+    fs.mkdirSync("img/s", { recursive: true });
+    const need = have.filter(id => !fs.existsSync(`img/s/${id}.webp`));
+    console.log("мініатюр до створення:", need.length);
+    for (let i = 0; i < need.length; i += 8) await Promise.all(need.slice(i, i + 8).map(id => sharp(`img/${id}.webp`).resize(480, 480, { fit: "inside", withoutEnlargement: true }).webp({ quality: 74 }).toFile(`img/s/${id}.webp`).catch(() => { })));
+  }
+  if (fs.existsSync("img/s")) smap = fs.readdirSync("img/s").filter(f => f.endsWith(".webp")).map(f => f.slice(0, -5)).filter(id => HAVE.has(id));
+  fs.writeFileSync("img/smap.json", JSON.stringify(smap));
+  console.log("мініатюр усього:", smap.length);
+}
 const imgUrl = p => HAVE.has(safe(p.id)) ? `${SITE}/img/${safe(p.id)}.webp` : p.img;
 
 /* ---------- сторінки ---------- */

@@ -2,7 +2,7 @@ let RECOV=false;
 let LAPPLY=0;
 const $=i=>document.getElementById(i);
 const curH=()=>location.hash||window.__R||"#/";
-const BASE=window.__BASE||new URL(".",location.href).href,safeId=id=>String(id).replace(/[^A-Za-z0-9_-]/g,"_");let IMG=new Set;
+const BASE=window.__BASE||new URL(".",location.href).href,safeId=id=>String(id).replace(/[^A-Za-z0-9_-]/g,"_");let IMG=new Set,IMGS=new Set;
 const esc=t=>String(t==null?"":t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const money=n=>{n=+n||0;return n.toLocaleString("uk-UA",{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2})+" ₴"};
 const LS=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
@@ -16,7 +16,9 @@ let P=[],PALL=[],M={},ROOT={kids:{},count:0,path:[]},PR={m:0,d:0,c:{}},CI={},CM=
 let cart=LS("te_cart",{}),fav=LS("te_fav",{}),CMP=(a=>Array.isArray(a)?a.filter(x=>typeof x==="string").slice(0,4):[])(LS("te_cmp",[])),INSTEV=null,IOS=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1),STANDALONE=!!(window.matchMedia&&matchMedia("(display-mode: standalone)").matches||navigator.standalone),F={brand:"",min:"",max:"",sort:"def",q:"",lim:24,a:{},stock:false,fo:innerWidth>=860},SCR={},CUR={path:[],list:[],key:null},PTAB="info",QTY=1;
 
 /* ---------- зображення ---------- */
-const thumb=(u,w,h)=>!u?"":(u.indexOf(".supabase.co/")>-1||u.indexOf(BASE)===0)?u:"https://wsrv.nl/?url="+encodeURIComponent(u)+"&w="+w+"&h="+(h||Math.round(w*.75))+"&fit=contain&output=webp&q=75";
+/* легка копія фото (img/s/) для карток і списків — у 4 рази менша; якщо її немає, беремо звичайне фото */
+const sm=(u,w)=>{if(w>480||!IMGS.size)return u;const m=u.indexOf(BASE+"img/")===0&&u.match(/\/img\/([^\/?]+)\.webp$/);return m&&IMGS.has(m[1])?BASE+"img/s/"+m[1]+".webp":u};
+const thumb=(u,w,h)=>!u?"":u.indexOf(BASE)===0?sm(u,w):u.indexOf(".supabase.co/")>-1?u:"https://wsrv.nl/?url="+encodeURIComponent(u)+"&w="+w+"&h="+(h||Math.round(w*.75))+"&fit=contain&output=webp&q=75";
 function bad(im){if(!im.dataset.f){im.dataset.f=1;im.src=im.dataset.o}else im.style.display="none"}
 const img=(u,w,h,alt,hi)=>u?`<img ${hi?'fetchpriority="high"':'loading="lazy"'} decoding="async" src="${esc(thumb(u,w,h))}" data-o="${esc(u)}" alt="${esc(alt||"")}" onerror="bad(this)">`:"";
 
@@ -783,7 +785,7 @@ async function boot(){
  sb.auth.onAuthStateChange((_e,s)=>{me=s?s.user:null;if(_e==="PASSWORD_RECOVERY"){RECOV=true;setTimeout(()=>{drawAcc();panel("acc",true)},400)}setTimeout(loadProf,0)});
  loadBanners();loadPromos();
  const pf=(async()=>{try{const g=await sb.auth.getSession();me=g.data.session?g.data.session.user:null;await loadProf()}catch(e){}})();
- try{await Promise.all([loadProducts(),loadSettings(),loadCats(),fetch(BASE+"img/map.json").then(r=>r.ok?r.json():[]).then(a=>{IMG=new Set(a)}).catch(()=>{})]);imgMap()}catch(e){$("view").innerHTML='<div class="empty">Не вдалося завантажити каталог. Перевірте інтернет і оновіть сторінку.</div>';return}
+ try{await Promise.all([loadProducts(),loadSettings(),loadCats(),fetch(BASE+"img/map.json").then(r=>r.ok?r.json():[]).then(a=>{IMG=new Set(a)}).catch(()=>{}),fetch(BASE+"img/smap.json").then(r=>r.ok?r.json():[]).then(a=>{IMGS=new Set(a)}).catch(()=>{})]);imgMap()}catch(e){$("view").innerHTML='<div class="empty">Не вдалося завантажити каталог. Перевірте інтернет і оновіть сторінку.</div>';return}
  applyOrders();document.body.classList.toggle("fxon",!SHOP.anim_off);applyLayout();build();ALLN=[];collectN(ROOT);initChat();drawFooter();
  await pf;
  route();idxWarm();
