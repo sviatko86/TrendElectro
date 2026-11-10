@@ -734,3 +734,66 @@ html{background:var(--nav)}body{min-height:100vh;min-height:100dvh}
  .pimg{max-height:min(76vh,720px)}
  .fgrid{gap:34px 28px}
 }
+
+/* v77: кольорові ілюстровані іконки в блоці «Доставка / Оплата / Гарантія / Допомога» (малюнки в коді; рух вмикається разом з анімаціями сайту, вимикається в адмінці та при reduce-motion) */
+.perks .pk{--p1:#0ABAB5;--p2:#5eead4;--ps:rgba(10,186,181,.4);flex:none;width:46px;height:46px;border-radius:14px;display:block;background:linear-gradient(135deg,var(--p1),var(--p2));box-shadow:0 7px 16px var(--ps);transition:transform .25s var(--ease)}
+.perks div:nth-child(2) .pk{--p1:#ff9f1c;--p2:#ff6b8a;--ps:rgba(255,120,80,.42)}
+.perks div:nth-child(3) .pk{--p1:#14b86a;--p2:#8be04e;--ps:rgba(30,190,100,.42)}
+.perks div:nth-child(4) .pk{--p1:#7c5cff;--p2:#f06bd8;--ps:rgba(150,92,255,.42)}
+.perks .pk svg{width:100%;height:100%;padding:0;margin:0;background:none;border-radius:0;box-shadow:none;color:inherit;display:block;overflow:visible}
+@media (hover:hover){.perks div:hover .pk{transform:scale(1.07) rotate(-3deg)}}
+@media (min-width:1024px) and (hover:hover) and (pointer:fine){.perks .pk{width:54px;height:54px;border-radius:16px}}
+.pk g,.pk circle,.pk path,.pk rect{transform-box:fill-box;transform-origin:center}
+.pk .ck{stroke-dasharray:24;stroke-dashoffset:0}
+@media (prefers-reduced-motion:no-preference){
+ body.fxon .pk .wh1,body.fxon .pk .wh2{animation:pkspin .7s linear infinite}
+ body.fxon .pk .sp{animation:pksp .9s linear infinite}
+ body.fxon .pk .tb{animation:pkbob .5s ease-in-out infinite alternate}
+ body.fxon .pk .cd{animation:pkwob 3.2s ease-in-out infinite}
+ body.fxon .pk .shn{animation:pkshn 2.8s ease-in-out infinite}
+ body.fxon .pk .coin{animation:pkcoin 1.6s ease-in-out infinite}
+ body.fxon .pk .tw1{animation:pktw 1.8s ease-in-out infinite}
+ body.fxon .pk .tw2{animation:pktw 1.8s ease-in-out -.9s infinite}
+ body.fxon .pk .shd{animation:pkpop 2.6s ease-in-out infinite}
+ body.fxon .pk .ck{animation:pkck 2.6s ease-in-out infinite}
+ body.fxon .pk .d1,body.fxon .pk .d2,body.fxon .pk .d3{animation:pkdot 1.2s ease-in-out infinite}
+ body.fxon .pk .d2{animation-delay:.15s}body.fxon .pk .d3{animation-delay:.3s}
+ body.fxon .pk .bb{animation:pkbub 2.4s ease-in-out infinite}
+ body.fxon .pk .ht{animation:pkht 1s ease-in-out infinite}
+}
+@keyframes pkspin{to{transform:rotate(360deg)}}
+@keyframes pksp{0%{transform:translateX(5px);opacity:0}35%{opacity:1}100%{transform:translateX(-5px);opacity:0}}
+@keyframes pkbob{to{transform:translateY(-1px)}}
+@keyframes pkwob{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(-2deg) translateY(-1px)}}
+@keyframes pkshn{0%,35%{transform:translateX(0) skewX(-20deg)}80%,100%{transform:translateX(64px) skewX(-20deg)}}
+@keyframes pkcoin{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-3px) rotate(14deg)}}
+@keyframes pktw{0%,100%{transform:scale(.3) rotate(0);opacity:.2}50%{transform:scale(1.15) rotate(40deg);opacity:1}}
+@keyframes pkpop{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+@keyframes pkck{0%,12%{stroke-dashoffset:24}40%,100%{stroke-dashoffset:0}}
+@keyframes pkdot{0%,70%,100%{transform:translateY(0)}35%{transform:translateY(-3px)}}
+@keyframes pkbub{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+@keyframes pkht{0%,100%{transform:scale(1)}40%{transform:scale(1.35)}}
+
+/* v78: кабінет на всю сторінку (комп'ютер): зліва замовлення, справа картка й дані, кожна колонка скролиться окремо */
+.osum{margin:4px 0 8px;font-size:14px}.osum div{display:flex;justify-content:space-between;gap:10px;padding:4px 0;color:var(--mut,#667)}.osum .t{border-top:1px solid var(--line);margin-top:4px;padding-top:8px;color:inherit;font-size:15px}
+@media (min-width:1024px) and (hover:hover) and (pointer:fine){
+ #acc{width:100vw}
+ #acc .dh{padding-left:max(28px,calc((100vw - 1400px)/2));padding-right:max(20px,calc((100vw - 1400px)/2))}
+ #acc .dl{overflow:hidden;display:flex;flex-direction:column;padding:0 max(28px,calc((100vw - 1400px)/2)) 14px}
+ #acc .acol{flex:1;min-height:0;display:grid;grid-template-columns:minmax(360px,5fr) minmax(0,7fr);gap:36px}
+ #acc .aL{order:1;overflow:auto;min-height:0;padding:0 10px 20px 0;overscroll-behavior:contain}
+ #acc .aR{order:2;overflow:auto;min-height:0;padding:0 10px 20px 0;overscroll-behavior:contain}
+ #acc .aL h3{margin-top:12px!important;font-size:20px}
+ #acc>.dl>#rout{flex:none;align-self:flex-start;margin:10px 0 0;width:auto;padding:10px 28px}
+ #acc .loy{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ #acc .loy .wcard{position:relative}
+}
+
+/* v79: склад замовлення, усі покупки; на комп'ютері зліва картка і дані, справа замовлення */
+.oitems,.oall{flex-basis:100%;margin-top:6px}.oall{margin:6px 0 10px;border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+.oitems summary,.oall summary{cursor:pointer;font-size:13px;font-weight:700;color:#0b7d79}.oall summary{font-size:14px}
+.oit{display:flex;justify-content:space-between;gap:12px;padding:6px 0;font-size:13px;color:inherit;text-decoration:none;border-top:1px dashed var(--line)}.oit:first-of-type{margin-top:6px}.oit span{min-width:0}.oit b{white-space:nowrap;font-weight:600}.oit:hover span{text-decoration:underline}
+@media (min-width:1024px) and (hover:hover) and (pointer:fine){
+ #acc .acol{grid-template-columns:minmax(0,7fr) minmax(360px,5fr)}
+ #acc .aR{order:1}#acc .aL{order:2}
+}
