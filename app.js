@@ -351,7 +351,9 @@ function drawSug(){
  e.innerHTML=cs.map(x=>`<a href="${href(x.n.path)}"><span class="sn"><small>Категорія</small><br><b>${esc(x.n.path.join(" › "))}</b></span></a>`).join("")+r.slice(0,6).map(p=>`<a href="#/p/${encodeURIComponent(p.id)}"><span class="st">${img(p.img,100,100)}</span><span class="sn">${esc(p.n)}<br><small>Арт. ${esc(p.id)}</small></span><span class="sc">${money(price(p))}</span></a>`).join("")+(r.length>6?`<button class="all" data-sall>Усі результати (${r.length})</button>`:"");
  e.hidden=false;
 }
-function goSearch(){const q=$("q").value.trim();$("sug").hidden=true;if(!q)return;F.q=q;CUR.key="\u0002";if(curH().indexOf("#/c")===0&&curH().length<=4){route()}else location.hash="#/c/"}
+function goSearch(){const q=$("q").value.trim();$("sug").hidden=true;if(!q)return;
+ {const k=nrm(q).replace(/ /g,"");let hit=k.length>=4?P.find(p=>nrm(p.id).replace(/ /g,"")===k):null;if(!hit&&/\d/.test(q)&&!/\s/.test(q)&&k.length>=5){const r=search(q,P);if(r.length===1)hit=r[0]}if(hit){$("q").blur();location.hash="#/p/"+encodeURIComponent(hit.id);return}}
+F.q=q;CUR.key="\u0002";if(curH().indexOf("#/c")===0&&curH().length<=4){route()}else location.hash="#/c/"}
 function viewList(path){
  document.title=(path.length?path[path.length-1]+" — ":"")+"Trend Electro — електротовари та LED-освітлення";
  const node=path.length?nodeAt(path):ROOT;
@@ -387,7 +389,7 @@ const DENS=[["list","Список"],["l","Велика сітка"],["m","Сер
 const DICO={list:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="3" y="4" width="18" height="3" rx="1.5"/><rect x="3" y="10.5" width="18" height="3" rx="1.5"/><rect x="3" y="17" width="18" height="3" rx="1.5"/></svg>',l:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>',m:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">'+[3,9.5,16].map(y=>[3,9.5,16].map(x=>`<rect x="${x}" y="${y}" width="5" height="5" rx="1.3"/>`).join("")).join("")+'</svg>',s:'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">'+[2.5,7.5,12.5,17.5].map(y=>[2.5,7.5,12.5,17.5].map(x=>`<rect x="${x}" y="${y}" width="4" height="4" rx="1"/>`).join("")).join("")+'</svg>'};
 function dens(){let d="";try{d=localStorage.getItem("te_dens")||""}catch(e){}if(!DENS.some(x=>x[0]===d))d=DENS.some(x=>x[0]===(SHOP||{}).grid_def)?SHOP.grid_def:"l";return d}
 function setDens(d){try{localStorage.setItem("te_dens",d)}catch(e){}const g=$("grid");if(g)g.dataset.d=d;document.querySelectorAll(".dsw button").forEach(b=>b.classList.toggle("on",b.dataset.dn===d))}
-function applyLayout(){const S=SHOP||{},r=document.documentElement.style,c=Math.min(6,Math.max(2,+S.cat_cols||4)),m=Math.min(3,Math.max(2,+S.cat_cols_m||2));r.setProperty("--tc",c);r.setProperty("--tcm",m)}
+function applyLayout(){const S=SHOP||{},r=document.documentElement.style,c=Math.min(6,Math.max(2,+S.cat_cols||4)),m=Math.min(3,Math.max(2,+S.cat_cols_m||2));r.setProperty("--tc",c);r.setProperty("--tcm",m);r.setProperty("--tcw",Math.min(7,c+1))}
 const stile=k=>`<a class="stile" href="${href(k.path)}"><span class="th pic${cmeta(k.path).image_url?" ph":""}">${img(nodeImg(k),300,300,k.name)}</span><b>${esc(k.name)}</b><small>${k.count}</small></a>`;
 function tilesHtml(list){if(!list.length)return"";const S=SHOP||{},c=innerWidth<700?Math.min(3,Math.max(2,+S.cat_cols_m||2)):Math.min(6,Math.max(2,+S.cat_cols||4)),rw=Math.min(8,Math.max(0,+S.cat_rows||0)),lim=rw?c*rw:0;
  return `<div class="stiles">${list.map((k,i)=>lim&&i>=lim?stile(k).replace('class="stile"','class="stile xt" hidden'):stile(k)).join("")}</div>${lim&&list.length>lim?`<button class="more xtb" data-xt="1">Показати всі ${list.length} ↓</button>`:""}`}
@@ -544,13 +546,12 @@ async function viewProduct(id){
  QTY=1;PTAB="info";document.title=p.n+" — Trend Electro";
  const pi=priceInfo(p),o=pi.base,pc=pi.pc,disc=pi.disc;
  $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a>${p.c.map((n,i)=>`<span>›</span><a href="${href(p.c.slice(0,i+1))}">${esc(n)}</a>`).join("")}</nav>
-<div class="pgrid"><div><div class="pimg" id="pmain">${img(p.img,900,900,p.n,1)}</div><div class="thumbs" id="pthumbs"></div></div><div class="pinfo"><h1>${esc(p.n)}</h1>
+<div class="pgrid"><div class="pl"><div class="pm"><div class="pimg" id="pmain">${img(p.img,900,900,p.n,1)}</div><div class="thumbs" id="pthumbs"></div></div><div class="box pkbox"><h3>Основні характеристики</h3><div id="pkey"><div class="sku">Завантаження…</div></div></div></div><div class="pinfo"><h1>${esc(p.n)}</h1>
 <div class="meta"><span>Артикул: <b>${esc(p.id)}</b></span>${p.b?`<span>Бренд: <a href="#/c/" data-brand="${esc(p.b)}">${esc(p.b)}</a></span>`:""}</div>
 <div class="avail${p.st?"":" no"}">${p.st?ico("check")+stkTxt(p):"Немає в наявності"}</div>
 <div class="bigprice${disc>0?" sale":""}">${money(pc)}${pi.base>pc?`<s>${money(pi.base)}</s>`:""}${disc>0?`<span class="bds2">${saleBadges(pi)}</span>`:""}</div>${packHtml(p,1)}${p.ofr?`<div class="spbox"><span class="bd p">Спеціальна пропозиція</span><div>${esc(p.ofr)}</div></div>`:""}
 <div class="buyrow"><div class="qtybox"><button data-q="-1" aria-label="Менше">−</button><input id="pq" type="number" min="1" max="${stkMax(p)}" value="1" inputmode="numeric" aria-label="Кількість"><button data-q="1" aria-label="Більше">+</button></div><button class="buybtn" id="buy" data-id="${esc(p.id)}"${p.st?"":" disabled"}>${p.st?ico("cart")+"Купити":"Немає в наявності"}</button><button class="favbtn${fav[p.id]?" on":""}" data-f="${esc(p.id)}" aria-label="Обране">${ico("heart")}</button></div><p class="ordoff">${esc(ordMsg())}</p>
-<div class="ptrust"><a href="#/page/delivery">${ico("truck")}<span><b>Доставка по Україні</b>Нова пошта, Укрпошта</span></a><a href="#/page/delivery">${ico("wallet")}<span><b>Оплата при отриманні</b>або карткою</span></a><a href="#/page/exchange">${ico("swap")}<span><b>Обмін та повернення</b>за законом, без зайвих питань</span></a></div>
-<div class="box" style="margin:14px 0 0"><h3>Основні характеристики</h3><div id="pkey"><div class="sku">Завантаження…</div></div></div></div></div>
+<div class="ptrust"><a href="#/page/delivery">${ico("truck")}<span><b>Доставка по Україні</b>Нова пошта, Укрпошта</span></a><a href="#/page/delivery">${ico("wallet")}<span><b>Оплата при отриманні</b>або карткою</span></a><a href="#/page/exchange">${ico("swap")}<span><b>Обмін та повернення</b>за законом, без зайвих питань</span></a></div></div></div>
 ${relHtml(p)}<div class="tabsb"><button data-pt="info" class="on">Опис</button><button data-pt="spec">Усі характеристики</button></div><div class="box" id="pdet"><div class="sku">Завантаження…</div></div>
 ${rvHtml(p.id)}<section class="sec" id="btog" hidden></section>`;
  rvPush(p.id);loadBT(p.id);

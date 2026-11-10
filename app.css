@@ -645,7 +645,7 @@ html{background:var(--nav)}body{min-height:100vh;min-height:100dvh}
  .hm .sec{margin-top:44px}
  .perks{gap:14px;margin-top:18px}
  .perks div{background:linear-gradient(135deg,#34424f,#222d36);border:0;color:#c3ced5;box-shadow:0 10px 24px rgba(20,30,40,.18);padding:16px 18px;align-items:center;border-radius:16px;transition:transform .2s var(--ease)}
- .perks div:hover{transform:translateY(-3px)}
+ .perks div:hover{box-shadow:0 14px 30px rgba(20,30,40,.26)}
  .perks b{color:#fff;font-size:14.5px}
  .perks svg{background:rgba(10,186,181,.2);color:#3fd3ce;width:46px;height:46px;padding:11px;border-radius:13px}
  .card,.ctile{border-color:transparent;box-shadow:0 1px 3px rgba(16,24,32,.07)}
@@ -655,4 +655,82 @@ html{background:var(--nav)}body{min-height:100vh;min-height:100dvh}
  .ctile .subl i{font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
  .ctile .subl .mr{color:var(--accd);font-weight:600}
  .ctile b{font-size:16px}
+}
+
+/* v72: кабінет клієнта ширший на комп'ютері */
+@media (min-width:1024px) and (hover:hover) and (pointer:fine){
+ #acc{width:min(52vw,920px)}
+ #acc .dl{padding:10px 28px 24px}
+ #acc .loy{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:26px;align-items:start;margin-top:12px}
+ #acc .loy .wcard{position:sticky;top:0}
+ #acc .loy .wpct{font-size:7cqw}
+ #acc .loy .lyb{min-width:0}
+ #acc .dh{padding-left:28px;padding-right:20px}
+ #acc .df input,#acc .df select{max-width:520px}
+ #acc .ord{padding:12px 14px}
+}
+
+/* v73: на комп'ютері картки не зсуваються при наведенні — текст завжди чіткий (зсув робив напис розмитим на час анімації) */
+@media (min-width:1024px) and (hover:hover) and (pointer:fine){
+ .card:hover,.ctile:hover,.stile:hover,.gcard:hover,.art:hover,.btn:hover,.go:hover,.add:hover,.buybtn:hover,.xadd:hover{transform:none}
+ .card,.ctile,.stile,.gcard,.art,.perks div{transition-property:box-shadow,border-color;will-change:auto}
+ .card.rv.in,.rv.in{transform:none;will-change:auto}
+ body.fxon .card,body.fxon .card:hover,#grid .card:hover{transform:none}
+ body.fxon .card{transition:box-shadow .25s ease,border-color .25s ease}
+ body.fxon .card:hover{box-shadow:0 14px 32px rgba(16,24,32,.16)}
+ .card:hover .pic img,.ctile:hover .th img,.stile:hover .th img{transform:scale(1.04)}
+ .card,.ctile,.stile{backface-visibility:visible}
+}
+
+/* v74: сторінка товару — блок характеристик під фото (на телефоні порядок як і був) */
+.pl{display:contents}.pkbox{order:2;margin:-4px 0 0}.pinfo{order:1}
+@media (min-width:1024px) and (hover:hover) and (pointer:fine){
+ .pgrid{grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);gap:28px 34px;align-items:start}
+ .pl{display:block;min-width:0}
+ .pm{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:start}
+ .pm:has(.thumbs:empty){grid-template-columns:minmax(0,1fr)}
+ .pm .pimg{grid-column:2;grid-row:1;border:0;box-shadow:0 1px 3px rgba(16,24,32,.08);border-radius:16px}
+ .pm:has(.thumbs:empty) .pimg{grid-column:1}
+ .pm .thumbs{grid-column:1;grid-row:1;flex-direction:column;margin:0;overflow:visible;gap:10px}
+ .thumbs button{width:76px;height:76px;border-width:1px;border-radius:12px;transition:border-color .15s,box-shadow .15s}
+ .thumbs button:hover{box-shadow:0 6px 16px rgba(16,24,32,.14)}
+ .thumbs button.on{border-width:2px}
+ .pkbox{order:0;margin:26px 0 0;padding:20px 24px;border-radius:16px}
+ .pkbox h3{font-size:18px;margin-bottom:12px}
+ .pkbox .kv{padding:10px 12px;border-bottom:0!important;border-radius:8px}
+ .pkbox .kv:nth-child(odd){background:var(--bg)}
+ .pinfo{order:0;background:var(--card);border-radius:16px;box-shadow:0 1px 3px rgba(16,24,32,.08);padding:26px 30px}
+ .pinfo h1{font-size:25px;margin-bottom:10px}
+ .bigprice{font-size:38px;margin:18px 0 6px}
+ .buyrow{margin:18px 0;gap:12px}
+ .buyrow .buybtn{flex:1 1 220px;max-width:340px;height:52px;font-size:16px}
+ .ptrust{margin-top:6px;border-radius:12px}
+}
+
+/* v75: ширший сайт на великих екранах (комп'ютер). Ширина керується змінною --W, усі сітки підлаштовані пропорційно */
+@media (min-width:1440px) and (hover:hover) and (pointer:fine){
+ :root{--W:1380px}
+ .wrap{max-width:var(--W);padding:0 24px}
+ .slider{max-height:min(480px,62vh)}
+ .pimg{max-height:min(74vh,660px)}
+ .xgrid{max-width:calc(var(--xc,4)*230px)}
+}
+@media (min-width:1700px) and (hover:hover) and (pointer:fine){
+ :root{--W:1580px}
+ .wrap{padding:0 32px}
+ .slider{max-height:min(540px,62vh)}
+ .hero{padding:64px 64px}
+ .hero h1{font-size:56px;max-width:720px}
+ .hero p{font-size:17px;max-width:580px}
+ .ctiles{grid-template-columns:repeat(var(--tcw,6),minmax(0,1fr));gap:16px}
+ .stiles{grid-template-columns:repeat(var(--tcw,6),minmax(0,1fr));gap:16px}
+ .hrow{grid-auto-columns:calc((100% - 72px)/6);gap:14px}
+ #grid[data-d="l"]{grid-template-columns:repeat(5,minmax(0,1fr))}
+ #grid[data-d="m"]{grid-template-columns:repeat(7,minmax(0,1fr))}
+ #grid[data-d="s"]{grid-template-columns:repeat(10,minmax(0,1fr))}
+ #grid[data-d="list"]{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .grid:not(#grid){grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+ .xgrid{max-width:calc(var(--xc,4)*250px)}
+ .pimg{max-height:min(76vh,720px)}
+ .fgrid{gap:34px 28px}
 }
