@@ -406,6 +406,127 @@ function viewPage(key){
 
 /* ---------- сторінка товару ---------- */
 function specRows(sp){return(sp||"").split(";").map(x=>{const k=x.indexOf(":");return k>0?[x.slice(0,k).trim(),x.slice(k+1).trim()]:null}).filter(Boolean)}
+
+/* ---------- «Дивіться також»: до 9 сумісних товарів, додати в кошик галочкою ---------- */
+const relOn=()=>!SHOP.rel_off;
+function relFor(p){
+ const N=x=>x.n.toLowerCase().replace(/[еЕ](?=\d)/g,"e").replace(/(\d)\s*[хx×]\s*(\d)/g,"$1x$2"),n=N(p),c=p.c,top=c[0]||"",sec=c[1]||"",leaf=c[c.length-1]||"";
+ const C=new Map(),add=(arr,sc,why,k)=>{let i=0;for(const x of arr){if(i>=k)break;if(!x||x.id===p.id||!x.st||!(x.pr0>0))continue;const o=C.get(x.id);if(!o||o.s<sc)C.set(x.id,{x,s:sc-i*.01,w:why});i++}};
+ const L=f=>P.filter(x=>x.id!==p.id&&x.st&&x.pr0>0&&f(x)),ch=a=>a.sort((x,y)=>(!y.img-!x.img)||x.pr0-y.pr0);
+ const uq=(a,key)=>{const s={};return a.filter(x=>{const q=key(x);if(s[q])return false;s[q]=1;return true})};
+ const W=x=>{const m=N(x).match(/(\d+(?:[.,]\d+)?)\s*w\b/);return m?+m[1].replace(",","."):0};
+ const SK=x=>{const m=N(x).match(/\b(e27|e14|e40|gu10|gu5[.,]3|g9|g4|gx53|g13)\b/);return m?m[1].replace(",","."):""};
+ const D=x=>{const m=N(x).match(/\bd\.?\s?(\d{2,3})\b/);return m?m[1]:""};
+ const lf=x=>x.c[x.c.length-1]||"",in2=(x,s2)=>x.c[1]===s2,isL=x=>in2(x,"Світлодіодні лампи");
+ const ZZ=x=>/з\/з|заземл/.test(N(x))?1:/б\/з/.test(N(x))?0:-1;
+ /* A. світильник або патрон під лампу → лампи потрібного цоколя (не потужніші за max W) */
+ const sk=SK(p);
+ if(sk&&!isL(p)&&sec!=="Світлодіодна стрічка"&&(/патрон|під лампу|без лампи/.test(n)||top==="Освітлення"&&!/\bled\b|світлодіод/.test(n))){
+  const mx=+((n.match(/max\s*(\d+)\s*w/)||[])[1]||0),lm=ch(L(x=>isL(x)&&SK(x)===sk&&(!mx||!W(x)||W(x)<=mx)&&!/датчик|акумулятор|fito|фіто/.test(N(x))));
+  add(uq(lm.filter(x=>!/filament|філамент/.test(N(x))),W).sort((a,b)=>W(a)-W(b)),100,"Лампа "+sk.toUpperCase(),5);
+  add(lm.filter(x=>/filament|філамент/.test(N(x))),95,"Лампа "+sk.toUpperCase(),1);
+ }
+ /* B. лампа → світильники й патрони під цей цоколь */
+ if(isL(p)&&sk&&sk!=="g13"){add(uq(ch(L(x=>!isL(x)&&SK(x)===sk&&/під лампу|без лампи/.test(N(x)))),x=>x.c.join()),60,"Під цю лампу",3);add(ch(L(x=>/^патрон/.test(N(x))&&SK(x)===sk)),55,"Патрон "+sk.toUpperCase(),2)}
+ /* C. лампи Т8 ↔ світильники під Т8 тієї ж довжини */
+ const len=x=>{const t=N(x),m=t.match(/(600|1200|1500)\s*мм|(0[.,]6|1[.,]2|1[.,]5)\s*м\b/);return m?(m[1]||String(Math.round(parseFloat(m[2].replace(",","."))*1000))):""};
+ if(leaf==="Світильники під лампи Т8")add(ch(L(x=>lf(x)==="Лінійні лампи Т8"&&(!len(p)||len(x)===len(p)))),100,"Лампа Т8",4);
+ if(leaf==="Лінійні лампи Т8")add(ch(L(x=>lf(x)==="Світильники під лампи Т8"&&(!len(p)||!len(x)||len(x)===len(p)))),90,"Світильник під Т8",3);
+ /* D. батарейки до виробів на батарейках */
+ const bm=n.match(/\d\s*[*x×]\s*(aaa|ааа|aa|аа)\b/);
+ if(bm){const t=/aaa|ааа/.test(bm[1]);add(ch(L(x=>/Батарейки/.test(x.c[1]||"")&&new RegExp(t?"lr03":"lr0?6\\b|lr6","i").test(x.n)&&/alkaline/i.test(x.n))),100,"Батарейки "+(t?"AAA":"AA"),2)}
+ /* E. каучукові: комплект того ж бренду й кольору */
+ if(leaf==="Каучукові"){
+  const col=x=>(N(x).match(/чорн|червон|син|помаранч|біл|сір/)||[""])[0],ty=x=>/^вилка/.test(N(x))?0:/^розетка/.test(N(x))?1:2,gn=x=>+((N(x).match(/(\d)\s*гнізд/)||[0,0])[1]),c0=col(p);
+  const a=L(x=>x.c.join()===c.join()&&(x.b===p.b||!x.b||!p.b)&&(col(x)===c0||!c0&&col(x)==="чорн"||!col(x)&&c0==="чорн"));
+  add(uq(a.sort((x,y)=>ty(x)-ty(y)||gn(x)-gn(y)||x.pr0-y.pr0),x=>ty(x)+"|"+gn(x)+"|"+/г-под/.test(N(x))+"|"+/вимик/.test(N(x))),100,"До комплекту",7);
+  add(ch(L(x=>/кгтп|пвс 3x/.test(N(x))&&x.c[0]==="Кабельна продукція")),40,"Кабель",2);
+ }
+ /* F. силові та до плит: вилка ↔ розетка з тими ж струмом, полюсами і IP */
+ if(leaf==="Силові"||leaf==="До електричних плит"){
+  const key=x=>{const t=N(x),am=(t.match(/(\d+)\s*[аa](?![а-яіїєa-z])/)||[])[1]||"",po=(t.match(/\/(\d)/)||[])[1]||(/трифаз|3x фаз|3р\+/.test(t)?"3":/2р\+/.test(t)?"2":""),ip=(t.match(/ip\s?(\d\d)/)||[])[1]||"";return am+"|"+po+"|"+(leaf==="Силові"?ip:"")},ty=x=>/^вилка/.test(N(x))?0:1;
+  add(ch(L(x=>x.c.join()===c.join()&&key(x)===key(p)&&ty(x)!==ty(p))),100,ty(p)?"Вилка до розетки":"Розетка до вилки",4);
+  add(ch(L(x=>x.c.join()===c.join()&&key(x)===key(p)&&ty(x)===ty(p))),70,"Інший варіант",2);
+  if(leaf==="Силові")add(ch(L(x=>/кгтп/.test(N(x)))),45,"Гнучкий кабель",2);
+ }
+ /* G. побутові вилки ↔ колодки + шнур, з/з до з/з */
+ const PB=x=>x.c[1]==="Вилки та розетки"&&lf(x)==="Побутові",KL=x=>lf(x)==="Колодки"&&x.c[0]==="Електротовари для дому";
+ const cord=z=>ch(L(x=>x.c[0]==="Кабельна продукція"&&(z===1?/пвс 3x(0,75|1|1,5)\b/:/шввп 2x(0,75|1)\b|пвс 2x(0,75|1)\b/).test(N(x))));
+ if(PB(p)&&/^вилка/.test(n)){const z=ZZ(p);add(ch(L(x=>KL(x)&&(z<0||ZZ(x)===z))),70,"Колодка",4);add(cord(z),60,"Шнур",2)}
+ if(KL(p)){const z=ZZ(p);add(ch(L(x=>PB(x)&&/^вилка/.test(N(x))&&(z<0||ZZ(x)===z||z===0&&ZZ(x)===1))),80,"Вилка",3);add(cord(z),60,"Шнур",2)}
+ /* H. рамки ↔ механізми однієї серії та кольору */
+ if(top==="Розетки та вимикачі"){
+  const ser=x=>((x.n.match(/\b(RITA|CANDELA|BRON|NORA|Lara|Julia|Juli|Aqua)\b/i)||[])[1]||"").toLowerCase(),cl=x=>((x.n.match(/Mutlusan,\s*([^,(]+)/i)||x.n.match(/"[^"]+"\s*,\s*([^,(]+)/)||[])[1]||"").trim().toLowerCase(),s0=ser(p),fr=/^рамка/.test(n),mech=x=>/^механізм|^розетка|^вимикач/.test(N(x))&&!/^рамка/.test(N(x));
+  if(s0&&(fr||mech(p))){
+   if(fr)add(uq(ch(L(x=>ser(x)===s0&&cl(x)===cl(p)&&mech(x))),x=>N(x).replace(/,.*/,"").replace(/механізм /,"")),100,"Механізм у рамку",8);
+   else{add(uq(ch(L(x=>ser(x)===s0&&cl(x)===cl(p)&&/^рамка/.test(N(x)))),x=>N(x).replace(/,.*/,"")).sort((a,b)=>a.pr0-b.pr0),100,"Рамка",4);
+    const sw=/вимикач/.test(n);add(uq(ch(L(x=>ser(x)===s0&&cl(x)===cl(p)&&mech(x)&&(sw?/розетк/:/вимикач/).test(N(x)))),x=>N(x).replace(/,.*/,"")),70,sw?"Розетка серії":"Вимикач серії",3)}
+  }
+ }
+ /* I. кабель-канал ↔ аксесуари того ж розміру */
+ if(leaf==="Кабель канал"||leaf==="Аксесуари до кабель-каналу"){
+  const sz=x=>(N(x).match(/(\d{2,3})\s*x\s*(\d{2,3})/)||[]).slice(1,3).join("x"),z=sz(p);
+  if(z){if(leaf==="Кабель канал")add(uq(ch(L(x=>sz(x)===z&&lf(x)==="Аксесуари до кабель-каналу")),x=>N(x).replace(/\d.*/,"")),100,"Аксесуар "+z.replace("x","×"),7);
+   else{add(ch(L(x=>sz(x)===z&&lf(x)==="Кабель канал")),100,"Кабель-канал",2);add(uq(ch(L(x=>sz(x)===z&&lf(x)===leaf)),x=>N(x).replace(/\d.*/,"")),70,"Аксесуар "+z.replace("x","×"),5)}}
+ }
+ /* J. трекові системи */
+ if(sec==="Трекові системи"){const rail=x=>lf(x)==="Шинопроводи та комплектуючі",ra=x=>/^шинопровід/.test(N(x));
+  if(rail(p)){add(uq(ch(L(x=>in2(x,"Трекові системи")&&!rail(x))),x=>lf(x)+W(x)),100,"Трековий світильник",6);add(ch(L(x=>rail(x)&&!ra(x))),80,"З’єднувач",3)}
+  else{add(ch(L(x=>rail(x)&&ra(x))),100,"Шинопровід",3);add(ch(L(x=>rail(x)&&!ra(x))),80,"З’єднувач",3);add(uq(ch(L(x=>x.c.join()===c.join())),W),40,"Інша потужність",2)}}
+ /* K. LED-стрічка */
+ if(sec==="Світлодіодна стрічка"){const V=x=>(N(x).match(/(?:dc\s*)?(12|24)\s*v/)||[])[1]||"",vv=V(p),st=x=>lf(x)==="LED стрічка 12/24V (SMD, COB)";
+  if(st(p)){add(ch(L(x=>/^блок живлення/.test(N(x))&&lf(x)==="Блоки живлення та контролери"&&(!vv||V(x)===vv))),100,"Блок живлення "+(vv?vv+"V":""),3);
+   if(/rgb/.test(n))add(ch(L(x=>/контролер/.test(N(x))&&(!vv||!V(x)||V(x)===vv))),98,"Контролер RGB",1);
+   add(ch(L(x=>lf(x)==="Профіль алюмінієвий")),90,"Профіль",3);add(ch(L(x=>lf(x)==="З'єднувачі, заглушки, тримачі"&&!/neon/.test(N(x)))),80,"З’єднувач",2)}
+  else if(lf(p)==="Неонова стрічка 230V")add(ch(L(x=>lf(x)==="З'єднувачі, заглушки, тримачі"&&/neon/.test(N(x)))),100,"Для неону",6);
+  else if(/^блок живлення/.test(n)&&vv)add(ch(L(x=>st(x)&&V(x)===vv)),100,"Стрічка "+vv+"V",6);
+  else if(lf(p)==="Профіль алюмінієвий")add(ch(L(x=>st(x))),90,"Стрічка",4);
+  else if(lf(p)==="З'єднувачі, заглушки, тримачі")add(ch(L(x=>/neon/.test(n)?lf(x)==="Неонова стрічка 230V":st(x))),90,"Стрічка",4);
+ }
+ /* L. автомати ↔ щити й шини */
+ const AV=x=>/Автоматичні вимикачі|Диференційні|ПЗВ/.test(lf(x)),SH=x=>x.c[0]==="Розподільні щити та бокси"&&/щити та бокси/.test(lf(x)),BUS=x=>/Шини та клемники/.test(lf(x));
+ if(AV(p)){add(ch(L(x=>SH(x)&&/авт|модул|\d+и\b/.test(N(x)))),60,"Щит / бокс",3);add(ch(L(BUS)),70,"Шина",2)}
+ if(SH(p)){add(uq(ch(L(x=>lf(x)==="Автоматичні вимикачі"&&/1р|1p/.test(N(x))&&/\b(10|16|25)\s*а(?![а-яі])/.test(N(x)))),x=>(N(x).match(/\b(10|16|25)\s*а(?![а-яі])/)||[])[1]),70,"Автомат",3);add(ch(L(BUS)),70,"Шина",2);add(ch(L(x=>/ПЗВ/.test(lf(x)))),55,"ПЗВ",1)}
+ /* M. силовий кабель → монтаж */
+ if(top==="Кабельна продукція"&&/ввг|пвс|шввп|пв-3|аввг|аппв|кгтп/.test(n)){add(ch(L(x=>/Клеми/.test(lf(x))&&/з.єднувальн/.test(N(x)))),70,"Клема",3);add(ch(L(x=>/Ізоляційна стрічка/.test(lf(x))&&/стрічк/.test(N(x)))),55,"Ізострічка",2);add(ch(L(x=>/Труби, гофра/.test(lf(x))&&/гофро/.test(N(x)))),50,"Гофротруба",2);add(ch(L(x=>lf(x)==="Коробки монтажні")),45,"Коробка",1)}
+ /* N. гофра й труби → кріплення й фітинги того ж діаметра */
+ if(/Труби, гофра/.test(leaf)&&D(p)){const d0=D(p);add(ch(L(x=>/Скоби|хомут/.test(lf(x))&&D(x)===d0)),90,"Кріплення d"+d0,3);add(ch(L(x=>x.c.join()===c.join()&&D(x)===d0&&!/^труба|^гофро/.test(N(x)))),90,"Фітинг d"+d0,4)}
+ /* O. вентиляція: вентилятор ↔ повітровод того ж діаметра, панелі dRim */
+ if(top==="Клімат"){const d0=D(p);
+  if(/Витяжні/.test(leaf)){if(d0)add(ch(L(x=>lf(x)==="Повітроводи"&&D(x)===d0)),100,"Повітровод D"+d0,3);if(/drim/.test(n))add(ch(L(x=>lf(x)==="Панелі для вентиляторів")),100,"Панель dRim",4)}
+  if(leaf==="Повітроводи"&&d0)add(ch(L(x=>/Витяжні/.test(lf(x))&&D(x)===d0)),100,"Вентилятор D"+d0,4);
+  if(leaf==="Панелі для вентиляторів")add(ch(L(x=>/Витяжні/.test(lf(x))&&/drim/.test(N(x)))),100,"Вентилятор dRim",4);
+ }
+ /* P. прожектор ↔ датчик руху */
+ if(sec==="Прожектори"&&!/датчик/.test(n))add(ch(L(x=>/Датчики руху та світла/.test(x.c[1]||"")&&!/механізм/.test(N(x)))),60,"Датчик",3);
+ /* Q. монтаж: коробки ↔ клеми, наконечники ↔ термоусадка й обжимка, металорукав ↔ скоби */
+ const KLM=x=>/Клеми/.test(lf(x))&&/з.єднувальн|клема/.test(N(x));
+ if(leaf==="Коробки монтажні"){add(ch(L(KLM)),80,"Клема",3);add(ch(L(x=>/Труби, гофра/.test(lf(x))&&/гофро/.test(N(x)))),50,"Гофротруба",2)}
+ if(/Клеми/.test(leaf))add(ch(L(x=>lf(x)==="Коробки монтажні"&&/розподіл|розвед|розгалуж|ip/.test(N(x)))),60,"Коробка",3);
+ if(leaf==="Кабельні наконечники"){add(ch(L(x=>lf(x)==="Електромонтажний інструмент"&&/обжим|кліщ/.test(N(x)))),90,"Інструмент",1);add(ch(L(x=>lf(x)==="Термоусаджувальні трубки")),80,"Термоусадка",3)}
+ if(leaf==="Термоусаджувальні трубки")add(ch(L(x=>lf(x)==="Кабельні наконечники")),60,"Наконечник",3);
+ if(leaf==="Металорукав"&&D(p)){const d0=D(p);add(ch(L(x=>/Скоби/.test(lf(x))&&D(x)===d0)),90,"Кріплення d"+d0,3)}
+ /* R. СІП, ТВ, мережа */
+ if(lf(p)==="Провід СІП")add(ch(L(x=>lf(x)==="Арматура для СІП")),90,"Арматура СІП",5);
+ if(leaf==="Арматура для СІП"){add(ch(L(x=>lf(x)==="Провід СІП")),80,"Провід СІП",2);add(uq(ch(L(x=>x.c.join()===c.join())),x=>N(x).replace(/\s.*/,"")),60,"Арматура СІП",3)}
+ const TV=x=>/ТВ антени/.test(lf(x)),CX=x=>/коаксіал/.test(lf(x));
+ if(CX(p)){add(ch(L(x=>TV(x)&&/роз.єм|штекер|папа/.test(N(x)))),90,"Роз’єм F",2);add(ch(L(x=>TV(x)&&/спліттер/.test(N(x)))),70,"Спліттер",2);add(ch(L(x=>TV(x)&&/антена/.test(N(x)))),60,"Антена",1)}
+ if(TV(p)){add(ch(L(CX)),90,"Коаксіальний кабель",2);if(/антена/.test(n))add(ch(L(x=>TV(x)&&/роз.єм/.test(N(x)))),70,"Роз’єм F",2)}
+ if(/Вита пара/.test(leaf))add(ch(L(x=>x.c[0]==="Розетки та вимикачі"&&/комп.ютерн|rj45|cat\s?5|cat\s?6|інтернет/.test(N(x)))),80,"Інтернет-розетка",3);
+ /* S. DIN: шини й гребінки → автомати; датчик руху → прожектор */
+ if(/Шини та клемники/.test(leaf))add(uq(ch(L(x=>lf(x)==="Автоматичні вимикачі"&&/1р|1p/.test(N(x)))),x=>(N(x).match(/(\d+)\s*а(?![а-яі])/)||[])[1]),60,"Автомат",3);
+ if(sec==="Датчики руху та світла"&&!/механізм/.test(n))add(ch(L(x=>x.c[1]==="Прожектори"&&!/датчик/.test(N(x)))),50,"Прожектор",3);
+ return [...C.values()].sort((a,b)=>b.s-a.s).slice(0,9);
+}
+let XS=[];
+function relHtml(p){
+ if(!relOn())return"";let g=[];try{g=relFor(p)}catch(e){}
+ XS=g.map(x=>x.x.id);if(!g.length)return"";
+ return `<section class="xsell"><div class="xh"><h2>Дивіться також</h2><span>Позначте галочкою — додамо в кошик разом</span></div><div class="xgrid" style="--xc:${g.length<=5?g.length:Math.ceil(g.length/2)}">${g.map(({x,w})=>{const u="#/p/"+encodeURIComponent(x.id);return `<div class="xc"><a class="xi" href="${u}">${img(x.img,240,240,x.n)}</a><span class="xw">${esc(w)}</span><a class="xn" href="${u}">${esc(x.n)}</a><b class="xp">${money(priceInfo(x).pc)}</b><label class="xk"><input type="checkbox" data-xs="${esc(x.id)}" onchange="xsUpd()"> Додати до кошика</label></div>`}).join("")}</div><button class="xadd" id="xadd" onclick="xsAdd()" disabled>Оберіть товари галочкою</button></section>`;
+}
+function xsSel(){return [...document.querySelectorAll(".xsell input[data-xs]:checked")].map(i=>i.dataset.xs).filter(id=>M[id])}
+function xsUpd(){const b=$("xadd");if(!b)return;const s=xsSel(),sum=s.reduce((t,id)=>t+priceInfo(M[id]).pc,0);b.disabled=!s.length;b.textContent=s.length?`Додати до кошика: ${s.length} шт. · ${money(sum)}`:"Оберіть товари галочкою";document.querySelectorAll(".xsell .xc").forEach(c=>c.classList.toggle("on",!!c.querySelector("input:checked")))}
+function xsAdd(){const s=xsSel();if(!s.length||SHOP.orders_off)return;s.forEach(id=>{cart[id]=(cart[id]||0)+1});save();drawCart();document.querySelectorAll(".xsell input[data-xs]").forEach(i=>i.checked=false);xsUpd();toast(s.length>1?"Додано в кошик: "+s.length+" товари":"Додано в кошик",1)}
 async function viewProduct(id){
  const p=M[id];
  if(!p){$("view").innerHTML='<div class="empty">Товар не знайдено або він прихований. <a href="#/c/">До каталогу</a></div>';return}
@@ -421,7 +542,7 @@ async function viewProduct(id){
 <div class="buyrow"><div class="qtybox"><button data-q="-1" aria-label="Менше">−</button><input id="pq" type="number" min="1" max="${stkMax(p)}" value="1" inputmode="numeric" aria-label="Кількість"><button data-q="1" aria-label="Більше">+</button></div><button class="buybtn" id="buy" data-id="${esc(p.id)}"${p.st?"":" disabled"}>${p.st?ico("cart")+"Купити":"Немає в наявності"}</button><button class="favbtn${fav[p.id]?" on":""}" data-f="${esc(p.id)}" aria-label="Обране">${ico("heart")}</button></div><p class="ordoff">${esc(ordMsg())}</p>
 <div class="ptrust"><a href="#/page/delivery">${ico("truck")}<span><b>Доставка по Україні</b>Нова пошта, Укрпошта</span></a><a href="#/page/delivery">${ico("wallet")}<span><b>Оплата при отриманні</b>або карткою</span></a><a href="#/page/exchange">${ico("swap")}<span><b>Обмін та повернення</b>за законом, без зайвих питань</span></a></div>
 <div class="box" style="margin:14px 0 0"><h3>Основні характеристики</h3><div id="pkey"><div class="sku">Завантаження…</div></div></div></div></div>
-<div class="tabsb"><button data-pt="info" class="on">Опис</button><button data-pt="spec">Усі характеристики</button></div><div class="box" id="pdet"><div class="sku">Завантаження…</div></div>
+${relHtml(p)}<div class="tabsb"><button data-pt="info" class="on">Опис</button><button data-pt="spec">Усі характеристики</button></div><div class="box" id="pdet"><div class="sku">Завантаження…</div></div>
 ${sim2.length?`<section class="sec"><div class="sech"><div><h2>Схожі товари</h2></div><a href="${href(p.c)}">Уся категорія →</a></div>${hsc("hsim",sim2)}</section>`:""}${rvHtml(p.id)}<section class="sec" id="btog" hidden></section>`;
  rvPush(p.id);loadBT(p.id);
  const sbx=$("sbuy");sbx.innerHTML=`<div><b>${money(pc)}</b><small>${p.st?"В наявності":""}</small></div><button class="buybtn" data-sb="${esc(p.id)}"${p.st?"":" disabled"}>${p.st?ico("cart")+"Купити":"Немає в наявності"}</button>`;sbx.hidden=false;
