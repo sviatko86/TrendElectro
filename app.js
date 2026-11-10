@@ -150,20 +150,6 @@ function statsHtml(){
  if(!it.length){const mn=P.reduce((m,p)=>{const v=price(p);return v>0&&v<m?v:m},1e9);it=[{v:P.length>=100?Math.floor(P.length/100)*100+"+":String(P.length),l:"товарів у каталозі"},{v:String(kids(ROOT).length),l:"категорій"}];if(mn<1e9)it.push({v:"від "+Math.ceil(mn),l:"грн — мінімальна ціна"})}
  return `<section class="stats">${it.slice(0,4).map(x=>{const m=String(x.v).match(/^(\D*?)(\d[\d\s]*)(\D*)$/);const n=m?m[2].replace(/\s/g,""):"";return `<div><b${m?` data-cnt="${esc(n)}" data-pre="${esc(m[1])}" data-suf="${esc(m[3])}"`:""}>${esc(x.v)}</b><span>${esc(x.l)}</span></div>`}).join("")}</section>`}
 function runCounters(){document.querySelectorAll(".stats b[data-cnt]").forEach(el=>{if(el.dataset.run)return;el.dataset.run=1;const to=+el.dataset.cnt,pre=el.dataset.pre,suf=el.dataset.suf;const go=()=>{const t0=performance.now(),d=1400;(function f(t){const k=Math.min(1,(t-t0)/d),e=1-Math.pow(1-k,3);el.textContent=pre+Math.round(to*e)+suf;if(k<1)requestAnimationFrame(f)})(t0)};if(!("IntersectionObserver"in window)||matchMedia("(prefers-reduced-motion:reduce)").matches)return;const io=new IntersectionObserver(es=>{if(es[0].isIntersecting){io.disconnect();go()}});io.observe(el)})}
-/* кролик ганяється за лампочкою біля підвалу: лише комп'ютер, запускається коли докрутили сторінку до кінця */
-function initChase(){
- const f=document.querySelector("footer");let c=$("chase");
- const ok=f&&!SHOP.chase_off&&matchMedia("(min-width:1024px) and (hover:hover) and (pointer:fine)").matches&&!matchMedia("(prefers-reduced-motion:reduce)").matches;
- if(!ok){if(c)c.remove();document.body.classList.remove("hasch");return}
- if(c)return;
- c=document.createElement("div");c.id="chase";c.className="chase";c.setAttribute("aria-hidden","true");
- const u=esc(BASE);
- c.innerHTML='<div class="lane"><div class="cb"><div class="barc"><div class="bflip"><div class="bbob"><img src="'+u+'bulb.webp" alt="" width="62" height="89" draggable="false"></div></div></div></div><div class="cr"><div class="rflip"><div class="rhop"><img src="'+u+'rabbit.webp" alt="" width="90" height="121" draggable="false"></div></div></div></div>';
- f.insertBefore(c,f.firstChild);document.body.classList.add("hasch");
- const lane=c.firstChild,fit=()=>lane.style.setProperty("--d",Math.max(200,lane.clientWidth-94)+"px");
- const chk=()=>{const h=document.documentElement;c.classList.toggle("on",(window.scrollY+innerHeight)>=h.scrollHeight-70)};
- fit();chk();addEventListener("resize",()=>{fit();chk()});addEventListener("scroll",chk,{passive:true});
-}
 function regBar(){let b=$("regbar");const on=!me&&!SHOP.reg_off&&!!sb;if(!on){if(b)b.remove();return}if(!b){b=document.createElement("button");b.type="button";b.id="regbar";b.className="regbar";b.innerHTML='<span>🎁 Зареєструйся і гарантовано отримай постійну знижку на всі покупки</span><b>Зареєструватися →</b>';b.addEventListener("click",()=>{tab="up";drawAcc();panel("acc",true)});document.body.insertBefore(b,document.body.firstChild)}}
 function applyOrders(){const off=!!SHOP.orders_off;document.body.classList.toggle("noord",off);let b=$("ordbar");if(off){if(!b){b=document.createElement("div");b.id="ordbar";b.className="ordbar";const h=document.querySelector("header");h.parentNode.insertBefore(b,h.nextSibling)}b.textContent=ordMsg()}else if(b)b.remove()}
 const tel=p=>"tel:"+String(p).replace(/[^\d+]/g,"");
@@ -816,7 +802,7 @@ async function boot(){
  loadBanners();loadPromos();
  const pf=(async()=>{try{const g=await sb.auth.getSession();me=g.data.session?g.data.session.user:null;await loadProf()}catch(e){}})();
  try{await Promise.all([loadProducts(),loadSettings(),loadCats(),fetch(BASE+"img/map.json").then(r=>r.ok?r.json():[]).then(a=>{IMG=new Set(a)}).catch(()=>{}),fetch(BASE+"img/smap.json").then(r=>r.ok?r.json():[]).then(a=>{IMGS=new Set(a)}).catch(()=>{})]);imgMap()}catch(e){$("view").innerHTML='<div class="empty">Не вдалося завантажити каталог. Перевірте інтернет і оновіть сторінку.</div>';return}
- applyOrders();regBar();initChase();document.body.classList.toggle("fxon",!SHOP.anim_off);applyLayout();build();ALLN=[];collectN(ROOT);initChat();drawFooter();
+ applyOrders();regBar();document.body.classList.toggle("fxon",!SHOP.anim_off);applyLayout();build();ALLN=[];collectN(ROOT);initChat();drawFooter();
  await pf;
  route();idxWarm();
  if(CATBG)setTimeout(catRefresh,1500);
