@@ -68,7 +68,7 @@ function login(msg){
 }
 async function logout(){await sb.auth.signOut();$("out").hidden=true;login()}
 $("out").onclick=logout;
-const T={dash:"Огляд",orders:"Замовлення",products:"Товари",show:"Вітрини",cats:"Категорії",price:"Ціни",clients:"Клієнти",mkt:"Маркетинг",shop:"Налаштування"};
+const T={dash:"Огляд",orders:"Замовлення",products:"Товари",show:"Вітрини",vars:"Кольори",cats:"Категорії",price:"Ціни",clients:"Клієнти",mkt:"Маркетинг",shop:"Налаштування"};
 const GR={mkt:{promos:"Акції",codes:"Промокоди",banners:"Банери",leads:"Підписники",bdays:"Іменинники",land:"Лендінги",loy:"Картки"},shop:{shop:"Магазин",pages:"Сторінки",import:"Імпорт",backup:"Резервна копія"}};
 const SUB={mkt:"promos",shop:"shop"},LEAFG={};Object.keys(GR).forEach(g=>Object.keys(GR[g]).forEach(k=>LEAFG[k]=g));
 const setCur=k=>{if(LEAFG[k]&&k!=="shop"){SUB[LEAFG[k]]=k;cur=LEAFG[k]}else cur=k};
@@ -80,7 +80,7 @@ function shell(){
   const a=document.querySelector('.tabs .on');if(a)a.scrollIntoView({block:'nearest',inline:'center'})}
  const g=GR[cur],leaf=g?SUB[cur]:cur;
  $("subt").innerHTML=g?'<div class="subt">'+Object.keys(g).map(k=>`<button data-sub="${k}" class="${k===leaf?"on":""}">${g[k]}</button>`).join("")+'</div>':"";
- ({dash:tDash,orders:tOrders,products:tProducts,show:tShow,cats:tCats,import:tImport,price:tPrice,promos:tPromos,bdays:tBdays,land:tLand,loy:tLoy,codes:tCodes,clients:tClients,leads:tLeads,banners:tBanners,pages:tPages,shop:tShop,backup:tBackup})[leaf]();
+ ({dash:tDash,orders:tOrders,products:tProducts,show:tShow,vars:tVars,cats:tCats,import:tImport,price:tPrice,promos:tPromos,bdays:tBdays,land:tLand,loy:tLoy,codes:tCodes,clients:tClients,leads:tLeads,banners:tBanners,pages:tPages,shop:tShop,backup:tBackup})[leaf]();
 }
 const fail=e=>{$("pane").innerHTML=`<div class="box"><div class="msg bad">Помилка: ${esc(e.message||e)}</div></div>`};
 const flash=(t,ok)=>{const m=$("fm");if(m){m.className="msg "+(ok?"ok":"bad");m.textContent=t}};
@@ -732,6 +732,40 @@ const SCD={hit:["Хіти продажу","is_hit"],new:["Новинки","is_ne
 let SC={k:"hit",q:"",cat:"",view:"sel",page:0,total:0,cnt:{},add:new Set(),rem:new Set(),noSpecial:false};
 const scOn=(p,k)=>k==="spec"?!!p.special:!!p[SCD[k][1]];
 async function scCounts(){for(const k of Object.keys(SCD)){let q=sb.from("products").select("id",{count:"exact",head:true});q=k==="spec"?q.not("special","is",null):q.eq(SCD[k][1],true);const r=await q;SC.cnt[k]=r.error?null:(r.count||0);if(k==="spec"&&r.error)SC.noSpecial=true}}
+/* ---------- Кольори: обʼєднання однакових товарів різного кольору ---------- */
+const VC="біл|чорн|сір|сріб|золот|графіт|бронз|беж|коричн|антрацит|хром|нікел|мідн|крем|венге|wenge|алюміні|антич|латун|жовт|червон|син|зелен|блакит|рожев|фіолет|помаранч|прозор|титан|шампан|перламут|пісочн|мокко|капучино|black|white|grey|gray|silver|gold";
+const VL="[\\p{L}ʼ'’]*",VPRE="(?:мат"+VL+"\\s+|глянц"+VL+"\\s+|темно-?|світло-?)?",VPOST="(?:\\s+(?:мат"+VL+"|глянц"+VL+"))?";
+const VRX=new RegExp("(?:^|[\\s(,/\\-\"«])("+VPRE+"(?:"+VC+")"+VL+"(?:-\\p{L}+)?"+VPOST+")","iu");
+const VRXG=new RegExp("(?<![\\p{L}])"+VPRE+"(?:"+VC+")"+VL+"(?:-\\p{L}+)?"+VPOST,"giu");
+const vColor=n=>{const m=String(n||"").match(VRX);if(!m)return"";const c=m[1].trim();if(/гірлянд/i.test(n)){if(/^біл/i.test(c))return"Біле світло";if(/^жовт/i.test(c))return"Тепле світло"}return c.charAt(0).toUpperCase()+c.slice(1).toLowerCase()};
+const vNorm=n=>String(n||"").toLowerCase().replace(VRXG," ").replace(/[(),\-–/]+/g," ").replace(/\s+/g," ").trim();
+let VST=null,VPR=null;
+async function tVars(){
+ $("pane").innerHTML='<div class="box">Завантаження…</div>';
+ try{const r=await sb.from("settings").select("value").eq("key","variants").maybeSingle();if(r.error)throw r.error;const v=(r.data&&r.data.value)||{};VST={on:v.on!==false,g:Array.isArray(v.g)?v.g:[]};
+  VPR=await allRows("products","id,name,category,subcategory,subcategory2,price,image_url,in_stock,active")}catch(e){return fail(e)}
+ vDraw()}
+function vFind(){const PM={},inG={};VPR.forEach(p=>PM[p.id]=p);VST.g.forEach(g=>Object.keys(g).forEach(id=>inG[id]=1));
+ const G={};VPR.forEach(p=>{if(p.active===false||inG[p.id])return;const c=vColor(p.name);if(!c)return;const k=[vNorm(p.name),p.category,p.subcategory,p.subcategory2,+p.price].join("|");(G[k]=G[k]||[]).push(p)});
+ return Object.values(G).filter(l=>l.length>1&&new Set(l.map(p=>vColor(p.name).toLowerCase())).size===l.length)}
+function vRow(p,c,chk,gi,k){return`<div class="vrow"><label><input type="checkbox" data-vc="${gi}" value="${esc(p.id)}"${chk?" checked":""} style="width:auto"></label>${p.image_url?`<img src="${esc(p.image_url)}" alt="" loading="lazy">`:'<span class="vni">без фото</span>'}<div class="vnm"><b>${esc(p.id)}</b> ${esc(p.name)}<small>${p.price} ₴${p.in_stock===false?" · немає в наявності":""}</small></div><input class="vcl" data-vk="${k}" data-vid="${esc(p.id)}" value="${esc(c)}" placeholder="Колір"></div>`}
+function vDraw(){const PM={};VPR.forEach(p=>PM[p.id]=p);const F=vFind();window.__vf=F;
+ $("pane").innerHTML=`<style>.vrow{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid #eee}.vrow img,.vni{width:44px;height:44px;object-fit:contain;border:1px solid #eee;border-radius:8px;flex:none;font-size:9px;display:grid;place-items:center;color:#999;text-align:center}.vnm{flex:1;min-width:0;font-size:13px}.vnm small{display:block;color:#777}.vcl{width:130px!important;flex:none}.vgr{border:1px solid #e3e6e8;border-radius:12px;padding:10px 12px;margin:10px 0}.vgr .vh{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}</style>
+ <div class="box"><h2>Кольори одного товару</h2><p class="mut">Однакові товари з однаковою ціною, що різняться лише кольором, показуються на сайті однією карткою. На сторінці товару покупець перемикає колір мініатюрами, і міняються назва, артикул, фото та наявність. Кожен колір лишається окремим артикулом.</p>
+ <label><input type="checkbox" id="von"${VST.on?" checked":""} style="width:auto"> <b>Обʼєднувати кольори на сайті</b></label> <button id="vsaveon">Зберегти</button><div class="msg" id="fm"></div></div>
+ <div class="box"><h3>Обʼєднані групи (${VST.g.length})</h3>${VST.g.length?VST.g.map((g,i)=>`<div class="vgr"><div class="vh"><b>${esc((PM[Object.keys(g)[0]]||{}).name||"")}</b><span><button data-vupd="${i}">Зберегти кольори</button> <button class="sec" data-vdel="${i}">Розʼєднати</button></span></div>${Object.keys(g).map(id=>PM[id]?vRow(PM[id],g[id],true,"m"+i,"m"+i):`<div class="vrow mut">${esc(id)} — товар видалено</div>`).join("")}</div>`).join(""):'<p class="mut">Поки немає. Знайдіть групи нижче.</p>'}</div>
+ <div class="box"><h3>Знайдені групи (${F.length})</h3><p class="mut">Однакова назва без кольору, той самий розділ і однакова ціна. Перевірте й приберіть галочку з товару, який не підходить. Колір можна виправити.</p>${F.length?`<button id="vall">Обʼєднати всі знайдені (${F.length})</button>`:""}${F.map((l,i)=>`<div class="vgr"><div class="vh"><b>${esc(l[0].name)}</b><button data-vadd="${i}">Обʼєднати</button></div>${l.map(p=>vRow(p,vColor(p.name),true,"f"+i,"f"+i)).join("")}</div>`).join("")||'<p class="mut">Нових груп не знайдено.</p>'}</div>
+ <div class="box"><h3>Обʼєднати вручну</h3><p class="mut">Впишіть артикули через кому (від 2). Колір визначиться з назви, потім його можна виправити в групі вище.</p><input id="vman" placeholder="Напр.: 67-01-33, 67-01-34"> <button id="vmanb">Обʼєднати</button></div>`}
+function vPick(k){const o={};document.querySelectorAll(`[data-vc="${k}"]`).forEach(c=>{if(!c.checked)return;const i=document.querySelector(`.vcl[data-vk="${k}"][data-vid="${CSS.escape(c.value)}"]`);o[c.value]=(i&&i.value.trim())||"—"});return o}
+async function vSave(msg){const r=await sb.from("settings").upsert({key:"variants",value:{on:VST.on,g:VST.g},updated_at:new Date().toISOString()});if(r.error){flash("Помилка: "+r.error.message);return false}vDraw();flash(msg+" Оновіть сайт (Ctrl+F5).",true);return true}
+document.addEventListener("click",async e=>{const t=e.target;if(!VST||!$("von"))return;
+ if(t.id==="vsaveon"){VST.on=$("von").checked;return vSave(VST.on?"Обʼєднання кольорів увімкнено ✓":"Обʼєднання кольорів вимкнено ✓")}
+ if(t.dataset.vadd!=null){const o=vPick("f"+t.dataset.vadd);if(Object.keys(o).length<2)return flash("Залиште щонайменше 2 товари.");VST.g.push(o);return vSave("Групу обʼєднано ✓")}
+ if(t.id==="vall"){const F=window.__vf||[];let n=0;F.forEach((l,i)=>{const o=vPick("f"+i);if(Object.keys(o).length>1){VST.g.push(o);n++}});return vSave("Обʼєднано груп: "+n+" ✓")}
+ if(t.dataset.vupd!=null){const i=+t.dataset.vupd,o=vPick("m"+i);if(Object.keys(o).length<2)return flash("У групі має лишитись щонайменше 2 товари. Щоб прибрати групу, натисніть «Розʼєднати».");VST.g[i]=o;return vSave("Кольори збережено ✓")}
+ if(t.dataset.vdel!=null){if(!confirm("Розʼєднати цю групу? Товари знову будуть окремими картками."))return;VST.g.splice(+t.dataset.vdel,1);return vSave("Групу розʼєднано ✓")}
+ if(t.id==="vmanb"){const PM={};VPR.forEach(p=>PM[p.id]=p);const inG={};VST.g.forEach(g=>Object.keys(g).forEach(id=>inG[id]=1));const ids=[...new Set($("vman").value.split(/[,;\s]+/).map(s=>s.trim()).filter(Boolean))];const bad=ids.filter(id=>!PM[id]),dup=ids.filter(id=>inG[id]);if(bad.length)return flash("Не знайдено артикул: "+bad.join(", "));if(dup.length)return flash("Вже в іншій групі: "+dup.join(", "));if(ids.length<2)return flash("Впишіть щонайменше 2 артикули.");const o={};ids.forEach(id=>o[id]=vColor(PM[id].name)||PM[id].name.slice(-20));VST.g.push(o);return vSave("Групу обʼєднано ✓")}
+});
 async function tShow(){
  if(!TREE.length){try{await loadTree()}catch(e){return fail(e)}}
  const tops=sk(treeModel()).map(n=>n.name);SC.add.clear();SC.rem.clear();SC.page=0;await scCounts();
