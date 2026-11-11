@@ -107,17 +107,17 @@ function mapRows(all){
 }
 
 /* ---------- персональні картки клієнта ---------- */
-let LOY={on:true,one:true,tiers:[{k:"silver",p:5,f:0},{k:"gold",p:10,f:5000},{k:"platinum",p:15,f:15000},{k:"vip",p:20,f:50000}]};
+let LOY={on:true,one:true,tiers:[{k:"silver",p:5,f:0},{k:"gold",p:10,f:5000},{k:"platinum",p:15,f:15000},{k:"vip",p:20,f:0}]};
 const TN={silver:"Silver",gold:"Gold",platinum:"Platinum",vip:"VIP"};
 const cardPct=()=>LOY.on===false||!prof?0:(+prof.card_pct||0);
-const loyOne=s=>{if(LOY.one===false)return 0;let m=0;(LOY.tiers||[]).forEach(t=>{if(+t.f>0&&+t.f<=s)m=Math.max(m,+t.p)});return m};
+const loyOne=s=>{if(LOY.one===false)return 0;let m=0;(LOY.tiers||[]).forEach(t=>{if(t.k!=="vip"&&+t.f>0&&+t.f<=s)m=Math.max(m,+t.p)});return m};
 const tierRank=k=>(LOY.tiers||[]).findIndex(t=>t.k===k);
 const cardNo=n=>{const m=String(n||"").match(/(\d+)/);return"TE-"+(m?m[1].padStart(4,"0"):"0000")};
 function wCard(k,pct,no,name){return`<div class="wcard ${esc(k)}"><span class="wsh"></span><img class="wlogo" src="${esc(BASE)}logo2.webp" alt="Trend Electro"><div class="wname">${esc(name||"")}</div><div class="wpct">${esc(pct)}% ЗНИЖКА</div><div class="wtier">${esc(TN[k]||k)}${k==="vip"?"<small>діамантова</small>":""}</div><div class="wno"><small>КАРТКА №</small><b>${esc(no)}</b></div></div>`}
-function loyBlock(){if(!prof||LOY.on===false)return"";const T=LOY.tiers,k=prof.card_tier||"silver",cur=T.find(t=>t.k===k)||T[0],sp=+prof.loyalty_spent||0,nx=T.find(t=>+t.f>sp);
+function loyBlock(){if(!prof||LOY.on===false)return"";const T=LOY.tiers,k=prof.card_tier||"silver",cur=T.find(t=>t.k===k)||T[0],sp=+prof.loyalty_spent||0,nx=T.find(t=>t.k!=="vip"&&+t.f>sp),TL=T.filter(t=>t.k!=="vip"||k==="vip");
  const prog=nx?`<div class="lyn">Ще <b>${money(Math.max(0,+nx.f-sp))}</b> покупок до картки <b>${esc(TN[nx.k])}</b> зі знижкою <b>${nx.p}%</b></div><div class="lybar"><i style="width:${Math.min(100,Math.max(3,Math.round((sp-+cur.f)/(+nx.f-+cur.f)*100)))}%"></i></div><div class="lyr"><span>${money(sp)}</span><span>${money(+nx.f)}</span></div>`:`<div class="lyn">🎉 У вас найвищий рівень картки. Дякуємо, що ви з нами!</div>`;
- const one=LOY.one===false?"":`<div class="sku">Разова знижка за велике замовлення: ${T.filter(t=>+t.f>0).map(t=>"від "+money(+t.f)+" → "+t.p+"%").join(", ")}.</div>`;
- return`<div class="loy">${wCard(k,cur.p,cardNo(prof.card_number),prof.full_name)}<div class="lyb"><div class="lyh">Куплено на суму: <b>${money(sp)}</b></div>${prog}<div id="lypend" class="sku"></div><div class="lylad">${T.map(t=>`<div class="${t.k===k?"on":""}${sp>=+t.f?" ok":""}"><b>${esc(TN[t.k])}</b><span>${t.p}%</span><small>${+t.f?"від "+money(+t.f):"одразу"}</small></div>`).join("")}</div><div class="sku">Знижка за карткою діє на всі товари сайту і застосовується автоматично. До суми рахуємо виконані замовлення.</div>${one}</div></div>`}
+ const one=LOY.one===false?"":`<div class="sku">Разова знижка за велике замовлення: ${T.filter(t=>t.k!=="vip"&&+t.f>0).map(t=>"від "+money(+t.f)+" → "+t.p+"%").join(", ")}.</div>`;
+ return`<div class="loy">${wCard(k,cur.p,cardNo(prof.card_number),prof.full_name)}<div class="lyb"><div class="lyh">Куплено на суму: <b>${money(sp)}</b></div>${prog}<div id="lypend" class="sku"></div><div class="lylad">${TL.map(t=>`<div class="${t.k===k?"on":""}${sp>=+t.f?" ok":""}"><b>${esc(TN[t.k])}</b><span>${t.p}%</span><small>${+t.f?"від "+money(+t.f):"одразу"}</small></div>`).join("")}</div><div class="sku">Знижка за карткою діє на всі товари сайту і застосовується автоматично. До суми рахуємо виконані замовлення.</div>${one}</div></div>`}
 function loyPop(){if(!prof||!me||LOY.on===false||curH().indexOf("#/l/")===0)return;let seen=null;try{seen=localStorage.getItem("te_tier_"+me.id)}catch(e){}const k=prof.card_tier||"silver";if(seen===k)return;
  if(seen&&tierRank(k)<=tierRank(seen)){try{localStorage.setItem("te_tier_"+me.id,k)}catch(e){}return}
  const t=LOY.tiers.find(x=>x.k===k)||LOY.tiers[0],first=!seen;try{localStorage.setItem("te_tier_"+me.id,k)}catch(e){}
