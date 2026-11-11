@@ -860,3 +860,8 @@ a.chkb{text-decoration:none;display:inline-block}
  .hrow .card .add{height:30px;font-size:12px;gap:5px;padding:0 6px;border-radius:8px}
  .hrow .card .add svg{width:14px;height:14px}
 }
+
+/* v90: «Вийти» у шапці кабінету */
+.dhr{display:flex;align-items:center;gap:8px}
+.dh .rout{width:auto;height:36px;border-radius:999px;padding:0 14px;font-size:14px;font-weight:700;line-height:1;color:var(--ink);border:1px solid var(--line);background:var(--bg)}
+.dh .rout[hidden]{display:none}
