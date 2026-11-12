@@ -567,7 +567,7 @@ async function viewProduct(id){
  QTY=1;PTAB="info";document.title=p.n+" — Trend Electro";
  const pi=priceInfo(p),o=pi.base,pc=pi.pc,disc=pi.disc;
  $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a>${p.c.map((n,i)=>`<span>›</span><a href="${href(p.c.slice(0,i+1))}">${esc(n)}</a>`).join("")}</nav>
-<div class="pgrid"><div class="pl"><div class="pm"><div class="pimg" id="pmain">${img(p.img,900,900,p.n,1)}</div><div class="thumbs" id="pthumbs"></div></div><div class="box pkbox"><h3>Основні характеристики</h3><div id="pkey"><div class="sku">Завантаження…</div></div></div></div><div class="pinfo"><h1>${esc(p.n)}</h1>
+<div class="pgrid"><div class="pl"><div class="pm"><div class="pimg" id="pmain"${zoomOn()?' data-z="1" tabindex="0" role="button" aria-label="Збільшити фото"':""}>${img(p.img,900,900,p.n,1)}</div><div class="thumbs" id="pthumbs"></div></div><div class="box pkbox"><h3>Основні характеристики</h3><div id="pkey"><div class="sku">Завантаження…</div></div></div></div><div class="pinfo"><h1>${esc(p.n)}</h1>
 <div class="meta"><span>Артикул: <b>${esc(p.id)}</b></span>${p.b?`<span>Бренд: <a href="#/c/" data-brand="${esc(p.b)}">${esc(p.b)}</a></span>`:""}</div>${vBlock(p)}
 <div class="avail${p.st?"":" no"}">${p.st?ico("check")+stkTxt(p):"Немає в наявності"}</div>
 <div class="bigprice${disc>0?" sale":""}">${money(pc)}${pi.base>pc?`<s>${money(pi.base)}</s>`:""}${disc>0?`<span class="bds2">${saleBadges(pi)}</span>`:""}</div>${packHtml(p,1)}${p.ofr?`<div class="spbox"><span class="bd p">Спеціальна пропозиція</span><div>${esc(p.ofr)}</div></div>`:""}
@@ -592,6 +592,98 @@ function drawDet(p){
  if(PTAB==="spec"){const rows=specRows(p.sp);d.innerHTML=rows.length?`<table class="sp">${rows.map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join("")}</table>`:'<div class="sku">Характеристики не вказані.</div>'}
  else d.innerHTML=p.d?`<div class="txt">${esc(p.d).split(/\n+/).map(x=>`<p>${x}</p>`).join("")}</div>`:'<div class="sku">Опис скоро з’явиться. Якщо маєте питання щодо товару — напишіть нам.</div>';
 }
+
+/* ---------- збільшення фото товару (вмикається/вимикається в адмінці: Налаштування → «Збільшення фото») ---------- */
+const zoomOn=()=>!(SHOP&&SHOP.zoom_off);
+let ZB=null;
+function zoomOpen(){
+ const m=$("pmain");if(!m||ZB)return;
+ const btns=[...document.querySelectorAll("#pthumbs button[data-ph]")],cur=m.querySelector("img");
+ let urls=btns.map(b=>b.dataset.ph).filter(Boolean),idx=Math.max(0,btns.findIndex(b=>b.classList.contains("on")));
+ if(!urls.length){const u=cur&&cur.dataset.o;if(!u)return;urls=[u];idx=0}
+ const opener=document.activeElement,big=u=>thumb(u,1600,1600),MAX=4,many=urls.length>1,touch=!!(window.matchMedia&&matchMedia("(pointer:coarse)").matches);
+ const d=document.createElement("div");d.className="zlb";d.setAttribute("role","dialog");d.setAttribute("aria-modal","true");d.setAttribute("aria-label","Перегляд фото");
+ d.innerHTML=`<div class="zbar"><span class="zcnt"></span><div class="zbt"><button type="button" data-zz="-" aria-label="Зменшити">−</button><button type="button" data-zz="+" aria-label="Збільшити">+</button><button type="button" data-zz="0" aria-label="Показати повністю" class="zfit">↺</button><button type="button" data-zx aria-label="Закрити">✕</button></div></div><div class="zst"><img class="zim" alt="" draggable="false"></div>${many?`<button type="button" class="znav zp" data-zn="-1" aria-label="Попереднє фото">‹</button><button type="button" class="znav zn" data-zn="1" aria-label="Наступне фото">›</button><div class="zth">${urls.map((u,i)=>`<button type="button" data-zi="${i}" aria-label="Фото ${i+1}">${img(u,120,120)}</button>`).join("")}</div>`:""}<div class="zhint">${touch?"Двічі торкніться або розведіть пальці, щоб наблизити":"Колесо миші — наближення, перетягування — рух, Esc — закрити"}</div>`;
+ document.body.appendChild(d);ZB=d;
+ const st=d.querySelector(".zst"),im=d.querySelector(".zim"),cnt=d.querySelector(".zcnt"),pts=new Map();
+ let s=1,tx=0,ty=0,g=null,last=0,lx0=0,ly0=0,dead=0,zdt=0;
+ const lim=()=>[Math.max(0,(im.clientWidth*s-st.clientWidth)/2),Math.max(0,(im.clientHeight*s-st.clientHeight)/2)];
+ const clampT=()=>{const[a,b]=lim();tx=Math.min(a,Math.max(-a,tx));ty=Math.min(b,Math.max(-b,ty))};
+ const apply=()=>{im.style.transform=`translate(${tx}px,${ty}px) scale(${s})`;d.classList.toggle("zoomed",s>1.02);im.style.cursor=s>1.02?"grab":"zoom-in"};
+ const anim=f=>{im.classList.add("zanim");f();setTimeout(()=>im.classList.remove("zanim"),220)};
+ const at=(ns,cx,cy)=>{ns=Math.min(MAX,Math.max(1,ns));const k=ns/s;tx=cx-(cx-tx)*k;ty=cy-(cy-ty)*k;s=ns;if(s<1.02){s=1;tx=ty=0}clampT();apply()};
+ const rel=(x,y)=>{const r=st.getBoundingClientRect();return[x-r.left-r.width/2,y-r.top-r.height/2]};
+ const show=i=>{idx=(i+urls.length)%urls.length;s=1;tx=ty=0;im.style.opacity=0;im.src=big(urls[idx]);im.onload=()=>{im.style.opacity=1};im.onerror=()=>{im.style.opacity=1};apply();cnt.textContent=many?(idx+1)+" / "+urls.length:"";
+  d.querySelectorAll(".zth button").forEach((b,k)=>b.classList.toggle("on",k===idx));const on=d.querySelector(".zth .on");if(on&&on.scrollIntoView)on.scrollIntoView({block:"nearest",inline:"center"});
+  [1,-1].forEach(n=>{if(many){const p=new Image();p.src=big(urls[(idx+n+urls.length)%urls.length])}})};
+ const go=n=>{if(many)show(idx+n)};
+ function close(fromPop){
+  if(!ZB)return;window.removeEventListener("popstate",onPop);document.removeEventListener("keydown",onKey,true);
+  document.documentElement.classList.remove("zlock");d.remove();ZB=null;
+  if(many){const pm=$("pmain");if(pm){pm.innerHTML=img(urls[idx],900,900);document.querySelectorAll("#pthumbs button").forEach((b,k)=>b.classList.toggle("on",k===idx))}}
+  if(!fromPop&&history.state&&history.state.zlb)history.back();
+  if(opener&&opener.focus&&document.contains(opener))try{opener.focus({preventScroll:true})}catch(e){}
+ }
+ const onPop=()=>close(true);
+ const onKey=e=>{
+  if(e.key==="Escape"){e.preventDefault();e.stopPropagation();close();return}
+  if(e.key==="ArrowRight"){e.preventDefault();go(1)}else if(e.key==="ArrowLeft"){e.preventDefault();go(-1)}
+  else if(e.key==="+"||e.key==="="){e.preventDefault();anim(()=>at(s*1.5,0,0))}else if(e.key==="-"||e.key==="_"){e.preventDefault();anim(()=>at(s/1.5,0,0))}else if(e.key==="0"){e.preventDefault();anim(()=>at(1,0,0))}
+  else if(e.key==="Tab"){const f=[...d.querySelectorAll("button")].filter(b=>b.offsetParent!==null);if(!f.length)return;const i=f.indexOf(document.activeElement);e.preventDefault();f[(i+(e.shiftKey?-1:1)+f.length)%f.length].focus()}
+ };
+ document.addEventListener("keydown",onKey,true);
+ d.addEventListener("click",e=>{
+  const t=e.target.closest("button");
+  if(t){if(t.dataset.zx!==undefined)close();else if(t.dataset.zn)go(+t.dataset.zn);else if(t.dataset.zi!==undefined)show(+t.dataset.zi);else if(t.dataset.zz){const z=t.dataset.zz;anim(()=>at(z==="+"?s*1.5:z==="-"?s/1.5:1,0,0))}return}
+ });
+ st.addEventListener("wheel",e=>{e.preventDefault();const[x,y]=rel(e.clientX,e.clientY);at(s*Math.exp(-e.deltaY*(e.ctrlKey?.012:.002)),x,y)},{passive:false});
+ st.addEventListener("pointerdown",e=>{
+  if(e.button>0)return;try{st.setPointerCapture(e.pointerId)}catch(x){}pts.set(e.pointerId,[e.clientX,e.clientY]);
+  if(pts.size===2){const[a,b]=[...pts.values()];g={pinch:1,d0:Math.hypot(a[0]-b[0],a[1]-b[1])||1,s0:s};dead=1}
+  else{g={x:e.clientX,y:e.clientY,tx:tx,ty:ty,t:Date.now(),mode:"",moved:0,target:e.target}}
+ });
+ st.addEventListener("pointermove",e=>{
+  if(!pts.has(e.pointerId)||!g)return;pts.set(e.pointerId,[e.clientX,e.clientY]);
+  if(g.pinch&&pts.size===2){const[a,b]=[...pts.values()],[cx,cy]=rel((a[0]+b[0])/2,(a[1]+b[1])/2);at(g.s0*Math.hypot(a[0]-b[0],a[1]-b[1])/g.d0,cx,cy);return}
+  if(g.pinch)return;
+  const dx=e.clientX-g.x,dy=e.clientY-g.y;if(Math.hypot(dx,dy)>6)g.moved=1;
+  if(s>1.02){tx=g.tx+dx;ty=g.ty+dy;clampT();apply();return}
+  if(!g.mode&&g.moved)g.mode=Math.abs(dx)>Math.abs(dy)?"x":"y";
+  if(g.mode==="x"&&many)im.style.transform=`translate(${dx}px,0) scale(1)`;
+  else if(g.mode==="y"&&dy>0){im.style.transform=`translate(0,${dy}px) scale(1)`;d.style.background=`rgba(8,10,12,${Math.max(.35,.94-dy/500)})`}
+ });
+ const end=e=>{
+  if(!pts.has(e.pointerId))return;pts.delete(e.pointerId);
+  if(!g)return;if(g.pinch){if(pts.size===0)g=null;return}
+  const f=g;g=null;d.style.background="";const dx=e.clientX-f.x,dy=e.clientY-f.y,now=Date.now();
+  if(dead){dead=0;apply();return}
+  if(s>1.02){if(!f.moved&&now-f.t<400){if(now-last<320&&Math.hypot(f.x-lx0,f.y-ly0)<30){last=0;zdt=now;anim(()=>at(1,0,0));return}last=now;lx0=f.x;ly0=f.y}apply();return}
+  if(f.mode==="x"&&many&&Math.abs(dx)>Math.min(70,st.clientWidth*.18)){go(dx<0?1:-1);return}
+  if(f.mode==="y"&&dy>110){close();return}
+  anim(()=>apply());
+  if(!f.moved&&now-f.t<400){
+   if(now-last<320&&Math.hypot(f.x-lx0,f.y-ly0)<30){last=0;zdt=now;const[x,y]=rel(f.x,f.y);anim(()=>at(2.6,x,y));return}
+   last=now;lx0=f.x;ly0=f.y;
+   if(f.target===st)close();
+  }
+ };
+ st.addEventListener("pointerup",end);st.addEventListener("pointercancel",e=>{pts.delete(e.pointerId);if(!pts.size){g=null;apply()}});
+ st.addEventListener("dblclick",e=>{if(Date.now()-zdt<700)return;if(s>1.02){anim(()=>at(1,0,0))}});
+ window.addEventListener("resize",()=>{clampT();apply()});
+ try{history.pushState({zlb:1},"",location.href)}catch(e){}
+ window.addEventListener("popstate",onPop);
+ document.documentElement.classList.add("zlock");
+ show(idx);d.querySelector("[data-zx]").focus({preventScroll:true});
+ setTimeout(()=>{const h=d.querySelector(".zhint");if(h)h.classList.add("off")},3800);
+}
+document.addEventListener("click",e=>{
+ if(!zoomOn()||ZB)return;const m=e.target.closest&&e.target.closest("#pmain[data-z]");
+ if(!m||!m.querySelector("img"))return;e.preventDefault();zoomOpen();
+});
+document.addEventListener("keydown",e=>{
+ if(ZB||!zoomOn()||(e.key!=="Enter"&&e.key!==" "))return;const m=e.target.closest&&e.target.closest("#pmain[data-z]");
+ if(m&&m.querySelector("img")){e.preventDefault();zoomOpen()}
+});
 
 /* ---------- каталог-меню (дерево з розкриттям) ---------- */
 function menuHtml(n,lvl){
@@ -941,7 +1033,7 @@ function lSimple(L){
  const sale=pr.save>0,price=one?`<div class="lxpr">${sale?`<div class="lxw"><small>Було</small><s class="lxo">${money(pr.s)}</s></div>`:""}<div class="lxw"><small>${sale?"Тепер":"Ціна"}</small><b class="lxn">${money(pr.l)}</b></div>${sale?`<span class="lxp">−${pr.pct}%</span>`:""}</div>${sale?`<div class="lxsv">Ви економите ${money(pr.save)}</div>`:""}`:"";
  const cta=`<div class="lxcta"><button class="lbtn lxbtn" data-lgo="${one?"order":"prods"}">${one?(sale?"Замовити зі знижкою":"Замовити"):"Обрати товар"}</button>${one?`<a class="lxlnk" href="${esc(lSite(p.id))}" target="_blank" rel="noopener">${sale?"Перевірити ціну на сайті ↗":"Дивитись на сайті ↗"}</a>`:""}</div>`;
  const ims=one?[p.img].concat(p.ims||[]).filter(Boolean):[];
- const right=one?`<div class="lxim"><div class="lxpic" id="pmain">${img(p.img,900,900,p.n)}</div>${sale?`<span class="lxbadge">−${pr.pct}%</span>`:""}${ims.length>1?`<div class="thumbs" id="pthumbs">${ims.slice(0,6).map((u,i)=>`<button data-ph="${esc(u)}" class="${i?"":"on"}" aria-label="Фото ${i+1}">${img(u,120,120)}</button>`).join("")}</div>`:""}</div>`:"";
+ const right=one?`<div class="lxim"><div class="lxpic" id="pmain"${zoomOn()?' data-z="1" tabindex="0" role="button" aria-label="Збільшити фото"':""}>${img(p.img,900,900,p.n)}</div>${sale?`<span class="lxbadge">−${pr.pct}%</span>`:""}${ims.length>1?`<div class="thumbs" id="pthumbs">${ims.slice(0,6).map((u,i)=>`<button data-ph="${esc(u)}" class="${i?"":"on"}" aria-label="Фото ${i+1}">${img(u,120,120)}</button>`).join("")}</div>`:""}</div>`:"";
  const hero=`<section class="lsec lxh${one?"":" lxh1"}${th.bg?" lxbg":""}"${th.bg?` style="background-image:linear-gradient(rgba(5,15,20,.45),rgba(5,15,20,.45)),url('${esc(th.bg)}')"`:""}><div class="lxl">${ttl?`<span class="lxk">${esc(ttl)}</span>`:""}${one&&p.b?`<span class="lxk lxk2">${esc(p.b)}</span>`:""}<h1>${esc(one?p.n:(b.title||L.title||"Акція"))}</h1>${b.sub?`<p class="lxsub">${esc(b.sub)}</p>`:""}
   ${one&&rows.length?`<ul class="lxb">${rows.slice(0,4).map(r=>`<li><span>${esc(r[0])}</span> <b>${esc(r[1])}</b></li>`).join("")}</ul>`:""}
   ${price}${e?`<div class="lxtl">До кінця акції:</div>${lTiles(e)}`:""}${cta}${one?`<div class="lxst">${p.st?"✓ В наявності":"Немає в наявності"} · Арт. ${esc(p.id)}</div>`:""}</div>${right}</section>`;

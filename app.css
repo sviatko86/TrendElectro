@@ -881,3 +881,32 @@ a.chkb{text-decoration:none;display:inline-block}
 .vsw a:not(.on):hover{border-color:#0ABAB5;transform:translateY(-1px)}
 .vsw a.out{opacity:.45}
 .vsw a.out::after{content:"";position:absolute;left:-4px;right:-4px;top:50%;height:2px;background:#9aa1a8;transform:rotate(-35deg)}
+
+/* збільшення фото товару */
+#pmain[data-z]{cursor:zoom-in;-webkit-tap-highlight-color:transparent}
+#pmain[data-z]:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.pimg[data-z]:after{content:"";position:absolute;right:12px;bottom:12px;width:42px;height:42px;border-radius:50%;background:rgba(21,25,28,.74) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-4-4M11 8v6M8 11h6'/%3E%3C/svg%3E") center/22px no-repeat;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.25);transition:transform .2s}
+.pimg[data-z]:hover:after{transform:scale(1.1)}
+html.zlock,html.zlock body{overflow:hidden!important;overscroll-behavior:none}
+.zlb{position:fixed;inset:0;z-index:1200;background:rgba(8,10,12,.97);display:flex;flex-direction:column;color:#fff;animation:zin .18s ease-out;-webkit-user-select:none;user-select:none}
+@keyframes zin{from{opacity:0}to{opacity:1}}
+.zbar{display:flex;align-items:center;justify-content:space-between;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 8px;position:relative;z-index:2}
+.zcnt{font-size:14px;opacity:.8;min-width:60px}
+.zbt{display:flex;gap:8px}
+.zbt button,.znav{width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.12);color:#fff;font-size:22px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0;transition:background .15s}
+.zbt button:hover,.znav:hover{background:rgba(255,255,255,.24)}
+.zbt button:focus-visible,.znav:focus-visible,.zth button:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.zst{flex:1;min-height:0;position:relative;display:grid;grid-template:100%/100%;place-items:center;overflow:hidden;touch-action:none}
+.zim{max-width:100%;max-height:100%;min-height:0;min-width:0;object-fit:contain;transform-origin:center center;will-change:transform;background:#fff;border-radius:6px;transition:opacity .2s;cursor:zoom-in}
+.zim.zanim{transition:transform .2s ease,opacity .2s}
+.zlb:not(.zoomed) .zfit{opacity:.35}
+.znav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;font-size:30px}
+.zp{left:14px}.zn{right:14px}
+.zth{display:flex;gap:8px;justify-content:center;padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px));overflow-x:auto;position:relative;z-index:2}
+.zth button{flex:none;width:58px;height:58px;border-radius:10px;border:2px solid transparent;background:#fff;padding:0;position:relative;overflow:hidden;opacity:.65;cursor:pointer}
+.zth button.on{border-color:var(--acc);opacity:1}
+.zth img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:3px}
+.zhint{position:absolute;left:50%;bottom:calc(86px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:rgba(0,0,0,.62);padding:8px 14px;border-radius:20px;font-size:13px;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;pointer-events:none;transition:opacity .5s;z-index:2}
+.zhint.off{opacity:0}
+@media(max-width:700px){.znav{display:none}.zbt button{width:42px;height:42px}}
+@media(prefers-reduced-motion:reduce){.zlb,.zim,.zim.zanim{animation:none!important;transition:none!important}}
