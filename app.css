@@ -910,3 +910,5 @@ html.zlock,html.zlock body{overflow:hidden!important;overscroll-behavior:none}
 .zhint.off{opacity:0}
 @media(max-width:700px){.znav{display:none}.zbt button{width:42px;height:42px}}
 @media(prefers-reduced-motion:reduce){.zlb,.zim,.zim.zanim{animation:none!important;transition:none!important}}
+/* iOS: нижня навігація не стрибає при згортанні панелі Safari */
+.bnav{-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);-webkit-backface-visibility:hidden;backface-visibility:hidden}
