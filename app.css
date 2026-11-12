@@ -914,3 +914,5 @@ html.zlock,html.zlock body{overflow:hidden!important;overscroll-behavior:none}
 .bnav{-webkit-transform:translate3d(0,0,0);transform:translate3d(0,0,0);-webkit-backface-visibility:hidden;backface-visibility:hidden}
 /* нижня навігація нижча: менший відступ під домашню смужку iPhone, більше місця під контент */
 :root{--bi:calc(env(safe-area-inset-bottom,0px)*.4)}
+/* банер на телефоні: без повільного наближення картинки (воно давало ривок у кінці гортання) */
+@media (max-width:1023px),(pointer:coarse){.sl.on img{animation:none!important;transform:none}}
