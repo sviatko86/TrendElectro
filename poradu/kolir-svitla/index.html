@@ -25,7 +25,7 @@
 <script src="https://trendelectro.com.ua/config.js"></script>
 <script>/* каталог починає вантажитись одразу, паралельно з кодом сайту */try{(function(){var c=null;try{c=JSON.parse(localStorage.getItem("te_cat")||"null")}catch(e){}if(c&&c.rows&&c.rows.length&&Date.now()-c.t<864e5)return;var T=window.TE;if(!T||!T.url||!window.fetch)return;var n=Math.ceil((+localStorage.getItem("te_pc")||3000)/1000)+1,q=[];for(var i=0;i<n;i++)q.push(fetch(T.url+"/rest/v1/products?select=id,name,category,subcategory,subcategory2,brand,price,old_price,image_url,in_stock,is_hit,is_new,special,pack_qty,in_pack,in_box,stock,pack_only&active=eq.true&order=id.asc&offset="+i*1000+"&limit=1000",{headers:{apikey:T.key,Authorization:"Bearer "+T.key}}).then(function(r){if(!r.ok)throw 0;return r.json()}));window.__CAT=Promise.all(q);window.__CAT.catch(function(){})})()}catch(e){}</script>
 <script defer src="supabase.js"></script>
-<script defer src="https://trendelectro.com.ua/app.js?v=103"></script>
+<script defer src="https://trendelectro.com.ua/app.js?v=104"></script>
 <link rel="canonical" href="https://trendelectro.com.ua/poradu/kolir-svitla/">
 <script>window.__R="#/guide/kolir-svitla";window.__BASE="https://trendelectro.com.ua/"</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Колір світла лампи: 2700K, 4000K чи 6500K","description":"Що означають кельвіни на упаковці та яку температуру обрати для кухні, спальні й офісу.","mainEntityOfPage":"https://trendelectro.com.ua/poradu/kolir-svitla/","author":{"@type":"Organization","name":"Trend Electro"},"publisher":{"@type":"Organization","name":"Trend Electro"},"image":"https://trendelectro.com.ua/img/11-11-41.webp"}</script>
