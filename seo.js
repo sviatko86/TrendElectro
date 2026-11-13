@@ -189,6 +189,7 @@ const STOPW = new Set("який яка які яке чи що як для пр�
 const LATN = { е: "e", х: "x", а: "a", с: "c", о: "o", к: "k", м: "m", т: "t", в: "b", н: "h", р: "p", і: "i", у: "y" };
 const nz = t => String(t).toLowerCase().replace(/[\u0430-\u044f\u0456]/g, c => LATN[c] || c);
 const stem = t => t.length <= 4 ? t : t.slice(0, Math.min(6, t.length - 1));
+const fixLinks = h => h.replace(/href="#\/guide\/([a-z0-9-]*)"/g, (m, s) => `href="${SITE}/poradu/${s ? s + "/" : ""}"`).replace(/href="#\/c\/([^"]*)"/g, (m, p) => { const pt = p.split("/").filter(Boolean).map(x => { try { return decodeURIComponent(x) } catch (e) { return x } }); return pt.length ? `href="${SITE}/c/${pt.map(x => slug(x)).join("/")}/"` : `href="${SITE}/"` });
 function artBlock(a) {
   const toks = [...new Set(String(a.title).toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(t => t.length >= 3 && !STOPW.has(t)).map(t => stem(nz(t))))];
   const cat = a.category ? `<p><a href="${SITE}/c/${slug(a.category)}/">Усі товари розділу «${esc(a.category)}»</a></p>` : "";
@@ -206,7 +207,7 @@ if (ART.length) {
   for (const a of ART) {
     const rel = `poradu/${a.slug}/`, url = `${SITE}/${rel}`;
     fs.mkdirSync(rel, { recursive: true });
-    fs.writeFileSync(rel + "index.html", page({ title: `${a.title} — Trend Electro`, desc: a.description, url, hash: "#/guide/" + a.slug, body: `<h1>${esc(a.title)}</h1>${a.body}${SEO_LINKS ? artBlock(a) : ""}`, ld: { "@context": "https://schema.org", "@type": "Article", headline: a.title, description: a.description, mainEntityOfPage: url, author: { "@type": "Organization", name: "Trend Electro" }, publisher: { "@type": "Organization", name: "Trend Electro" }, ...(a.img ? { image: `${SITE}/${a.img}` } : {}) }, image: a.img ? `${SITE}/${a.img}` : undefined }));
+    fs.writeFileSync(rel + "index.html", page({ title: `${a.title} — Trend Electro`, desc: a.description, url, hash: "#/guide/" + a.slug, body: `<h1>${esc(a.title)}</h1>${SEO_LINKS ? fixLinks(a.body) : a.body}${SEO_LINKS ? artBlock(a) : ""}`, ld: { "@context": "https://schema.org", "@type": "Article", headline: a.title, description: a.description, mainEntityOfPage: url, author: { "@type": "Organization", name: "Trend Electro" }, publisher: { "@type": "Organization", name: "Trend Electro" }, ...(a.img ? { image: `${SITE}/${a.img}` } : {}) }, image: a.img ? `${SITE}/${a.img}` : undefined }));
     urls.push([url, 0.6]);
   }
 }
