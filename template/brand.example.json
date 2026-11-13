@@ -1,0 +1,17 @@
+{
+  "name": "ВСТАВТЕ: назва магазину",
+  "domain": "ВСТАВТЕ: домен без https, напр. myshop.com.ua",
+  "color": "#0ABAB5",
+  "card_prefix": "SHOP",
+  "title_suffix": "інтернет-магазин одягу",
+  "supabase_url": "ВСТАВТЕ: https://xxxx.supabase.co",
+  "supabase_key": "ВСТАВТЕ: publishable (anon) ключ Supabase",
+  "assets": {
+    "logo1.webp": "шлях/до/вашого/логотипа1.webp",
+    "logo2.webp": "шлях/до/вашого/логотипа2.webp"
+  },
+  "replacements": {
+    "електротовари та LED-освітлення": "одяг та аксесуари",
+    "електротоварів": "одягу"
+  }
+}
