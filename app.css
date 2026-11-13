@@ -916,3 +916,9 @@ html.zlock,html.zlock body{overflow:hidden!important;overscroll-behavior:none}
 :root{--bi:calc(env(safe-area-inset-bottom,0px)*.4)}
 /* банер на телефоні: без повільного наближення картинки (воно давало ривок у кінці гортання) */
 @media (max-width:1023px),(pointer:coarse){.sl.on img{animation:none!important;transform:none}}
+
+/* покращені лендінги (перемикач в адмінці) */
+.lnd.lfix .lsec{opacity:1;transform:none}
+body.noord .lnd.lfix .lstrip:not(.lend),body.noord .lnd.lfix .lxtl,body.noord .lnd.lfix .lxt{display:none}
+body.lndon:has(.lnd.lfix) .ordbar{display:none}
+.lxs3{display:flex;gap:10px;justify-content:center;margin:4px 0}.lxs3 span{display:block;width:30%;max-width:130px;aspect-ratio:1;border-radius:14px;overflow:hidden;background:#fff}.lxs3 img{width:100%;height:100%;object-fit:cover;display:block}

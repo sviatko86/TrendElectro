@@ -1,5 +1,5 @@
 /* Trend Electro: service worker. Сторінка й основні файли — з мережі (якщо мережа повільна понад 3 с — з памʼяті); фото товарів — одразу з памʼяті телефону, оновлюються у фоні. */
-const V="te-shell-32",IMG="te-img-2",MAXIMG=1200,S=self.registration.scope,CORE=["","index.html","app.js","app.css","config.js","articles.json","logo1.webp","logo2.webp","manifest.webmanifest"].map(x=>S+x);
+const V="te-shell-33",IMG="te-img-2",MAXIMG=1200,S=self.registration.scope,CORE=["","index.html","app.js","app.css","config.js","articles.json","logo1.webp","logo2.webp","manifest.webmanifest"].map(x=>S+x);
 self.addEventListener("install",e=>{e.waitUntil(caches.open(V).then(c=>Promise.allSettled(CORE.map(u=>c.add(u)))).then(()=>self.skipWaiting()))});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V&&x!==IMG).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 let trimming=0;
