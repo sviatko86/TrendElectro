@@ -715,14 +715,14 @@ function drawCart(){stkClamp();
  const ids=Object.keys(cart).filter(i=>M[i]);let n=0;
  $("lines").innerHTML=ids.length?ids.map(i=>{const p=M[i],q=cart[i];n+=q;const u="#/p/"+encodeURIComponent(i);return `<div class="row"><a class="rth" href="${u}" aria-label="${esc(p.n)}">${img(p.img,120,120)}</a><a href="${u}">${esc(p.n)}</a><b>${money(price(p)*q)}</b><div class="qty"><button data-m="${esc(i)}" aria-label="Менше">−</button>${q}<button data-p="${esc(i)}" aria-label="Більше">+</button></div><span class="sku">${money(price(p))} / шт.</span></div>`}).join(""):'<div class="empty">Кошик поки порожній.<br>Додайте товари з каталогу — і оформлення займе хвилину.<br><br><a class="btn" href="#/c/">До каталогу</a></div>';
  const t=totals(ids);$("sum").textContent=money(t.t);$("cnt").textContent=n||"";$("bcnt").textContent=n||"";$("form").hidden=!ids.length;
- $("dinfo").textContent=t.d>0?"Знижка "+t.d+"%: −"+money(Math.round((t.s-t.t)*100)/100):"";
+ $("dinfo").textContent=t.d>0?"Знижка "+t.d+"%: −"+money(Math.round((t.s-t.t)*100)/100):"";if(SHOP.parts_on)payOpts();
  const f=Object.keys(fav).length;$("fcnt").textContent=f||"";$("bfcnt").textContent=f||"";
 }
 const stkOn=p=>!!SHOP.stock_on&&p&&p.sk!=null;
 function stkTxt(p){if(!stkOn(p))return"Є в наявності";return p.sk<=5?"Залишилось "+p.sk+" шт":"Є в наявності: "+p.sk+" шт"}
 function stkMax(p){return stkOn(p)?Math.max(1,p.sk):999}
 function stkClamp(){let ch=0;Object.keys(cart).forEach(i=>{const p=M[i];if(stkOn(p)&&cart[i]>p.sk){ch=1;if(p.sk>0)cart[i]=p.sk;else delete cart[i]}});if(ch){save();toast("Кількість змінено: більше, ніж є в наявності, замовити не можна",1)}}
-function payOpts(){const s=$("fy");if(!s)return;const o=["Оплата при отриманні","Оплата карткою"];if(SHOP.pay_cod_off)o.shift();if(SHOP.pay_card_off)o.pop();if(SHOP.bank_on)o.push("Оплата на рахунок ФОП (IBAN)");const cur=s.value;s.innerHTML=o.map(x=>`<option>${x}</option>`).join("");if(o.indexOf(cur)>-1)s.value=cur}
+function payOpts(){const s=$("fy");if(!s)return;const o=["Оплата при отриманні","Оплата карткою"];if(SHOP.pay_cod_off)o.shift();if(SHOP.pay_card_off)o.pop();if(SHOP.bank_on)o.push("Оплата на рахунок ФОП (IBAN)");if(SHOP.parts_on&&(!SHOP.parts_min||totals(Object.keys(cart).filter(i=>M[i])).t>=+SHOP.parts_min))o.push("Оплата частинами"+(SHOP.parts_n?" ("+SHOP.parts_n+" платежів)":""));const cur=s.value;s.innerHTML=o.map(x=>`<option>${x}</option>`).join("");if(o.indexOf(cur)>-1)s.value=cur}
 function openCart(){if(SHOP.orders_off)return;payOpts();{const lp=LS("te_lpromo",null);if(lp&&!promoCode&&Date.now()-lp.t<2592e5&&(!lp.e||lp.e>Date.now()))applyPromo(lp.c)}$("drawer").classList.remove("ordered");$("done").hidden=true;$("omsg").textContent="";drawCart();if(prof){if(!$("fn").value)$("fn").value=prof.full_name||"";if(!$("fp").value)$("fp").value=prof.phone||""}const cu=LS("te_cust",null);if(cu){if(!$("fn").value)$("fn").value=cu.n||"";if(!$("fp").value)$("fp").value=cu.p||"";if(!$("fc").value)$("fc").value=cu.c||""}panel("drawer",true)}
 async function applyPromo(code){
  const c=(code||"").trim().toUpperCase(),pm=$("pmsg");promoPct=0;promoCode="";pm.textContent="";$("fpr").value=c;
