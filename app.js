@@ -420,10 +420,19 @@ const hsOn=()=>!SHOP.hs_off;
 const gcard=a=>hsOn()&&a.img?`<a class="gcard pc" href="#/guide/${a.slug}"><span class="gi">${img(BASE+a.img,400,300,a.title)}</span><b>${esc(a.title)}</b><span>${esc(a.description)}</span><em>Читати →</em></a>`:`<a class="gcard" href="#/guide/${a.slug}"><b>${esc(a.title)}</b><span>${esc(a.description)}</span><em>Читати →</em></a>`;
 function hsTog(b){const e=b.previousElementSibling;if(!e)return;const on=e.classList.toggle("hs");b.textContent=on?b.dataset.o:b.dataset.c;if(on)e.scrollLeft=0;else e.scrollIntoView({behavior:"smooth",block:"start"})}
 const hsBtn=w=>`<button class="more hstog" data-o="Розгорнути ${w} ↓" data-c="Згорнути ↑" onclick="hsTog(this)">Розгорнути ${w} ↓</button>`;
+const STOPW=new Set("який яка які яке чи що як для при про від або коли чому де чим вибрати вибір різниця навіщо потрібен потрібна потрібно простий коротка таблиця краще треба можна".split(" "));
+const stemW=t=>t.length<=4?t:t.slice(0,Math.min(6,t.length-1));
+/* у статті: товари за темою (перемикач в адмінці: SEO-посилання зі статей) */
+function artProd(a){
+ if(SHOP.seo_links_off||!P.length)return"";
+ const toks=[...new Set(String(a.title).toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(t=>t.length>=3&&!STOPW.has(t)).map(t=>stemW(nrm(t))))];
+ const sc=P.filter(p=>!a.category||p.c[0]===a.category).map(p=>({p,s:toks.filter(t=>p.nn.includes(t)).length+(p.st?.25:0)})).filter(x=>x.s>=1).sort((x,y)=>y.s-x.s).slice(0,6).map(x=>x.p);
+ return sc.length?`<section class="sec"><div class="sech"><h2>Товари за темою</h2>${a.category?`<a href="${href([a.category])}">Усі в розділі →</a>`:""}</div><div class="grid">${sc.map(card).join("")}</div></section>`:"";
+}
 async function viewGuide(slug){
  const L=await arts(),a=slug?L.find(x=>x.slug===slug):null;
  if(a){document.title=a.title+" — Trend Electro";
-  $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a><span>›</span><a href="#/guide/">Поради</a><span>›</span>${esc(a.title)}</nav><article class="art"><h1 class="ptitle">${esc(a.title)}</h1><p class="cdesc">${esc(a.description)}</p><div class="box txt">${a.body}</div>${ytBox(a)}${shareBox(a)}</article><section class="sec"><div class="sech"><h2>Читайте також</h2></div><div class="gcards${hsOn()?" hs pcg":""}">${L.filter(x=>x.slug!==slug).sort((x,y)=>(y.category===a.category)-(x.category===a.category)).slice(0,hsOn()?8:3).map(gcard).join("")}</div>${hsOn()?hsBtn("ще статті"):""}</section>`;return}
+  $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a><span>›</span><a href="#/guide/">Поради</a><span>›</span>${esc(a.title)}</nav><article class="art"><h1 class="ptitle">${esc(a.title)}</h1><p class="cdesc">${esc(a.description)}</p><div class="box txt">${a.body}</div>${ytBox(a)}${shareBox(a)}</article>${artProd(a)}<section class="sec"><div class="sech"><h2>Читайте також</h2></div><div class="gcards${hsOn()?" hs pcg":""}">${L.filter(x=>x.slug!==slug).sort((x,y)=>(y.category===a.category)-(x.category===a.category)).slice(0,hsOn()?8:3).map(gcard).join("")}</div>${hsOn()?hsBtn("ще статті"):""}</section>`;return}
  document.title="Поради з вибору електротоварів — Trend Electro";
  $("view").innerHTML=`<nav class="crumbs"><a href="#/">Головна</a><span>›</span>Поради</nav><h1 class="ptitle">Поради з вибору електротоварів</h1><p class="cdesc">Короткі практичні статті: як вибрати лампу, кабель, розетки й захист.</p>${L.length?`<div class="gcards${hsOn()?" pcg":""}">${L.map(gcard).join("")}</div>`:'<div class="empty">Статті з’являться незабаром.</div>'}`;
 }

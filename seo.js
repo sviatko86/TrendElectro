@@ -132,12 +132,25 @@ const purl = new Map();
 P.forEach(p => { purl.set(p.id, `p/${slug(p.name, 60)}-${slug(p.id, 24)}/`) });
 const money = n => n.toLocaleString("uk-UA") + " ₴";
 const ctitle = n => n;
+/* SEO-покращення (перемикачі в адмінці → Налаштування магазину): унікальні описи з характеристик, заголовки категорій, посилання зі статей */
+const SEO_AUTO = !shop.seo_desc_off, SEO_LINKS = !shop.seo_links_off;
+const tov = n => { const a = n % 100, b = n % 10; return n + (a > 10 && a < 20 ? " товарів" : b === 1 ? " товар" : b > 1 && b < 5 ? " товари" : " товарів") };
+const weakDesc = d => { d = String(d || "").replace(/\s+/g, " ").trim(); return d.length < 25 || (d.length < 160 && / - [^-]+$/.test(d)) };
+const fmtSpec = r => { const m = r[0].match(/^(.*?),\s*([^,]+)$/); let k = m ? m[1] : r[0], v = r[1]; if (!v) return ""; if (m && /^[\d.,\s\u0445x\u00d7/-]+$/i.test(v)) v += " " + m[2]; return k + ": " + v };
+function genDesc(p, pr) {
+  const rows = specRows(p.sp).filter(r => !/^\u0431\u0440\u0435\u043d\u0434/i.test(r[0])).map(fmtSpec).filter(Boolean);
+  if (!rows.length) return null;
+  let meta = "";
+  for (let n = 3; n >= 1; n--) { meta = `${p.name}: ${rows.slice(0, n).join(", ")}. Ціна ${money(pr)}, Trend Electro.`; if (meta.length <= 165) break }
+  return { meta, body: `${p.name}. Розділ каталогу: ${p.c.join(" › ")}. Основні характеристики: ${rows.slice(0, 6).join("; ")}.` };
+}
 for (const p of P) {
   const rel = purl.get(p.id), url = `${SITE}/${rel}`, pr = price(p), im = imgUrl(p);
-  const desc = (p.seo_d || p.d || `${p.name}. Купити в Trend Electro: ціна ${money(pr)}, доставка по Україні.`).replace(/\s+/g, " ").slice(0, 300);
+  const G = SEO_AUTO && !p.seo_d && weakDesc(p.d) ? genDesc(p, pr) : null;
+  const desc = (p.seo_d || (G && G.meta) || p.d || `${p.name}. Купити в Trend Electro: ціна ${money(pr)}, доставка по Україні.`).replace(/\s+/g, " ").slice(0, G ? 200 : 300);
   const ld = { "@context": "https://schema.org", "@type": "Product", name: p.name, sku: p.id, description: desc, ...(im ? { image: [im] } : {}), ...(p.brand ? { brand: { "@type": "Brand", name: p.brand } } : {}), offers: { "@type": "Offer", url, priceCurrency: "UAH", price: pr.toFixed(2), availability: p.st ? "https://schema.org/InStock" : "https://schema.org/OutOfStock", itemCondition: "https://schema.org/NewCondition" } };
   const crumbs = p.c.map((n, i) => `<a href="${SITE}/c/${p.c.slice(0, i + 1).map(x => slug(x)).join("/")}/">${esc(n)}</a>`).join(" › ");
-  const body = `<nav class="crumbs">${crumbs}</nav><h1>${esc(p.name)}</h1>${im ? `<p><img src="${esc(im)}" alt="${esc(p.name)}" width="400" style="max-width:100%;height:auto"></p>` : ""}<p><b>${money(pr)}</b> · ${p.st ? "В наявності" : "Немає в наявності"} · Артикул: ${esc(p.id)}${p.brand ? " · Бренд: " + esc(p.brand) : ""}</p>${p.d ? `<p>${esc(p.d)}</p>` : ""}${specRows(p.sp).length ? `<table>${specRows(p.sp).map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join("")}</table>` : ""}`;
+  const body = `<nav class="crumbs">${crumbs}</nav><h1>${esc(p.name)}</h1>${im ? `<p><img src="${esc(im)}" alt="${esc(p.name)}" width="400" style="max-width:100%;height:auto"></p>` : ""}<p><b>${money(pr)}</b> · ${p.st ? "В наявності" : "Немає в наявності"} · Артикул: ${esc(p.id)}${p.brand ? " · Бренд: " + esc(p.brand) : ""}</p>${G ? `<p>${esc(G.body)}</p>` : p.d ? `<p>${esc(p.d)}</p>` : ""}${specRows(p.sp).length ? `<table>${specRows(p.sp).map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join("")}</table>` : ""}`;
   fs.mkdirSync(rel, { recursive: true });
   fs.writeFileSync(rel + "index.html", page({ title: p.seo_t || `${p.name} — купити в Trend Electro`, desc, url, hash: "#/p/" + encodeURIComponent(p.id), body, ld, image: im }));
   urls.push([url, 0.7]);
@@ -147,11 +160,17 @@ const nodes = new Map();
 P.forEach(p => { for (let i = 1; i <= p.c.length; i++) { const k = p.c.slice(0, i).join(SEP); if (!nodes.has(k)) nodes.set(k, { path: p.c.slice(0, i), items: [] }); nodes.get(k).items.push(p) } });
 for (const [k, n] of nodes) {
   const rel = "c/" + n.path.map(x => slug(x)).join("/") + "/", url = `${SITE}/${rel}`, name = n.path[n.path.length - 1];
-  const meta = CM[k] || {}, desc = meta.description || `${name} — ${n.items.length} товарів у каталозі Trend Electro. Ціни, наявність, доставка по Україні.`;
+  const meta = CM[k] || {};
+  const kids = [...nodes.values()].filter(x => x.path.length === n.path.length + 1 && x.path.slice(0, n.path.length).join(SEP) === k).sort((a, b) => b.items.length - a.items.length);
+  const kn = kids.map(x => x.path[x.path.length - 1]);
+  const desc = meta.description || (SEO_AUTO ? `${name}${kn.length ? ": " + kn.slice(0, 4).join(", ") : ""}. У каталозі Trend Electro: ${tov(n.items.length)}, ціни, фото, характеристики.` : `${name} — ${n.items.length} товарів у каталозі Trend Electro. Ціни, наявність, доставка по Україні.`);
+  let ctl = `${ctitle(name)} — купити в Trend Electro`;
+  if (SEO_AUTO) { let t = kn.length ? kn.slice(0, 3) : null; const mk = a => a ? `${name}: ${a.join(", ")} — ціни | Trend Electro` : `${name}${n.path.length > 1 ? " (" + n.path[n.path.length - 2] + ")" : ""} — купити, ціни | Trend Electro`; ctl = mk(t); while (t && t.length > 1 && ctl.length > 70) { t = t.slice(0, -1); ctl = mk(t) } }
+  const sub = SEO_LINKS && kids.length ? `<p>Підрозділи: ${kids.map(x => `<a href="${SITE}/c/${x.path.map(y => slug(y)).join("/")}/">${esc(x.path[x.path.length - 1])}</a>`).join(" · ")}</p>` : "";
   const ld = { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: n.path.map((x, i) => ({ "@type": "ListItem", position: i + 1, name: x, item: `${SITE}/c/${n.path.slice(0, i + 1).map(y => slug(y)).join("/")}/` })) };
   const list = n.items.slice(0, 150).map(p => `<li><a href="${SITE}/${purl.get(p.id)}">${esc(p.name)}</a> — ${money(price(p))}</li>`).join("");
   fs.mkdirSync(rel, { recursive: true });
-  fs.writeFileSync(rel + "index.html", page({ title: meta.seo_title || `${ctitle(name)} — купити в Trend Electro`, desc, url, hash: "#/c/" + n.path.map(encodeURIComponent).join("/"), body: `<h1>${esc(name)}</h1><p>${esc(desc)}</p><ul>${list}</ul>`, ld }));
+  fs.writeFileSync(rel + "index.html", page({ title: meta.seo_title || ctl, desc, url, hash: "#/c/" + n.path.map(encodeURIComponent).join("/"), body: `<h1>${esc(name)}</h1><p>${esc(desc)}</p>${sub}<ul>${list}</ul>`, ld }));
   urls.push([url, n.path.length === 1 ? 0.9 : 0.8]);
 }
 /* старі адреси категорій → нові (GitHub Pages не вміє 301: canonical + миттєвий перехід) */
@@ -166,6 +185,17 @@ try {
   }
 } catch (e) { console.log("redirects:", e.message) }
 /* ---------- поради (articles.json) ---------- */
+const STOPW = new Set("який яка які яке чи що як для при про від або коли чому де чим вибрати вибір різниця навіщо потрібен потрібна потрібно простий коротка таблиця краще треба можна".split(" "));
+const LATN = { е: "e", х: "x", а: "a", с: "c", о: "o", к: "k", м: "m", т: "t", в: "b", н: "h", р: "p", і: "i", у: "y" };
+const nz = t => String(t).toLowerCase().replace(/[\u0430-\u044f\u0456]/g, c => LATN[c] || c);
+const stem = t => t.length <= 4 ? t : t.slice(0, Math.min(6, t.length - 1));
+function artBlock(a) {
+  const toks = [...new Set(String(a.title).toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(t => t.length >= 3 && !STOPW.has(t)).map(t => stem(nz(t))))];
+  const cat = a.category ? `<p><a href="${SITE}/c/${slug(a.category)}/">Усі товари розділу «${esc(a.category)}»</a></p>` : "";
+  const sc = P.filter(p => !a.category || p.c[0] === a.category).map(p => { const nm = nz(p.name); return { p, s: toks.filter(t => nm.includes(t)).length + (HAVE.has(safe(p.id)) ? 0.5 : 0) + (p.st ? 0.25 : 0) } }).filter(x => x.s >= 1).sort((x, y) => y.s - x.s).slice(0, 6);
+  const li = sc.map(x => `<li><a href="${SITE}/${purl.get(x.p.id)}">${esc(x.p.name)}</a> — ${money(price(x.p))}</li>`).join("");
+  return (li ? `<h2>Товари за темою</h2><ul>${li}</ul>` : "") + cat;
+}
 let ART = []; try { ART = JSON.parse(fs.readFileSync("articles.json", "utf8")) } catch (e) { }
 fs.rmSync("poradu", { recursive: true, force: true });
 if (ART.length) {
@@ -176,7 +206,7 @@ if (ART.length) {
   for (const a of ART) {
     const rel = `poradu/${a.slug}/`, url = `${SITE}/${rel}`;
     fs.mkdirSync(rel, { recursive: true });
-    fs.writeFileSync(rel + "index.html", page({ title: `${a.title} — Trend Electro`, desc: a.description, url, hash: "#/guide/" + a.slug, body: `<h1>${esc(a.title)}</h1>${a.body}`, ld: { "@context": "https://schema.org", "@type": "Article", headline: a.title, description: a.description, mainEntityOfPage: url, author: { "@type": "Organization", name: "Trend Electro" }, publisher: { "@type": "Organization", name: "Trend Electro" }, ...(a.img ? { image: `${SITE}/${a.img}` } : {}) }, image: a.img ? `${SITE}/${a.img}` : undefined }));
+    fs.writeFileSync(rel + "index.html", page({ title: `${a.title} — Trend Electro`, desc: a.description, url, hash: "#/guide/" + a.slug, body: `<h1>${esc(a.title)}</h1>${a.body}${SEO_LINKS ? artBlock(a) : ""}`, ld: { "@context": "https://schema.org", "@type": "Article", headline: a.title, description: a.description, mainEntityOfPage: url, author: { "@type": "Organization", name: "Trend Electro" }, publisher: { "@type": "Organization", name: "Trend Electro" }, ...(a.img ? { image: `${SITE}/${a.img}` } : {}) }, image: a.img ? `${SITE}/${a.img}` : undefined }));
     urls.push([url, 0.6]);
   }
 }
