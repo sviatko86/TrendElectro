@@ -927,3 +927,4 @@ body.lndon:has(.lnd.lfix) .ordbar{display:none}
 .lrevs{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}.lrev{margin:0;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}.lstars{color:#f5a623;font-size:18px;letter-spacing:2px}.lrev blockquote{margin:8px 0;font-size:15px;line-height:1.5}.lrev figcaption{font-size:13px;color:var(--mut,#667)}
 .lwb{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(255,255,255,.96);box-shadow:0 -6px 20px rgba(0,0,0,.12);text-align:center}.lwb .lbtn{width:100%;max-width:520px}
 .lnd.lfix .ltop{background:linear-gradient(135deg,#0b0f12 0%,#1a242c 100%);border-color:#22303a;box-shadow:0 6px 18px rgba(0,0,0,.25)}.lnd.lfix .ltop .ltel{color:#fff}.lnd.lfix .ltop .lsite{color:#9ff3ee}
+.lxeco{text-align:center;line-height:1.4}.lxeco b{white-space:nowrap;font-size:1.08em}
