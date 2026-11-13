@@ -661,6 +661,7 @@ html{background:var(--nav)}body{min-height:100vh;min-height:100dvh}
  #acc .loy .lyb{min-width:0}
  #acc .dh{padding-left:28px;padding-right:20px}
  #acc .df input,#acc .df select{max-width:520px}
+ #acc .df .pwf{max-width:520px}
  #acc .ord{padding:12px 14px}
 }
 
