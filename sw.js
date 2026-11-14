@@ -22,3 +22,9 @@ self.addEventListener("fetch",e=>{
  /* повільна мережа: чекаємо не довше 3 с, далі показуємо збережену версію */
  e.respondWith(Promise.race([net.catch(()=>null),new Promise(z=>setTimeout(()=>z(null),core?3000:6e5))]).then(res=>res||cached().then(x=>x||net)).catch(()=>Response.error()))
 });
+
+/* push-сповіщення адміну: показуємо повідомлення і ставимо цифру на іконці */
+self.addEventListener("push",e=>{let d={};try{d=e.data.json()}catch(x){}
+ e.waitUntil(Promise.all([self.registration.showNotification(d.title||"Trend Electro",{body:d.body||"",icon:S+"icon-192.png",badge:S+"icon-192.png",tag:d.tag,data:{url:d.url||"/admin.html"}}),(d.badge&&self.navigator&&self.navigator.setAppBadge)?self.navigator.setAppBadge(d.badge).catch(()=>{}):0]))});
+self.addEventListener("notificationclick",e=>{e.notification.close();const u=new URL((e.notification.data&&e.notification.data.url)||"/admin.html",S).href;
+ e.waitUntil(clients.matchAll({type:"window",includeUncontrolled:true}).then(l=>{for(const c of l){if(c.url.indexOf("admin.html")>-1&&"focus"in c){return c.focus().then(()=>{try{return c.navigate(u)}catch(x){}})}}return clients.openWindow(u)}))});

@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
+<link rel="manifest" href="admin.webmanifest">
 <title>Адмінка — Trend Electro</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -61,11 +62,40 @@ async function init(){
  const s=await sb.auth.getSession();if(!s.data.session)return login();
  const p=await sb.from("profiles").select("is_admin").eq("id",s.data.session.user.id).maybeSingle();
  if(!p.data||!p.data.is_admin){$("app").innerHTML='<div class="box"><h2>Немає доступу</h2><p class="mut">Цей акаунт не має прав адміністратора.</p><button id="x">Вийти</button></div>';$("x").onclick=logout;return}
- $("out").hidden=false;shell();bellInit();if(location.hash==="#gifts"){setCur("gifts");shell()}
+ $("out").hidden=false;shell();bellInit();if(location.hash==="#gifts"){setCur("gifts");shell()}else if(location.hash==="#orders"){setCur("orders");shell()}
 }
 /* ---------- сповіщення адміну (дзвіночок) ---------- */
 let BELLN=0;
 async function bellCount(){try{const r=await sb.from("admin_notes").select("id",{count:"exact",head:true}).is("read_at",null);if(r.error)return;BELLN=r.count||0;const b=$("bellN");b.hidden=!BELLN;b.textContent=BELLN>99?"99+":BELLN;document.title=(BELLN?"("+BELLN+") ":"")+"Адмінка · Trend Electro";try{if(navigator.setAppBadge){BELLN?navigator.setAppBadge(BELLN):navigator.clearAppBadge()}}catch(e){}}catch(e){}}
+/* ---------- push-сповіщення на телефон (вмикається в «Подарунки» → Сповіщення) ---------- */
+const VAPID="BIvnbUhjk7te6KKxd6nJtICe4b64pfgT4t8Z97aA5vA9luKdoNmky40g9Cs_LpuhOC3AsX9jTObUIbcXI8y1Qmw";
+const b64u=s=>{const r=atob((s+"=".repeat((4-s.length%4)%4)).replace(/-/g,"+").replace(/_/g,"/"));return Uint8Array.from(r,c=>c.charCodeAt(0))};
+async function pushReg(){const reg=await navigator.serviceWorker.register("sw.js");await navigator.serviceWorker.ready;return reg}
+const pushOK=()=>"serviceWorker"in navigator&&"PushManager"in window&&"Notification"in window;
+async function pushInit(){
+ const on=$("pon");if(!on)return;
+ if(!pushOK()){on.disabled=true;$("pnote").textContent="Тут сповіщення недоступні. На iPhone відкрийте адмінку з іконки «Admin» на головному екрані (iOS 16.4 і новіше).";return}
+ try{const reg=await pushReg(),sub=await reg.pushManager.getSubscription();if(sub&&Notification.permission==="granted"){on.checked=true;const r=await sb.from("push_subs").select("n_orders,n_gifts").eq("endpoint",sub.endpoint).maybeSingle();if(r.data){$("pord").checked=r.data.n_orders;$("pgif").checked=r.data.n_gifts}}}catch(e){}
+ on.onchange=async()=>{
+  try{
+   if(on.checked){
+    const perm=await Notification.requestPermission();
+    if(perm!=="granted"){on.checked=false;return flash("Дозвіл не надано. Увімкніть: Налаштування iPhone → Сповіщення → Admin.")}
+    const reg=await pushReg();let sub=await reg.pushManager.getSubscription();
+    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID)});
+    const j=sub.toJSON(),r=await sb.from("push_subs").upsert({endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,n_orders:$("pord").checked,n_gifts:$("pgif").checked,ua:navigator.userAgent.slice(0,200)},{onConflict:"endpoint"});
+    if(r.error){on.checked=false;return flash("Помилка: "+r.error.message)}
+    flash("Сповіщення на цей телефон увімкнено ✓",true)
+   }else{
+    const reg=await pushReg(),sub=await reg.pushManager.getSubscription();
+    if(sub){await sb.from("push_subs").delete().eq("endpoint",sub.endpoint);await sub.unsubscribe()}
+    flash("Сповіщення на цей телефон вимкнено",true)
+   }
+  }catch(e){on.checked=!on.checked;flash("Помилка: "+(e.message||e))}
+ };
+ const upd=async()=>{if(!on.checked)return;const reg=await pushReg(),sub=await reg.pushManager.getSubscription();if(sub){const r=await sb.from("push_subs").update({n_orders:$("pord").checked,n_gifts:$("pgif").checked}).eq("endpoint",sub.endpoint);flash(r.error?"Помилка: "+r.error.message:"Збережено ✓",!r.error)}};
+ $("pord").onchange=upd;$("pgif").onchange=upd;
+}
 function bellInit(){const b=$("bell");b.hidden=false;b.onclick=()=>{setCur("gifts");shell()};bellCount();setInterval(bellCount,60000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)bellCount()})}
 /* ---------- подарункові посилання ---------- */
 const GTN={silver:"Silver 5%",gold:"Gold 10%",platinum:"Platinum 15%",vip:"VIP 20%"};
@@ -82,11 +112,12 @@ async function tGifts(){
  const ids=[...new Set(G.map(g=>g.used_by).filter(Boolean))];let PF={};if(ids.length){const p=await sb.from("profiles").select("id,full_name,phone,card_tier").in("id",ids);(p.data||[]).forEach(x=>PF[x.id]=x)}
  const st=g=>!g.used_by?(g.active?'<span class="mut">чекає на клієнта</span>':'<span class="mut">вимкнено</span>'):g.activated_at?`<b style="color:#1a7f37">активовано ✓</b> ${esc((PF[g.used_by]||{}).full_name||"")}`:`<b style="color:#b35900">забрав(ла), треба активувати</b> · ${esc((PF[g.used_by]||{}).full_name||"")}`;
  $("pane").innerHTML=`<div id="fm" class="msg"></div>
- <div class="box"><h2>🔔 Сповіщення</h2>${N.length?N.map(n=>{const g=GB[n.ref],pf=PF[n.user_id]||{};return `<div class="box gnote${n.read_at?"":" new"}"><div class="rw"><b>${esc(n.title)}</b><span class="mut">${new Date(n.created_at).toLocaleString("uk-UA")}</span></div><div>${esc(n.body||"")}</div><div class="rw" style="justify-content:flex-start;flex-wrap:wrap;margin-top:8px">${g&&g.used_by&&!g.activated_at?`<button data-gact="${esc(g.code)}">✅ Активувати картку ${esc(GTN[g.tier]||g.tier)}</button>`:g&&g.activated_at?'<span class="mut">картку активовано</span>':""}${contactRow(pf.phone,pf.full_name)}${n.read_at?"":`<button class="sec" data-gread="${n.id}">Прочитано</button>`}</div></div>`}).join(""):'<p class="mut">Поки немає. Коли клієнт забере подарунок за посиланням, ви побачите це тут і отримаєте повідомлення в Telegram.</p>'}</div>
+ <div class="box"><h2>🔔 Сповіщення</h2><div class="box" style="background:#eefbf9"><label><input type="checkbox" id="pon"> <b>📲 Сповіщення на цей телефон</b></label><p class="mut" id="pnote" style="margin:4px 0">Спливають зверху екрана, а на іконці «Admin» з’являється цифра непрочитаних.</p><label><input type="checkbox" id="pord" checked> Нові замовлення</label> <label style="margin-left:12px"><input type="checkbox" id="pgif" checked> Подарункові картки</label></div>${N.length?N.map(n=>{const g=GB[n.ref],pf=PF[n.user_id]||{};return `<div class="box gnote${n.read_at?"":" new"}"><div class="rw"><b>${esc(n.title)}</b><span class="mut">${new Date(n.created_at).toLocaleString("uk-UA")}</span></div><div>${esc(n.body||"")}</div><div class="rw" style="justify-content:flex-start;flex-wrap:wrap;margin-top:8px">${g&&g.used_by&&!g.activated_at?`<button data-gact="${esc(g.code)}">✅ Активувати картку ${esc(GTN[g.tier]||g.tier)}</button>`:g&&g.activated_at?'<span class="mut">картку активовано</span>':""}${contactRow(pf.phone,pf.full_name)}${n.read_at?"":`<button class="sec" data-gread="${n.id}">Прочитано</button>`}</div></div>`}).join(""):'<p class="mut">Поки немає. Коли клієнт забере подарунок за посиланням, ви побачите це тут і отримаєте повідомлення в Telegram.</p>'}</div>
  <div class="box"><h2>🎁 Подарувати картку посиланням</h2><p class="mut">Створіть посилання й надішліть людині в особисті (Instagram, Telegram, Viber). Вона відкриває його, реєструється, а вам приходить сповіщення сюди й у Telegram. Одне посилання — для однієї людини.</p>
  <label><input type="checkbox" id="gon"${S.gift_off?"":" checked"}> <b>Подарункові посилання увімкнені на сайті</b></label>
  <div class="rw" style="justify-content:flex-start;flex-wrap:wrap;gap:8px;margin-top:10px"><select id="gt"><option value="silver">Silver 5%</option><option value="gold" selected>Gold 10%</option><option value="platinum">Platinum 15%</option><option value="vip">VIP 20%</option></select><input id="gn" placeholder="Кому (напр. Олена, переможниця розіграшу)" style="flex:1;min-width:220px"><button id="gmk">Створити посилання</button></div><div id="gres"></div></div>
  <div class="box"><h2>Усі подарункові посилання</h2>${G.length?G.map(g=>`<div class="box"><div class="rw"><b>${esc(GTN[g.tier]||g.tier)}</b><span>${st(g)}</span></div><div class="mut">${esc(g.note||"")} · ${new Date(g.created_at).toLocaleDateString("uk-UA")}</div><div class="gl">${esc(giftUrl(g.code))}</div><div class="rw" style="justify-content:flex-start;flex-wrap:wrap">${g.used_by&&!g.activated_at?`<button data-gact="${esc(g.code)}">✅ Активувати</button>`:""}${!g.used_by?giftShare(g.code,g.tier,g.note):""}${!g.used_by?`<button class="sec" data-gtog="${esc(g.code)}" data-on="${g.active?1:0}">${g.active?"Вимкнути":"Увімкнути"}</button>`:""}</div></div>`).join(""):'<p class="mut">Ще не створено жодного.</p>'}</div>`;
+ pushInit();
  $("gon").onchange=async e=>{const r0=await sb.from("settings").select("value").eq("key","shop").maybeSingle();const V=Object.assign({},(r0.data&&r0.data.value)||{});if(e.target.checked)delete V.gift_off;else V.gift_off=true;const r=await sb.from("settings").upsert({key:"shop",value:V,updated_at:new Date().toISOString()});flash(r.error?"Помилка: "+r.error.message:(e.target.checked?"Подарункові посилання увімкнено ✓":"Подарункові посилання вимкнено"),!r.error)};
  $("gmk").onclick=async()=>{const t=$("gt").value,note=$("gn").value.trim();let r,c;for(let i=0;i<3;i++){c=giftCodeGen(t);r=await sb.from("gift_links").insert({code:c,tier:t,note:note||null});if(!r.error)break}
   if(r.error)return flash("Помилка: "+r.error.message);$("gres").innerHTML=`<div class="box" style="background:#eefbf9"><b>Готово! Надішліть це посилання:</b><div class="gl" style="margin:6px 0">${esc(giftUrl(c))}</div>${giftShare(c,t,note)}</div>`;flash("Посилання створено ✓",true)};
@@ -191,6 +222,7 @@ function drawOrders(){
  $("olist").innerHTML=l.length?l.map(oLine).join(""):'<div class="box">Нічого не знайдено.</div>';
 }
 async function tOrders(){
+ sb.from("admin_notes").update({read_at:new Date().toISOString()}).eq("kind","order").is("read_at",null).then(()=>bellCount());
  const r=await sb.from("orders").select("*").order("created_at",{ascending:false}).limit(500);if(r.error)return fail(r.error);OL=r.data;
  $("pane").innerHTML=`<div class="box"><div class="grid2"><input id="oq" placeholder="№, ім’я, телефон або ТТН" value="${esc(OQ.q)}"><select id="od"><option value="0">За весь час</option><option value="1"${OQ.days==1?" selected":""}>Сьогодні</option><option value="7"${OQ.days==7?" selected":""}>7 днів</option><option value="30"${OQ.days==30?" selected":""}>30 днів</option></select></div><div class="rw" id="ochips" style="justify-content:flex-start;gap:6px;flex-wrap:wrap"></div><div class="rw"><span class="mut">Показано останні 500 замовлень</span><button class="sec" data-act="ocsv">Експорт у Excel</button></div></div><div id="olist"></div>`;
  drawOrders();
