@@ -600,7 +600,7 @@ function fillDetails(p){
 function drawDet(p){
  const d=$("pdet");if(!d)return;
  if(PTAB==="spec"){const rows=specRows(p.sp);d.innerHTML=rows.length?`<table class="sp">${rows.map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join("")}</table>`:'<div class="sku">Характеристики не вказані.</div>'}
- else d.innerHTML=p.d?`<div class="txt">${esc(p.d).split(/\n+/).map(x=>`<p>${x}</p>`).join("")}</div>`:'<div class="sku">Опис скоро з’явиться. Якщо маєте питання щодо товару — напишіть нам.</div>';
+ else d.innerHTML=p.d?`<div class="txt">${esc(p.d).split(/\n+/).map(x=>`<p>${x.replace(/^(Увага:?)/,'<b class="warn">$1</b>')}</p>`).join("")}</div>`:'<div class="sku">Опис скоро з’явиться. Якщо маєте питання щодо товару — напишіть нам.</div>';
 }
 
 /* ---------- збільшення фото товару (вмикається/вимикається в адмінці: Налаштування → «Збільшення фото») ---------- */
@@ -1078,7 +1078,7 @@ function lSimple(L){
  const grid=one?"":`<section class="lsec" id="lprods"><h2>Товари акції</h2><div class="grid lg">${all.map(x=>lCard(x,L)).join("")}</div></section>`;
  const perks=`<section class="lsec lxpk">${lPerks.map(x=>`<div>${ico(x[0])}<b>${x[1]}</b><span>${x[2]}</span></div>`).join("")}</section>`;
  const spec=rows.length>4?`<section class="lsec"><h2>Характеристики</h2><div class="lxg">${rows.slice(0,14).map(r=>`<div><span>${esc(r[0])}</span><b>${esc(r[1])}</b></div>`).join("")}</div></section>`:"";
- const dd=one&&p.d?String(p.d).trim():"",desc=dd?`<section class="lsec"><h2>Про товар</h2><div class="ltxt">${dd.slice(0,700).split(/\n+/).map(x=>`<p>${esc(x)}</p>`).join("")}${dd.length>700?`<details><summary>Читати повністю</summary>${dd.slice(700).split(/\n+/).map(x=>`<p>${esc(x)}</p>`).join("")}</details>`:""}</div></section>`:"";
+ const dd=one&&p.d?String(p.d).trim():"",desc=dd?`<section class="lsec"><h2>Про товар</h2><div class="ltxt">${dd.slice(0,700).split(/\n+/).map(x=>`<p>${esc(x).replace(/^(Увага:?)/,'<b class="warn">$1</b>')}</p>`).join("")}${dd.length>700?`<details><summary>Читати повністю</summary>${dd.slice(700).split(/\n+/).map(x=>`<p>${esc(x)}</p>`).join("")}</details>`:""}</div></section>`:"";
  const steps=`<section class="lsec"><h2>Як замовити</h2><ol class="lstp lxs"><li><b>Оберіть кількість</b><p>Натисніть «Замовити» і виберіть, скільки потрібно</p></li><li><b>Залиште контакти</b><p>Ім’я та телефон, більше нічого не потрібно</p></li><li><b>Отримайте замовлення</b><p>Менеджер зателефонує, підтвердить і відправить Новою поштою</p></li></ol></section>`;
  const faq=LB.faq({items:"Як сплатити? | Оплата при отриманні в Новій пошті або на рахунок. Менеджер підкаже зручний варіант під час дзвінка.\nЯк швидко відправите? | Після підтвердження замовлення менеджером. Терміни доставки залежать від Нової пошти.\nЧи можна повернути? | Так, обмін і повернення діють за законом України. Деталі — на сторінці «Обмін та повернення»."},L);
  return hero+grid+(SHOP.orders_off&&lFix()?lWait(L.slug):"")+perks+spec+desc+steps+(lPlus()?lRev():"")+LB.order({title:"Оформити замовлення"},L)+faq}
