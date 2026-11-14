@@ -701,8 +701,8 @@ document.addEventListener("keydown",e=>{
 /* ---------- каталог-меню (дерево з розкриттям) ---------- */
 function menuHtml(n,lvl){
  return kids(n).map(k=>{const has=Object.keys(k.kids).length>0&&lvl<2;
-  const ci=lvl===0&&!(SHOP&&SHOP.cm_img_off)?nodeImg(k):"";
-  return `<div class="cm-row"><a href="${href(k.path)}"${ci?' class="cm-i"':""}>${ci?`<span class="cmt">${img(ci,88,88,k.name)}</span>`:""}<span>${esc(k.name)} <small>${k.count}</small></span></a>${has?'<button data-tg aria-label="Розкрити">+</button>':""}</div>${has?`<div class="cm-sub">${menuHtml(k,lvl+1)}</div>`:""}`}).join("");
+  const ci=!(SHOP&&SHOP.cm_img_off)?nodeImg(k):"";
+  return `<div class="cm-row"><a href="${href(k.path)}"${ci?` class="cm-i l${lvl}"`:""}>${ci?`<span class="cmt">${img(ci,88,88,k.name)}</span>`:""}<span>${esc(k.name)} <small>${k.count}</small></span></a>${has?'<button data-tg aria-label="Розкрити">+</button>':""}</div>${has?`<div class="cm-sub">${menuHtml(k,lvl+1)}</div>`:""}`}).join("");
 }
 function openCatMenu(){$("cmb").innerHTML=`<div class="cm-row"><a href="#/c/">Усі товари <small>${P.length}</small></a></div>`+menuHtml(ROOT,0);panel("catm",true)}
 

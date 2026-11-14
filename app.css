@@ -934,3 +934,4 @@ body.lndon:has(.lnd.lfix) .ordbar{display:none}
 .warn{color:#d4202c;font-weight:800}
 .warnbox{margin:14px 0;padding:12px 14px;border:1px solid #f0a8ad;border-left:4px solid #d4202c;background:#fff1f2;color:#1d2023;border-radius:10px;font-size:15px;line-height:1.45}
 .cm-row a.cm-i{display:flex;align-items:center;gap:12px;padding-top:8px;padding-bottom:8px}.cm-row .cmt{flex:none;width:44px;height:44px;border-radius:10px;background:#fff;border:1px solid var(--line);overflow:hidden;display:block}.cm-row .cmt img{width:100%;height:100%;object-fit:contain;padding:3px;display:block}
+.cm-sub .cm-row a.cm-i.l1{gap:10px;padding-top:6px;padding-bottom:6px}.cm-sub .cm-row a.cm-i.l1 .cmt{width:38px;height:38px;border-radius:9px}.cm-sub .cm-sub .cm-row a.cm-i.l2{gap:10px;padding-top:5px;padding-bottom:5px}.cm-sub .cm-sub .cm-row a.cm-i.l2 .cmt{width:32px;height:32px;border-radius:8px}
