@@ -199,6 +199,7 @@ function route(){
  else if(h==="#/birthday")viewBday();
  else if(h==="#/help")viewHelp();
  else if(h.indexOf("#/l/")===0)viewLanding(decodeURIComponent(h.slice(4)));
+ else if(h.indexOf("#/gift/")===0)viewGift(decodeURIComponent(h.slice(7)));
  else viewHome();
  requestAnimationFrame(hbInit);setTimeout(bdPopup,500);cmpDraw();backDraw();
  document.querySelectorAll(".bnav button").forEach(b=>b.classList.toggle("on",(b.dataset.nav==="home"&&(h==="#/"||h===""))||(b.dataset.nav==="fav"&&h==="#/fav")||(b.dataset.nav==="cat"&&h.indexOf("#/c")===0&&h!=="#/cmp")));
@@ -754,10 +755,33 @@ async function placeOrder(btn){if(SHOP.orders_off)return;
 
 /* ---------- кабінет ---------- */
 let PFP=null,PFU=null;
+/* ---------- подарункові картки за посиланням ---------- */
+const giftCode=()=>{try{return localStorage.getItem("te_gift")||""}catch(e){return""}};
+const giftDone=()=>{try{localStorage.removeItem("te_gift")}catch(e){}};
+async function giftClaim(){const c=giftCode();if(!c||!me||!sb||SHOP.gift_off)return;const r=await sb.rpc("claim_gift",{p_code:c});if(r.error)return;giftDone();
+ if(r.data==="ok"||r.data==="already"){toast("🎁 Подарунок отримано! Ми активуємо вашу картку найближчим часом.");if(curH().indexOf("#/gift/")===0)viewGift(c)}}
+async function viewGift(code){document.title="Вам подарунок — Trend Electro";const v=$("view");
+ if(SHOP.gift_off||!sb){v.innerHTML='<div class="empty">Сторінку не знайдено. <a href="#/">На головну</a></div>';return}
+ v.innerHTML='<div class="empty">Відкриваємо подарунок…</div>';
+ const r=await sb.rpc("gift_info",{p_code:code}),g=r.data;
+ if(!g){v.innerHTML='<div class="empty">Це подарункове посилання недійсне або вже вимкнене. <a href="#/">На головну</a></div>';return}
+ const t=(LOY.tiers||[]).find(x=>x.k===g.tier)||{p:""},nm=TN[g.tier]||g.tier;
+ if(g.used&&!g.mine){v.innerHTML='<div class="empty">Цей подарунок уже забрали. Якщо це ви — увійдіть у свій кабінет. <a href="#/">На головну</a></div>';return}
+ if(!g.used)try{localStorage.setItem("te_gift",code)}catch(e){}
+ const done=g.mine;
+ v.innerHTML=`<section class="gift"><div class="gcard">${wCard(g.tier,t.p,"ПОДАРУНОК",prof&&prof.full_name||"")}</div>
+ <h1>${done?"Подарунок ваш!":"Вам подарували картку "+esc(nm)}</h1>
+ <p class="lead">${done?`Ми вже отримали ваш подарунок і зараз активуємо картку <b>${esc(nm)}</b>. Знижка <b>−${esc(t.p)}%</b> діятиме на всі товари сайту, автоматично, назавжди.`:`Знижка <b>−${esc(t.p)}%</b> на всі товари Trend Electro — постійно, на кожну покупку. ${me?"Натисніть кнопку, щоб забрати картку.":"Зареєструйтесь за хвилину, і картка стане вашою."}`}</p>
+ ${done?'<a class="go" href="#/">До покупок</a>':me?'<button class="go" id="gclaim">Забрати подарунок</button>':'<button class="go" id="greg">Зареєструватися й забрати</button><div class="sku" style="margin-top:10px">Вже маєте акаунт? <a href="#" id="glog">Увійдіть</a> — подарунок додасться сам.</div>'}
+ </section>`;
+ const go=up=>{tab=up?"up":"in";drawAcc();panel("acc",true)};
+ if($("greg"))$("greg").onclick=()=>go(true);if($("glog"))$("glog").onclick=e=>{e.preventDefault();go(false)};
+ if($("gclaim"))$("gclaim").onclick=async e=>{e.target.disabled=true;await giftClaim();e.target.disabled=false};
+}
 async function loadProf(){
  const u=me?me.id:null;if(PFP&&PFU===u)return PFP;PFU=u;PFP=(async()=>{
  let pr=null;if(me){try{const r=await sb.from("profiles").select("*").eq("id",me.id).maybeSingle();pr=r.data}catch(e){}}prof=pr;
- $("accL").textContent=me?"Кабінет":"Увійти";regBar();drawCart();if($("acc").classList.contains("on"))drawAcc();setTimeout(bdPopup,300);setTimeout(loyPop,900);
+ $("accL").textContent=me?"Кабінет":"Увійти";regBar();drawCart();if($("acc").classList.contains("on"))drawAcc();setTimeout(giftClaim,200);setTimeout(bdPopup,300);setTimeout(loyPop,900);
  })();const my=PFP;try{await my}finally{if(PFP===my)PFP=null}
 }
 const lbl=s=>({new:"Нове",confirmed:"Підтверджено",shipped:"Відправлено",done:"Виконано",cancelled:"Скасовано"}[s]||s);
@@ -803,7 +827,7 @@ async function accClick(t){
   t.disabled=true;
   if(tab==="up"){
    if(!bdVal("rb")){t.disabled=false;m("Оберіть дату народження: день, місяць і рік.");return}
-   const r=await sb.auth.signUp({email:em,password:pw,options:{data:{full_name:$("rn").value.trim(),phone:$("rp").value.trim(),birthday:bdVal("rb")}}});t.disabled=false;
+   const r=await sb.auth.signUp({email:em,password:pw,options:{data:Object.assign({full_name:$("rn").value.trim(),phone:$("rp").value.trim(),birthday:bdVal("rb")},giftCode()?{gift:giftCode()}:{})}});t.disabled=false;if(!r.error&&giftCode()){giftDone();setTimeout(()=>toast("🎁 Подарунок отримано! Ми активуємо вашу картку найближчим часом."),400)}
    if(r.error){m(r.error.message.indexOf("already")>-1?"Цей email уже зареєстровано. Увійдіть.":"Не вдалося зареєструватися: "+r.error.message);return}
    if(!r.data.session)m("Перевірте пошту й підтвердіть email, потім увійдіть.",true);
   }else{
