@@ -583,7 +583,7 @@ async function viewProduct(id){
 <div class="bigprice${disc>0?" sale":""}">${money(pc)}${pi.base>pc?`<s>${money(pi.base)}</s>`:""}${disc>0?`<span class="bds2">${saleBadges(pi)}</span>`:""}</div>${packHtml(p,1)}${p.ofr?`<div class="spbox"><span class="bd p">Спеціальна пропозиція</span><div>${esc(p.ofr)}</div></div>`:""}
 <div class="buyrow"><div class="qtybox"><button data-q="-1" aria-label="Менше">−</button><input id="pq" type="number" min="1" max="${stkMax(p)}" value="1" inputmode="numeric" aria-label="Кількість"><button data-q="1" aria-label="Більше">+</button></div><button class="buybtn" id="buy" data-id="${esc(p.id)}"${p.st?"":" disabled"}>${p.st?ico("cart")+"Купити":"Немає в наявності"}</button><button class="favbtn${fav[p.id]?" on":""}" data-f="${esc(p.id)}" aria-label="Обране">${ico("heart")}</button></div><p class="ordoff">${esc(ordMsg())}</p>
 <div class="ptrust">${(pk=>`<a href="#/page/delivery">${ico("truck")}<span><b>${esc(pk[0][1])}</b>${esc(pk[0][2])}</span></a><a href="#/page/delivery">${ico("wallet")}<span><b>${esc(pk[1][1])}</b>${esc(pk[1][2])}</span></a>`)((q=>q.length>=2?q:PERKS)((shop().perks||[]).filter(x=>x&&x.t).map((x,i)=>[PERKS[i%4][0],x.t,x.d||""])))}<a href="#/page/exchange">${ico("swap")}<span><b>Обмін та повернення</b>згідно законодавства України</span></a></div></div></div>
-${relHtml(p)}<div class="tabsb"><button data-pt="info" class="on">Опис</button><button data-pt="spec">Усі характеристики</button></div><div class="box" id="pdet"><div class="sku">Завантаження…</div></div>
+<div id="pwarn"></div>${relHtml(p)}<div class="tabsb"><button data-pt="info" class="on">Опис</button><button data-pt="spec">Усі характеристики</button></div><div class="box" id="pdet"><div class="sku">Завантаження…</div></div>
 ${rvHtml(p.id)}<section class="sec" id="btog" hidden></section>`;
  if(window.__vy!=null){const y=window.__vy;window.__vy=null;scrollTo(0,y);requestAnimationFrame(()=>scrollTo(0,y))}
  rvPush(p.id);loadBT(p.id);
@@ -595,12 +595,15 @@ function fillDetails(p){
  const rows=specRows(p.sp),k=$("pkey");if(!k)return;
  const th=$("pthumbs"),all=[p.img].concat(p.ims||[]).filter(Boolean);if(th&&all.length>1)th.innerHTML=all.map((u,i)=>`<button data-ph="${esc(u)}" class="${i?"":"on"}" aria-label="Фото ${i+1}">${img(u,120,120)}</button>`).join("");
  k.innerHTML=rows.length?rows.slice(0,7).map(r=>`<div class="kv"><span>${esc(r[0])}</span><span>${esc(r[1])}</span></div>`).join(""):'<div class="sku">Характеристики уточнюйте в менеджера — відповімо швидко.</div>';
+ const wl=String(p.d||"").split(/\n+/).filter(x=>/^Увага:?/.test(x.trim())),wb=$("pwarn");
+ if(wb)wb.innerHTML=wl.length?`<div class="warnbox">⚠️ ${wl.map(x=>esc(x.trim()).replace(/^(Увага:?)/,'<b class="warn">$1</b>')).join("<br>")}</div>`:"";
  drawDet(p);
 }
 function drawDet(p){
  const d=$("pdet");if(!d)return;
  if(PTAB==="spec"){const rows=specRows(p.sp);d.innerHTML=rows.length?`<table class="sp">${rows.map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join("")}</table>`:'<div class="sku">Характеристики не вказані.</div>'}
- else d.innerHTML=p.d?`<div class="txt">${esc(p.d).split(/\n+/).map(x=>`<p>${x.replace(/^(Увага:?)/,'<b class="warn">$1</b>')}</p>`).join("")}</div>`:'<div class="sku">Опис скоро з’явиться. Якщо маєте питання щодо товару — напишіть нам.</div>';
+ else{const ls=String(p.d||"").split(/\n+/).filter(x=>x.trim()),rest=ls.filter(x=>!/^Увага:?/.test(x.trim()));
+  d.innerHTML=rest.length?`<div class="txt">${rest.map(x=>`<p>${esc(x)}</p>`).join("")}</div>`:(ls.length?'<div class="sku">Додаткового опису немає. Усі параметри дивіться у вкладці «Усі характеристики».</div>':'<div class="sku">Опис скоро з’явиться. Якщо маєте питання щодо товару — напишіть нам.</div>')}
 }
 
 /* ---------- збільшення фото товару (вмикається/вимикається в адмінці: Налаштування → «Збільшення фото») ---------- */
