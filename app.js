@@ -1463,14 +1463,41 @@ const frRank=t=>/^розетки з\/з, 16А$/i.test(t)?0:/^розетк/i.test
 function frTypes(col){const s=[...new Set(FR.M.filter(m=>m.col===col).map(m=>m.type))];return s.sort((a,b)=>frRank(a)-frRank(b)||a.localeCompare(b,"uk"))}
 function frCols(){const fc=new Set(FR.F.map(f=>f.col));return[...new Set(FR.M.map(m=>m.col))].filter(c=>fc.has(c)).sort((a,b)=>Object.keys(RCOL).indexOf(a)-Object.keys(RCOL).indexOf(b))}
 function frLum(h){const v=[1,3,5].map(i=>parseInt(h.substr(i,2),16)/255);return .2126*v[0]+.7152*v[1]+.0722*v[2]}
-function frSym(t,fg){const s=t.toLowerCase(),st=`stroke="${fg}" stroke-width="2"`;
- if(/вимикач|перемикач/.test(s)){const k=+((s.match(/(\d)\s*кл/)||[0,1])[1])||1,w=34/k;let r="";for(let i=0;i<k;i++)r+=`<rect x="${13+i*w+1.5}" y="12" width="${w-3}" height="36" rx="3" fill="none" ${st}/>`;return r+(/прохідн/.test(s)?`<path d="M24 54h12" ${st}/>`:"")}
- if(/діммер|димер/.test(s))return`<circle cx="30" cy="30" r="15" fill="none" ${st}/><path d="M30 30V18" stroke="${fg}" stroke-width="3" stroke-linecap="round"/>`;
- const tx=/hdmi/.test(s)?"HDMI":/sat/.test(s)?"SAT":/\btv\b|телевіз/.test(s)?"TV":/usb/.test(s)?"USB":/комп.ютер|rj/.test(s)?"RJ45":/телефон/.test(s)?"TEL":"";
- if(tx)return`<text x="30" y="35" text-anchor="middle" font-size="${tx.length>3?11:15}" font-weight="700" fill="${fg}" font-family="Manrope,sans-serif">${tx}</text>`;
- let r=`<circle cx="30" cy="30" r="17" fill="none" ${st}/><circle cx="23" cy="30" r="2.6" fill="${fg}"/><circle cx="37" cy="30" r="2.6" fill="${fg}"/>`;if(/з\/з|заземл/.test(s))r+=`<path d="M30 10v5M30 45v5" stroke="${fg}" stroke-width="3"/>`;return r}
-function frSvg(n,ori,fh,cells){const v=ori==="v"&&n>1,W=v?84:n*60+24,H=v?n*60+24:84,fg=h=>frLum(h)<.5?"#ececec":"#333";
- return`<svg viewBox="0 0 ${W+16} ${H+16}" class="frsvg" role="img" aria-label="Блок із ${n} місць"><defs><filter id="frsh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity=".25"/></filter></defs><g transform="translate(8 8)"><rect width="${W}" height="${H}" rx="9" fill="${fh}" stroke="rgba(0,0,0,.25)" filter="url(#frsh)"/>${cells.map((c,i)=>{const x=v?12:12+i*60,y=v?12+i*60:12,mh=c.hex;return`<g transform="translate(${x} ${y})"><rect width="60" height="60" rx="5" fill="${mh}" stroke="rgba(0,0,0,.28)"/>${frSym(c.type,fg(mh))}</g>`}).join("")}</g></svg>`}
+function frShade(h,a){const v=[1,3,5].map(i=>parseInt(h.substr(i,2),16)),t=a<0?0:255,k=Math.abs(a);return"#"+v.map(x=>("0"+Math.round(x+(t-x)*k).toString(16)).slice(-2)).join("")}
+function frKind(t){const s=String(t).toLowerCase();
+ if(/діммер|димер/.test(s))return"dim";
+ if(/вимикач|перемикач/.test(s)){const k=+((s.match(/(\d)\s*кл/)||[0,1])[1])||1;return/прохідн|перехрес/.test(s)?"pass":k>=2?"sw2":"sw1"}
+ if(/hdmi|sat|\btv\b|телевіз/.test(s))return"tv";
+ if(/комп.ютер|rj|телефон/.test(s))return"rj";
+ if(/usb/.test(s))return"usb";
+ if(/розетк/.test(s))return"sock";
+ return"blank"}
+/* реалістичний малюнок серії RITA: рамка з тінню, клавіші, розетки із заземленням (кольори беруться з каталогу) */
+function frIns(kind,x,y,S,c){const p=3,px=x+p,py=y+p,ps=S-2*p,cx=x+S/2,cy=y+S/2;
+ let g=`<rect x="${x}" y="${y}" width="${S}" height="${S}" rx="2" fill="${c.hole}"/><rect x="${px}" y="${py}" width="${ps}" height="${ps}" rx="2.5" fill="url(#frk)"/><rect x="${px+.5}" y="${py+.5}" width="${ps-1}" height="${ps-1}" rx="2.2" fill="none" stroke="url(#fre)" stroke-width="1"/>`;
+ const key=(kx,ky,kw,kh)=>`<rect x="${kx+.8}" y="${ky+1.8}" width="${kw}" height="${kh}" rx="2" fill="#000" opacity=".22"/><rect x="${kx}" y="${ky}" width="${kw}" height="${kh}" rx="2" fill="url(#frkey)"/><rect x="${kx+.5}" y="${ky+.5}" width="${kw-1}" height="${kh-1}" rx="1.7" fill="none" stroke="url(#fre)" stroke-width="1"/>`;
+ if(kind==="sw1")g+=key(px+7,py+7,ps-14,ps-14);
+ else if(kind==="sw2"){const w=(ps-16)/2;g+=key(px+7,py+7,w,ps-14)+key(px+9+w,py+7,w,ps-14)}
+ else if(kind==="pass")g+=key(px+7,py+7,ps-14,ps-14)+`<path d="M${cx} ${cy-1}l-5 -7h10z M${cx} ${cy+1}l-5 7h10z" fill="none" stroke="${c.ink}" stroke-width="1.2" stroke-linejoin="round"/>`;
+ else if(kind==="dim")g+=`<circle cx="${cx}" cy="${cy+1.4}" r="23" fill="#000" opacity=".25"/><circle cx="${cx}" cy="${cy}" r="23" fill="url(#frring)"/><circle cx="${cx}" cy="${cy}" r="18" fill="none" stroke="url(#fre)" stroke-width="1"/><path d="M${cx} ${cy-15}v9" stroke="${c.ink}" stroke-width="2.4" stroke-linecap="round"/>`;
+ else if(kind==="sock"||kind==="usb"){const sy=kind==="usb"?cy-6:cy,r=kind==="usb"?23:26;
+  g+=`<circle cx="${cx}" cy="${sy+1.4}" r="${r}" fill="#000" opacity=".25"/><circle cx="${cx}" cy="${sy}" r="${r}" fill="url(#frring)"/><circle cx="${cx}" cy="${sy}" r="${r-4.5}" fill="url(#frin)" stroke="#000" stroke-opacity=".25"/>`
+  +`<circle cx="${cx-r*.36}" cy="${sy}" r="3.1" fill="#111"/><circle cx="${cx+r*.36}" cy="${sy}" r="3.1" fill="#111"/><circle cx="${cx}" cy="${sy}" r="2.2" fill="#9a9a9a" stroke="#555" stroke-width=".6"/>`
+  +`<rect x="${cx-2.6}" y="${sy-r+3.2}" width="5.2" height="7" rx="1" fill="#8d8d8d" stroke="#555" stroke-width=".5"/><rect x="${cx-2.6}" y="${sy+r-10.2}" width="5.2" height="7" rx="1" fill="#8d8d8d" stroke="#555" stroke-width=".5"/>`;
+  if(kind==="usb"){const uy=py+ps-15;g+=`<rect x="${cx-23}" y="${uy}" width="19" height="8" rx="1.5" fill="#111"/><rect x="${cx-21}" y="${uy+2}" width="15" height="2.4" fill="#4a6fa5"/><rect x="${cx+4}" y="${uy}" width="19" height="8" rx="1.5" fill="#111"/><rect x="${cx+6}" y="${uy+2}" width="15" height="2.4" fill="#4a6fa5"/>`}}
+ else if(kind==="tv")g+=`<circle cx="${cx}" cy="${cy+1}" r="14" fill="#000" opacity=".2"/><circle cx="${cx}" cy="${cy}" r="14" fill="url(#frring)"/><circle cx="${cx}" cy="${cy}" r="9" fill="#1b1b1b"/><circle cx="${cx}" cy="${cy}" r="2.4" fill="#c9a24a"/>`;
+ else if(kind==="rj")g+=`<rect x="${cx-15}" y="${cy-11}" width="30" height="22" rx="2" fill="#141414"/><rect x="${cx-11}" y="${cy-11}" width="22" height="3" fill="#b6923e"/><rect x="${cx-5}" y="${cy+8}" width="10" height="3" fill="#2a2a2a"/>`;
+ return g}
+function frSvg(n,ori,fh,cells){const S=80,B=12,G=14,v=ori==="v"&&n>1,len=n*S+(n-1)*G+2*B,W=v?S+2*B:len,H=v?len:S+2*B,dark=frLum(fh)<.5,
+ c={f:fh,f2:frShade(fh,-.24),k:frShade(fh,.04),k2:frShade(fh,-.16),hole:frShade(fh,-.45),ink:dark?frShade(fh,.5):frShade(fh,-.4)},
+ rr=(x,y,w,h,r)=>`M${x+r} ${y}H${x+w-r}Q${x+w} ${y} ${x+w} ${y+r}V${y+h-r}Q${x+w} ${y+h} ${x+w-r} ${y+h}H${x+r}Q${x} ${y+h} ${x} ${y+h-r}V${y+r}Q${x} ${y} ${x+r} ${y}Z`,
+ hs=cells.map((_,i)=>[v?B:B+i*(S+G),v?B+i*(S+G):B]);
+ let d=rr(0,0,W,H,7);hs.forEach(h=>{d+=rr(h[0],h[1],S,S,2)});
+ const lg=(id,x2,y2,a,b)=>`<linearGradient id="${id}" x1="0" y1="0" x2="${x2}" y2="${y2}"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`;
+ const defs=`<defs>${lg("frf",1,1,c.f,c.f2)}${lg("frk",1,1,c.k,c.k2)}${lg("frkey",0,1,c.k,c.k2)}<linearGradient id="fre" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></linearGradient><linearGradient id="frei" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".35"/><stop offset=".5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity=".35"/></linearGradient><radialGradient id="frring" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="${c.k}"/><stop offset="1" stop-color="${c.k2}"/></radialGradient><radialGradient id="frin" cx=".4" cy=".35" r=".9"><stop offset="0" stop-color="${c.k2}"/><stop offset="1" stop-color="${c.hole}"/></radialGradient><filter id="frsh" x="-20%" y="-20%" width="150%" height="160%"><feDropShadow dx="3" dy="6" stdDeviation="5" flood-color="#000" flood-opacity=".38"/></filter></defs>`;
+ let o=`<g filter="url(#frsh)"><path d="${d}" fill-rule="evenodd" fill="url(#frf)"/></g><rect x=".6" y=".6" width="${W-1.2}" height="${H-1.2}" rx="6.5" fill="none" stroke="url(#fre)" stroke-width="1.2"/>`;
+ hs.forEach((h,i)=>{o+=frIns(frKind(cells[i].type),h[0],h[1],S,c)+`<rect x="${h[0]}" y="${h[1]}" width="${S}" height="${S}" rx="2" fill="none" stroke="url(#frei)" stroke-width="1.2"/>`});
+ return`<svg viewBox="-14 -12 ${W+30} ${H+34}" class="frsvg" role="img" aria-label="Блок із ${n} місць">${defs}${o}</svg>`}
 function frFix(){const cs=frCols();if(!cs.length)return false;if(cs.indexOf(CST.col)<0)CST.col=cs.indexOf("білий")>-1?"білий":cs[0];
  const ns=[...new Set(FR.F.filter(f=>f.col===CST.col).map(f=>f.n))].sort((a,b)=>a-b);if(!ns.length)return false;if(ns.indexOf(CST.n)<0)CST.n=ns.filter(x=>x<=CST.n).pop()||ns[0];
  const os=[...new Set(FR.F.filter(f=>f.col===CST.col&&f.n===CST.n).map(f=>f.ori))];const opts=os.indexOf("a")>-1?["a"]:os;if(opts.indexOf(CST.ori)<0)CST.ori=opts[0]||"h";
@@ -1478,7 +1505,7 @@ function frFix(){const cs=frCols();if(!cs.length)return false;if(cs.indexOf(CST.
 function viewFrame(){document.title="Конструктор рамки — Trend Electro";if(!frameOn()){$("view").innerHTML=NF;return}
  frIdx();const k=frFix();const cr='<nav class="crumbs"><a href="#/">Головна</a><span>›</span>Конструктор рамки</nav><h1 class="ptitle">Конструктор рамки</h1>';
  if(!k){$("view").innerHTML=cr+'<div class="empty">Для конструктора поки немає потрібних товарів у каталозі. <a href="#/c/">До каталогу</a></div>';return}
- $("view").innerHTML='<div class="tpg">'+cr+'<p class="lead">Серія RITA (Mutlusan): оберіть колір, кількість місць і що поставити в кожне гніздо. Нижче побачите список товарів і суму.</p><div id="frm"></div><p class="sku">Малюнок схематичний: він показує розташування й колір, а не точний вигляд механізмів.</p></div>';frDraw()}
+ $("view").innerHTML='<div class="tpg">'+cr+'<p class="lead">Серія RITA (Mutlusan): оберіть колір, кількість місць і що поставити в кожне гніздо. Нижче побачите список товарів і суму.</p><div id="frm"></div><p class="sku">Це ілюстрація: вигляд і колір орієнтовні, точний вигляд дивіться на сторінках товарів.</p></div>';frDraw()}
 function frDraw(){const e=$("frm");if(!e)return;const k=frFix();if(!k)return;
  const fp=FR.F.find(f=>f.col===CST.col&&f.n===CST.n&&(f.ori===CST.ori||f.ori==="a")),fh=RCOL[CST.col]||"#d9d9d9";
  const cells=CST.slots.map(t=>{const m=FR.M.find(x=>x.col===CST.col&&x.type===t);return{type:t,hex:RCOL[CST.col]||"#d9d9d9",m}});
