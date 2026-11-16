@@ -32,5 +32,5 @@ jobs:
         run: |
           git config user.name "trend-electro-bot"
           git config user.email "bot@users.noreply.github.com"
-          git add -A supabase.js p c img poradu feed sitemap.xml robots.txt
+          git add -A supabase.js p c img poradu feed sitemap.xml robots.txt llms.txt 2>/dev/null || git add -A supabase.js p c img poradu feed sitemap.xml robots.txt
           if git diff --cached --quiet; then echo "Без змін"; else git commit -m "Автооновлення SEO-сторінок і фото" && git pull --rebase && git push; fi
