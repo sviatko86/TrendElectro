@@ -200,6 +200,7 @@ function route(){
  else if(h==="#/help")viewHelp();
  else if(h.indexOf("#/l/")===0)viewLanding(decodeURIComponent(h.slice(4)));
  else if(h.indexOf("#/gift/")===0)viewGift(decodeURIComponent(h.slice(7)));
+ else if(h.indexOf("#/cart/")===0)viewCartLink(decodeURIComponent(h.slice(7)));
  else viewHome();
  requestAnimationFrame(hbInit);setTimeout(bdPopup,500);cmpDraw();backDraw();
  document.querySelectorAll(".bnav button").forEach(b=>b.classList.toggle("on",(b.dataset.nav==="home"&&(h==="#/"||h===""))||(b.dataset.nav==="fav"&&h==="#/fav")||(b.dataset.nav==="cat"&&h.indexOf("#/c")===0&&h!=="#/cmp")));
@@ -752,13 +753,30 @@ async function placeOrder(btn){if(SHOP.orders_off)return;
  btn.disabled=false;btn.textContent="Оформити замовлення";
  if(r.error){const em=r.error.message||"";return err("",/schema cache|Could not find|function/i.test(em)?"Не вдалося оформити замовлення. Спробуйте ще раз або зателефонуйте нам.":em)}
  const o=r.data,t="Замовлення №"+o.id+"\n"+o.items.map(x=>x.id+" · "+x.name+" × "+x.qty+" = "+money(Math.round(x.price*x.qty*100)/100)).join("\n")+"\nРазом: "+money(+o.total)+(+o.discount?" (знижка "+o.discount+"%)":"")+"\nДоставка: "+$("fd").value+", "+ad+"\nОплата: "+$("fy").value;
- SV("te_cust",{n:nm,p:ph,d:$("fd").value,c:ad});srcSend(o.id,ph);cart={};save();promoPct=0;promoCode="";$("fpr").value="";$("pmsg").textContent="";drawCart();$("form").hidden=true;$("lines").innerHTML="";
+ SV("te_cust",{n:nm,p:ph,d:$("fd").value,c:ad});{const cl=LS("te_cartlink",null);if(cl&&cl.c&&sb){try{sb.rpc("cart_done",{p_code:cl.c}).then(()=>{},()=>{})}catch(e){}try{localStorage.removeItem("te_cartlink")}catch(e){}}}srcSend(o.id,ph);cart={};save();promoPct=0;promoCode="";$("fpr").value="";$("pmsg").textContent="";drawCart();$("form").hidden=true;$("lines").innerHTML="";
  const d=$("done");d.hidden=false;$("drawer").classList.add("ordered");
  d.innerHTML=`<div class="ok">${ico("check")}</div><b style="font-size:20px">Дякуємо! Замовлення №${esc(o.id)} прийнято.</b><div class="sku" style="font-size:14px">Менеджер зателефонує найближчим часом, щоб підтвердити деталі й доставку.</div><pre>${esc(t)}</pre>${/IBAN/.test($("fy").value)&&SHOP.bank_text?`<div class="pk big" style="white-space:pre-line"><b>Реквізити для оплати:</b>\n${esc(SHOP.bank_text)}\nПризначення: замовлення №${esc(o.id)}</div>`:""}${accOffer(nm,ph,"go")}<button class="go" id="dclose">Продовжити покупки</button>`;
 }
 
 /* ---------- кабінет ---------- */
 let PFP=null,PFU=null;
+/* ---------- кошик за посиланням: менеджер збирає кошик в адмінці, клієнт відкриває посилання (вимикається в адмінці: cart_off) ---------- */
+async function viewCartLink(code){document.title="Ваш кошик — Trend Electro";const v=$("view");
+ const bad=t=>{v.innerHTML=`<div class="empty">${t} <a href="#/">На головну</a></div>`};
+ if(SHOP.cart_off||!sb)return bad("Сторінку не знайдено.");
+ v.innerHTML='<div class="empty">Збираємо ваш кошик…</div>';
+ const r=await sb.rpc("cart_get",{p_code:code}),g=r.data;
+ if(r.error||!g)return bad("Це посилання недійсне або термін його дії минув. Напишіть нам, і ми надішлемо нове.");
+ if(g.done)return bad("За цим посиланням замовлення вже оформлено. Дякуємо! Потрібен новий кошик — напишіть нам.");
+ const ok=[],miss=[];
+ (Array.isArray(g.items)?g.items:[]).forEach(x=>{const p=x&&M[x.id],q=Math.max(1,Math.min(999,Math.floor(+(x&&x.qty))||1));if(p&&p.st!==false)ok.push([p,Math.min(q,stkMax(p))]);else miss.push(x&&M[x.id]?M[x.id].n:(x&&x.id)||"")});
+ ok.forEach(a=>{cart[a[0].id]=Math.min(999,(cart[a[0].id]||0)+a[1])});
+ save();SV("te_cartlink",{c:String(code).toUpperCase(),t:Date.now()});drawCart();
+ if(g.promo)await applyPromo(g.promo);
+ const sum=ok.reduce((s,a)=>s+price(a[0])*a[1],0);
+ v.innerHTML=`<section class="gift"><div class="box" style="max-width:560px;margin:0 auto"><h1 class="ptitle">🛒 Ваш кошик від Trend Electro</h1>${g.note?`<p class="cdesc">${esc(g.note)}</p>`:""}${ok.length?`<div>${ok.map(a=>`<div class="rw" style="gap:10px;padding:6px 0"><span>${esc(a[0].n)}</span><b style="white-space:nowrap">${a[1]} × ${money(price(a[0]))}</b></div>`).join("")}</div><p><b>Разом: ${money(sum)}</b>${g.promo?" (знижку за промокодом буде враховано при оформленні)":""}</p>`:'<p class="mut">На жаль, товарів із цього кошика зараз немає в наявності. Напишіть нам, підберемо заміну.</p>'}${miss.length?`<p class="mut">Немає в наявності: ${miss.map(esc).join("; ")}</p>`:""}${ok.length?(SHOP.orders_off?'<p class="mut">Замовлення тимчасово не приймаємо.</p>':'<button class="btn" id="cartgo">Оформити замовлення</button>'):""}</div></section>`;
+ const go=$("cartgo");if(go)go.onclick=()=>openCart();
+ if(ok.length&&!SHOP.orders_off)setTimeout(openCart,400)}
 /* ---------- подарункові картки за посиланням ---------- */
 const giftCode=()=>{try{return localStorage.getItem("te_gift")||""}catch(e){return""}};
 const giftDone=()=>{try{localStorage.removeItem("te_gift")}catch(e){}};
