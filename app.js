@@ -1371,24 +1371,27 @@ let LIDXN=0;
 function lstIdx(){if(LIDX&&LIDXN===PALL.length)return LIDX;LIDXN=PALL.length;LIDX={};PALL.forEach(p=>{LIDX[lstNorm(p.id)]=p});return LIDX}
 function lstCmp(t){return(" "+String(t||"").toLowerCase()+" ").replace(/(\d)[.,](\d)/g,"$1 $2").replace(/без\s+заземл\S*|б\s*\/\s*з(?![а-яa-z])/g," bz1 ").replace(/(з|із)\s+заземл\S*|з\s*\/\s*з(?![а-яa-z])|заземл\S*/g," zz1 ").replace(/(одно|1)\s*-?\s*(клавіш\S*|кл(?![а-яa-z]))/g," 1kl ").replace(/(дво|2)\s*-?\s*(клавіш\S*|кл(?![а-яa-z]))/g," 2kl ").replace(/(три|3)\s*-?\s*(клавіш\S*|кл(?![а-яa-z]))/g," 3kl ")}
 const lstH=p=>p._lh||(p._lh=nrm(lstCmp(p.n+" "+p.id+" "+p.b+" "+p.c.join(" "))));
-function lstFind(q){const T=qtoks(lstCmp(q)).filter(a=>a[0].length>1||/\d/.test(a[0]));if(!T.length)return[];const need=T.length<=2?T.length:Math.ceil(T.length*.6),out=[];
- for(const p of PALL){const h=" "+lstH(p);let n=0,w=0;for(const alts of T){let b=0;for(const a of alts){const k=h.indexOf(a);if(k<0)continue;let v=h[k-1]===" "?2:1;if(v>b)b=v}if(b){n++;w+=b+(/\d/.test(alts[0])?2:0)}}
-  if(n>=need)out.push([p,n*10+w+(p.st===false?0:.5)])}
+function lstFind(q,mt){const T=qtoks(lstCmp(q)).filter(a=>a[0].length>1||/\d/.test(a[0]));if(!T.length)return[];const need=T.length<=2?T.length:Math.ceil(T.length*.6),out=[];
+ for(const p of PALL){const h=" "+lstH(p)+" ";let n=0,w=0;for(const alts of T){let b=0;for(const a of alts){const z=/\d/.test(a)?h.indexOf(" "+a+" "):-2,k=z>-2?(z<0?-1:z+1):h.indexOf(a);if(k<0)continue;let v=h[k-1]===" "?2:1;if(v>b)b=v}if(b){n++;w+=b+(/\d/.test(alts[0])?2:0)}}
+  if(n>=need)out.push([p,n*10+w+(p.st===false?0:.5)+(mt&&lstLen(p)?15:0)])}
  return out.sort((a,b)=>b[1]-a[1]).slice(0,4).map(x=>x[0])}
+function lstLen(p){if(!p)return 0;if(p.pq>1)return p.pq;const b=p.n.match(/(?:бухт\S*|кільце|моток)\D{0,12}(\d+)\s*м/i);return b&&+b[1]>1?+b[1]:0}
+function lstFix(r){const L=lstLen(M[r.p]);if(L){if(!r.m)r.m=r.q*L;r.q=Math.max(1,Math.ceil(r.m/L))}else if(r.m)r.q=r.m}
 function lstParse(txt){
  const idx=lstIdx(),out=[];
  String(txt||"").split(/\r?\n/).map(l=>l.trim()).filter(l=>l&&!/^(артикул|назва|найменування|№|код)([\s;,\t:]|$)/i.test(l)).slice(0,300).forEach(l=>{
   let q=1,t=l;const cols=l.split(/\t|;/).map(x=>x.trim()).filter(Boolean);
-  let m=t.match(/(\d+(?:[.,]\d+)?)\s*(шт|штук|pcs|уп|м\.?|метр\w*)(?![a-zа-яіїє])/i)||t.match(/[x×хX]\s*(\d+)\s*$/)||t.match(/^\s*(\d+)\s*[x×хX]\s/);
-  let um=false;if(m){q=Math.ceil(parseFloat(m[1].replace(",",".")));um=/^м/i.test(m[2]||"");t=t.replace(m[0]," ")}
+  let m=t.match(/(\d+(?:[.,]\d+)?)\s*(шт|штук|pcs|уп|бухт\S*|м\.?|метр\w*)(?![a-zа-яіїє])/i)||t.match(/[x×хX]\s*(\d+)\s*$/)||t.match(/^\s*(\d+)\s*[x×хX]\s/);
+  let u="";if(m){q=Math.ceil(parseFloat(m[1].replace(",",".")));u=/^м/i.test(m[2]||"")?"m":/^бух/i.test(m[2]||"")?"b":m[2]?"p":"";t=t.replace(m[0]," ")}
   else if(cols.length>1&&/^\d+([.,]\d+)?$/.test(cols[cols.length-1])){q=Math.ceil(parseFloat(cols[cols.length-1].replace(",",".")));t=cols.slice(0,-1).join(" ")}
   else{const e=t.match(/[\s,\-–]+(\d{1,4})\s*$/);if(e&&t.length-e[0].length>3){q=+e[1];t=t.slice(0,-e[0].length)}}
   q=Math.max(1,Math.min(9999,q||1));
   let p=null,alts=[];
   for(const tok of t.split(/[\s,;|()]+/)){const k=lstNorm(tok.replace(/^[^\wа-яіїє]+|[^\wа-яіїє]+$/gi,""));if(k.length>=3&&idx[k]){p=idx[k];break}}
-  if(!p){const cl=t.replace(/^\s*\d+[.)]\s+/,"").replace(/[^\wа-яіїєґ'\s.,-]/gi," ");alts=lstFind(cl);if(alts.length)p=alts[0]}
-  if(p&&um){const bm=p.n.match(/(?:бухт\S*|кільце|моток)\D{0,12}(\d+)\s*м/i);if(bm&&+bm[1]>1)q=Math.max(1,Math.ceil(q/+bm[1]))}
-  out.push({t:l,q,p:p?p.id:"",ex:!!(p&&!alts.length),alts:alts.map(a=>a.id),on:!!p})});
+  if(!p){const cl=t.replace(/^\s*\d+[.)]\s+/,"").replace(/[^\wа-яіїєґ'\s.,-]/gi," ");alts=lstFind(cl,u==="m");if(alts.length)p=alts[0]}
+  const r={t:l,q,p:p?p.id:"",ex:!!(p&&!alts.length),alts:alts.map(a=>a.id),on:!!p,m:0};
+  const L=lstLen(p);if(L)r.m=u==="m"?q:(u==="b"||u==="p"||q<10)?q*L:q;else if(u==="m")r.m=q;
+  lstFix(r);out.push(r)});
  return out}
 function viewList(){document.title="Замовлення за списком — Trend Electro";const v=$("view");
  if(!lstOn()){v.innerHTML=NF;return}
@@ -1403,14 +1406,14 @@ function lstDraw(){const e=$("lstres");if(!e||!LST)return;const R=LST.rows;
  const found=R.filter(r=>r.p),miss=R.filter(r=>!r.p);let sum=0;
  const row=(r,i)=>{const p=M[r.p];if(p&&r.on)sum+=price(p)*r.q;
   const sel=r.alts.length>1?`<select data-lstalt="${i}" style="max-width:100%">${r.alts.map(id=>`<option value="${esc(id)}"${id===r.p?" selected":""}>${esc(M[id].n)} · ${money(price(M[id]))}</option>`).join("")}<option value="">— нічого з цього, підберіть мені —</option></select>`:"";
-  return `<div class="box" style="padding:10px;margin:6px 0${r.p?"":";background:#fff7e6"}"><div class="mut" style="font-size:13px">${esc(r.t)}</div>${p?`<div class="rw" style="gap:8px;align-items:center;margin-top:4px"><label style="flex:1"><input type="checkbox" data-lston="${i}"${r.on?" checked":""}> <a href="#/p/${encodeURIComponent(p.id)}">${esc(p.n)}</a> <span class="mut">${esc(p.id)}</span>${r.ex?' <b style="color:#1a7f37">✓ точно</b>':' <span style="color:#b35900">перевірте</span>'}${p.st===false?' <span style="color:#b00">немає в наявності</span>':""}</label><input type="number" min="1" max="9999" value="${r.q}" data-lstq="${i}" style="width:70px"><b style="white-space:nowrap">${money(price(p))}</b></div>${sel}`:`<div style="margin-top:4px"><b>Не знайшли</b> — менеджер підбере аналог або привезе під замовлення.${sel}</div>`}</div>`};
+  return `<div class="box" style="padding:10px;margin:6px 0${r.p?"":";background:#fff7e6"}"><div class="mut" style="font-size:13px">${esc(r.t)}</div>${p?`<div class="rw" style="gap:8px;align-items:center;margin-top:4px"><label style="flex:1"><input type="checkbox" data-lston="${i}"${r.on?" checked":""}> <a href="#/p/${encodeURIComponent(p.id)}">${esc(p.n)}</a> <span class="mut">${esc(p.id)}</span>${r.ex?' <b style="color:#1a7f37">✓ точно</b>':' <span style="color:#b35900">перевірте</span>'}${p.st===false?' <span style="color:#b00">немає в наявності</span>':""}</label>${lstLen(p)?`<span style="white-space:nowrap"><input type="number" min="1" max="99999" value="${r.m}" data-lstm="${i}" style="width:80px"> м</span>`:`<input type="number" min="1" max="9999" value="${r.q}" data-lstq="${i}" style="width:70px">`}<b style="white-space:nowrap">${money(price(p))}</b></div>${lstLen(p)?`<div class="mut" style="font-size:13px">= ${r.q} ${r.q===1?"бухта":r.q<5?"бухти":"бухт"} по ${lstLen(p)} м (разом ${r.q*lstLen(p)} м)${r.q*lstLen(p)>r.m?" — продається цілими бухтами":""} · ${money(price(p)*r.q)}</div>`:""}${sel}`:`<div style="margin-top:4px"><b>Не знайшли</b> — менеджер підбере аналог або привезе під замовлення.${sel}</div>`}</div>`};
  const need=R.filter(r=>!r.p||!r.on);
  e.innerHTML=`<h2 style="margin-top:14px">Знайдено ${found.length} з ${R.length}</h2>${R.map(row).join("")}
  ${found.length?`<div class="rw" style="gap:10px;align-items:center;margin:10px 0"><b>Разом: ${money(sum)}</b><button class="btn" data-lstadd="1">Додати вибране в кошик</button></div>`:""}
  <div class="box" style="margin-top:12px"><h3>${need.length?"Підберіть мені решту ("+need.length+")":"Хочете, щоб менеджер перевірив список?"}</h3><p class="mut">Надішлемо список менеджеру: він підбере аналоги, привезе під замовлення й зателефонує з ціною.</p><input id="lstn" placeholder="Ваше імʼя" autocomplete="name"><input id="lstp" type="tel" placeholder="Телефон" autocomplete="tel"><input id="lstc" placeholder="Коментар (необовʼязково)"><button class="btn" data-lstsend="1" style="margin-top:6px">Надіслати менеджеру</button></div>`}
 async function lstSend(btn){const n=$("lstn").value.trim(),ph=$("lstp").value.trim(),c=$("lstc").value.trim();
  if(ph.replace(/\D/g,"").length<9){toast("Вкажіть телефон");return}
- const lines=LST.rows.map(r=>({t:r.t.slice(0,300),q:r.q,id:r.on?r.p:"",nm:r.on&&M[r.p]?M[r.p].n.slice(0,200):""}));
+ const lines=LST.rows.map(r=>({t:r.t.slice(0,300),q:r.on&&lstLen(M[r.p])?r.q+" бух. ("+r.q*lstLen(M[r.p])+" м)":r.q,id:r.on?r.p:"",nm:r.on&&M[r.p]?M[r.p].n.slice(0,200):""}));
  btn.disabled=true;const r=await sb.from("list_requests").insert({name:n.slice(0,100),phone:ph.slice(0,30),comment:c.slice(0,500),lines});btn.disabled=false;
  if(r.error){toast("Не вдалося надіслати. Напишіть нам у Viber або Telegram.");return}
  $("lstres").insertAdjacentHTML("afterbegin",'<div class="box" style="background:#eefbf9"><b>Дякуємо! Список отримали.</b> Менеджер зателефонує найближчим часом.</div>');toast("Список надіслано ✓")}
@@ -1421,7 +1424,8 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-lstgo],[da
 document.addEventListener("change",e=>{const t=e.target,d=t.dataset||{};if(!LST)return;
  if(d.lston!==undefined){LST.rows[+d.lston].on=t.checked;lstDraw();return}
  if(d.lstq!==undefined){LST.rows[+d.lstq].q=Math.max(1,Math.min(9999,Math.floor(+t.value)||1));lstDraw();return}
- if(d.lstalt!==undefined){const r=LST.rows[+d.lstalt];r.p=t.value;r.on=!!t.value;if(!t.value)r.alts=r.alts;lstDraw()}});
+ if(d.lstm!==undefined){const r=LST.rows[+d.lstm];r.m=Math.max(1,Math.min(99999,Math.ceil(+t.value)||1));lstFix(r);lstDraw();return}
+ if(d.lstalt!==undefined){const r=LST.rows[+d.lstalt],o=lstLen(M[r.p]);if(o&&!lstLen(M[t.value])){r.q=r.m;r.m=0}r.p=t.value;r.on=!!t.value;lstFix(r);lstDraw()}});
 /* --- кошторис --- */
 let EST=null,ESTPRE=null;
 const dmy=d=>String(d.getDate()).padStart(2,"0")+"."+String(d.getMonth()+1).padStart(2,"0")+"."+d.getFullYear();
