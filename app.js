@@ -198,7 +198,7 @@ function route(){
  else if(h.indexOf("#/page/")===0)viewPage(h.slice(7));
  else if(h==="#/birthday")viewBday();
  else if(h==="#/help")viewHelp();
- else if(h==="#/list")viewList();
+ else if(h==="#/list")viewLst();
  else if(h.indexOf("#/l/")===0)viewLanding(decodeURIComponent(h.slice(4)));
  else if(h.indexOf("#/gift/")===0)viewGift(decodeURIComponent(h.slice(7)));
  else if(h.indexOf("#/cart/")===0)viewCartLink(decodeURIComponent(h.slice(7)));
@@ -1393,7 +1393,7 @@ function lstParse(txt){
   const L=lstLen(p);if(L)r.m=u==="m"?q:(u==="b"||u==="p"||q<10)?q*L:q;else if(u==="m")r.m=q;
   lstFix(r);out.push(r)});
  return out}
-function viewList(){document.title="Замовлення за списком — Trend Electro";const v=$("view");
+function viewLst(){document.title="Замовлення за списком — Trend Electro";const v=$("view");
  if(!lstOn()){v.innerHTML=NF;return}
  v.innerHTML=`<section class="gift"><div class="box" style="max-width:760px;margin:0 auto"><h1 class="ptitle">📋 Замовлення за списком</h1><p class="cdesc">Вставте свій список: артикули або назви, кожен товар з нового рядка, кількість можна дописати в кінці («Розетка RITA біла 10 шт», «12-05-01 x5»). З Excel просто скопіюйте стовпці й вставте сюди.</p>
  <textarea id="lsttx" rows="8" style="width:100%" placeholder="12-05-01 10 шт&#10;Автомат 16А 1P - 6&#10;Кабель ВВГ 3х2.5 100 м"></textarea>
