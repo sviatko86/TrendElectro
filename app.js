@@ -198,6 +198,7 @@ function route(){
  else if(h.indexOf("#/page/")===0)viewPage(h.slice(7));
  else if(h==="#/birthday")viewBday();
  else if(h==="#/help")viewHelp();
+ else if(h==="#/list")viewList();
  else if(h.indexOf("#/l/")===0)viewLanding(decodeURIComponent(h.slice(4)));
  else if(h.indexOf("#/gift/")===0)viewGift(decodeURIComponent(h.slice(7)));
  else if(h.indexOf("#/cart/")===0)viewCartLink(decodeURIComponent(h.slice(7)));
@@ -877,7 +878,7 @@ function drawFooter(){
  if(s.address)c.push(`<span style="display:block;padding:3px 0">${esc(s.address)}</span>`);
  $("foot").innerHTML=`<div><img src="logo2.webp" alt="Trend Electro — Professional Electrical Solutions" width="180" height="91" loading="lazy">${esc(s.tagline||"Електротовари, LED-освітлення та електрофурнітура для дому, офісу й об’єктів.")}${m.length?`<div class="fmsg">${m.map(x=>`<a href="${esc(x[1])}" target="_blank" rel="noopener">${esc(x[0])}</a>`).join("")}</div>`:""}</div>
 <div><b>Каталог</b>${tops.map(k=>`<a href="${href(k.path)}">${esc(k.name)}</a>`).join("")}</div>
-<div><b>Покупцям</b><a href="#/page/delivery">Оплата і доставка</a><a href="#/page/exchange">Обмін та повернення</a><a href="#/page/coop">Співпраця та опт</a><a href="#/guide/">Поради та статті</a>${simOn()?'<a href="#/light">Підбір кольору світла</a>':""}${chkOn()?'<a href="#/check">Чек-лист для ремонту</a>':""}${frameOn()?'<a href="#/frame">Конструктор рамки</a>':""}<a href="#" data-install="1">Встановити додаток</a>${SHOP.help_on?'<a href="#/help">Помічник підбору</a>':""}<a href="#/page/privacy">Політика конфіденційності</a><a href="#/page/about">Про нас</a><a href="#/page/contacts">Контакти</a></div>
+<div><b>Покупцям</b><a href="#/page/delivery">Оплата і доставка</a><a href="#/page/exchange">Обмін та повернення</a><a href="#/page/coop">Співпраця та опт</a><a href="#/guide/">Поради та статті</a>${simOn()?'<a href="#/light">Підбір кольору світла</a>':""}${chkOn()?'<a href="#/check">Чек-лист для ремонту</a>':""}${frameOn()?'<a href="#/frame">Конструктор рамки</a>':""}<a href="#" data-install="1">Встановити додаток</a>${SHOP.help_on?'<a href="#/help">Помічник підбору</a>':""}${SHOP.list_on?'<a href="#/list">Замовлення за списком</a>':""}<a href="#/page/privacy">Політика конфіденційності</a><a href="#/page/about">Про нас</a><a href="#/page/contacts">Контакти</a></div>
 <div><b>${c.length?"Зв’язатися з нами":"Допомога"}</b>${c.join("")||`<a href="#/page/contacts">Контакти та підтримка</a>`}</div>`;
  $("fbot").textContent="© "+new Date().getFullYear()+" Trend Electro. Ціни на сайті вказані в гривнях.";
  {const n=$("dnav");if(n)n.innerHTML=`<a href="#/c/">Усі товари</a><a href="#/page/delivery">Оплата і доставка</a><a href="#/page/exchange">Обмін та повернення</a><a href="#/page/coop">Співпраця та опт</a><a href="#/guide/">Поради та статті</a><a href="#/page/about">Про нас</a><a href="#/page/contacts">Контакти</a><span class="dsp"></span>${s.hours?`<span class="dh">${esc(s.hours)}</span>`:""}${s.phone?`<a class="dph" href="${esc(tel(s.phone))}">${esc(s.phone)}</a>`:""}`}
@@ -1358,8 +1359,69 @@ function toolsHtml(){const t=[];
  if(frameOn())t.push(['#/frame','Конструктор рамки','Зберіть блок розеток і вимикачів і подивіться, як він виглядатиме','img/46-90-34.webp']);
  if(chkOn())t.push(['#/check','Чек-лист для ремонту','Нічого не забути: від блока живлення до рамок','img/60-29-35.webp']);
  if(cmpOn())t.push(['#/cmp','Порівняння товарів','Відмічайте ⇄ на картках і порівнюйте характеристики','img/11-11-41.webp']);
+ if(SHOP.list_on)t.push(['#/list','Замовлення за списком','Вставте свій список — сайт сам збере кошик','img/12-05-01.webp']);
  if(SHOP.help_on)t.push(['#/help','Помічник підбору','Калькулятори: скільки світильників, кабелю, стрічки','img/13-75-28.webp']);
  return t.length?`<section class="sec"><div class="sech"><div><h2>Корисні інструменти</h2><p>Допомагають обрати правильно й не помилитись</p></div></div>${hsOn()?`<div class="tools hs pct">${t.map(x=>`<a href="${x[0]}"><span class="gi">${img(BASE+x[3],400,300,x[1])}</span><b>${x[1]}</b><span>${x[2]}</span></a>`).join("")}</div>${t.length>2?hsBtn("усі інструменти"):""}`:`<div class="tools">${t.map(x=>`<a href="${x[0]}"><b>${x[1]}</b><span>${x[2]}</span></a>`).join("")}</div>`}</section>`:""}
+/* --- замовлення за списком --- */
+let LST=null;
+const lstOn=()=>!!SHOP.list_on;
+function lstNorm(s){return String(s||"").toLowerCase().replace(/[\s ]+/g,"").replace(/[–—]/g,"-")}
+let LIDX=null;
+let LIDXN=0;
+function lstIdx(){if(LIDX&&LIDXN===PALL.length)return LIDX;LIDXN=PALL.length;LIDX={};PALL.forEach(p=>{LIDX[lstNorm(p.id)]=p});return LIDX}
+function lstCmp(t){return(" "+String(t||"").toLowerCase()+" ").replace(/(\d)[.,](\d)/g,"$1 $2").replace(/без\s+заземл\S*|б\s*\/\s*з(?![а-яa-z])/g," bz1 ").replace(/(з|із)\s+заземл\S*|з\s*\/\s*з(?![а-яa-z])|заземл\S*/g," zz1 ").replace(/(одно|1)\s*-?\s*(клавіш\S*|кл(?![а-яa-z]))/g," 1kl ").replace(/(дво|2)\s*-?\s*(клавіш\S*|кл(?![а-яa-z]))/g," 2kl ").replace(/(три|3)\s*-?\s*(клавіш\S*|кл(?![а-яa-z]))/g," 3kl ")}
+const lstH=p=>p._lh||(p._lh=nrm(lstCmp(p.n+" "+p.id+" "+p.b+" "+p.c.join(" "))));
+function lstFind(q){const T=qtoks(lstCmp(q)).filter(a=>a[0].length>1||/\d/.test(a[0]));if(!T.length)return[];const need=T.length<=2?T.length:Math.ceil(T.length*.6),out=[];
+ for(const p of PALL){const h=" "+lstH(p);let n=0,w=0;for(const alts of T){let b=0;for(const a of alts){const k=h.indexOf(a);if(k<0)continue;let v=h[k-1]===" "?2:1;if(v>b)b=v}if(b){n++;w+=b+(/\d/.test(alts[0])?2:0)}}
+  if(n>=need)out.push([p,n*10+w+(p.st===false?0:.5)])}
+ return out.sort((a,b)=>b[1]-a[1]).slice(0,4).map(x=>x[0])}
+function lstParse(txt){
+ const idx=lstIdx(),out=[];
+ String(txt||"").split(/\r?\n/).map(l=>l.trim()).filter(l=>l&&!/^(артикул|назва|найменування|№|код)([\s;,\t:]|$)/i.test(l)).slice(0,300).forEach(l=>{
+  let q=1,t=l;const cols=l.split(/\t|;/).map(x=>x.trim()).filter(Boolean);
+  let m=t.match(/(\d+(?:[.,]\d+)?)\s*(шт|штук|pcs|уп|м\.?|метр\w*)(?![a-zа-яіїє])/i)||t.match(/[x×хX]\s*(\d+)\s*$/)||t.match(/^\s*(\d+)\s*[x×хX]\s/);
+  let um=false;if(m){q=Math.ceil(parseFloat(m[1].replace(",",".")));um=/^м/i.test(m[2]||"");t=t.replace(m[0]," ")}
+  else if(cols.length>1&&/^\d+([.,]\d+)?$/.test(cols[cols.length-1])){q=Math.ceil(parseFloat(cols[cols.length-1].replace(",",".")));t=cols.slice(0,-1).join(" ")}
+  else{const e=t.match(/[\s,\-–]+(\d{1,4})\s*$/);if(e&&t.length-e[0].length>3){q=+e[1];t=t.slice(0,-e[0].length)}}
+  q=Math.max(1,Math.min(9999,q||1));
+  let p=null,alts=[];
+  for(const tok of t.split(/[\s,;|()]+/)){const k=lstNorm(tok.replace(/^[^\wа-яіїє]+|[^\wа-яіїє]+$/gi,""));if(k.length>=3&&idx[k]){p=idx[k];break}}
+  if(!p){const cl=t.replace(/^\s*\d+[.)]\s+/,"").replace(/[^\wа-яіїєґ'\s.,-]/gi," ");alts=lstFind(cl);if(alts.length)p=alts[0]}
+  if(p&&um){const bm=p.n.match(/(?:бухт\S*|кільце|моток)\D{0,12}(\d+)\s*м/i);if(bm&&+bm[1]>1)q=Math.max(1,Math.ceil(q/+bm[1]))}
+  out.push({t:l,q,p:p?p.id:"",ex:!!(p&&!alts.length),alts:alts.map(a=>a.id),on:!!p})});
+ return out}
+function viewList(){document.title="Замовлення за списком — Trend Electro";const v=$("view");
+ if(!lstOn()){v.innerHTML=NF;return}
+ v.innerHTML=`<section class="gift"><div class="box" style="max-width:760px;margin:0 auto"><h1 class="ptitle">📋 Замовлення за списком</h1><p class="cdesc">Вставте свій список: артикули або назви, кожен товар з нового рядка, кількість можна дописати в кінці («Розетка RITA біла 10 шт», «12-05-01 x5»). З Excel просто скопіюйте стовпці й вставте сюди.</p>
+ <textarea id="lsttx" rows="8" style="width:100%" placeholder="12-05-01 10 шт&#10;Автомат 16А 1P - 6&#10;Кабель ВВГ 3х2.5 100 м"></textarea>
+ <div class="rw" style="gap:8px;margin:8px 0"><button class="btn" data-lstgo="1">Знайти товари</button><label class="mut" style="cursor:pointer">або файл .csv / .txt <input type="file" id="lstf" accept=".csv,.txt,text/plain,text/csv" style="max-width:190px"></label></div>
+ <div id="lstres"></div></div></section>`;
+ if(LST&&LST.txt){$("lsttx").value=LST.txt;lstDraw()}
+ $("lstf").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{$("lsttx").value=String(r.result||"");lstGo()};r.readAsText(f)}}
+function lstGo(){const txt=$("lsttx").value;if(!txt.trim()){toast("Вставте список");return}LST={txt,rows:lstParse(txt)};lstDraw()}
+function lstDraw(){const e=$("lstres");if(!e||!LST)return;const R=LST.rows;
+ const found=R.filter(r=>r.p),miss=R.filter(r=>!r.p);let sum=0;
+ const row=(r,i)=>{const p=M[r.p];if(p&&r.on)sum+=price(p)*r.q;
+  const sel=r.alts.length>1?`<select data-lstalt="${i}" style="max-width:100%">${r.alts.map(id=>`<option value="${esc(id)}"${id===r.p?" selected":""}>${esc(M[id].n)} · ${money(price(M[id]))}</option>`).join("")}<option value="">— нічого з цього, підберіть мені —</option></select>`:"";
+  return `<div class="box" style="padding:10px;margin:6px 0${r.p?"":";background:#fff7e6"}"><div class="mut" style="font-size:13px">${esc(r.t)}</div>${p?`<div class="rw" style="gap:8px;align-items:center;margin-top:4px"><label style="flex:1"><input type="checkbox" data-lston="${i}"${r.on?" checked":""}> <a href="#/p/${encodeURIComponent(p.id)}">${esc(p.n)}</a> <span class="mut">${esc(p.id)}</span>${r.ex?' <b style="color:#1a7f37">✓ точно</b>':' <span style="color:#b35900">перевірте</span>'}${p.st===false?' <span style="color:#b00">немає в наявності</span>':""}</label><input type="number" min="1" max="9999" value="${r.q}" data-lstq="${i}" style="width:70px"><b style="white-space:nowrap">${money(price(p))}</b></div>${sel}`:`<div style="margin-top:4px"><b>Не знайшли</b> — менеджер підбере аналог або привезе під замовлення.${sel}</div>`}</div>`};
+ const need=R.filter(r=>!r.p||!r.on);
+ e.innerHTML=`<h2 style="margin-top:14px">Знайдено ${found.length} з ${R.length}</h2>${R.map(row).join("")}
+ ${found.length?`<div class="rw" style="gap:10px;align-items:center;margin:10px 0"><b>Разом: ${money(sum)}</b><button class="btn" data-lstadd="1">Додати вибране в кошик</button></div>`:""}
+ <div class="box" style="margin-top:12px"><h3>${need.length?"Підберіть мені решту ("+need.length+")":"Хочете, щоб менеджер перевірив список?"}</h3><p class="mut">Надішлемо список менеджеру: він підбере аналоги, привезе під замовлення й зателефонує з ціною.</p><input id="lstn" placeholder="Ваше імʼя" autocomplete="name"><input id="lstp" type="tel" placeholder="Телефон" autocomplete="tel"><input id="lstc" placeholder="Коментар (необовʼязково)"><button class="btn" data-lstsend="1" style="margin-top:6px">Надіслати менеджеру</button></div>`}
+async function lstSend(btn){const n=$("lstn").value.trim(),ph=$("lstp").value.trim(),c=$("lstc").value.trim();
+ if(ph.replace(/\D/g,"").length<9){toast("Вкажіть телефон");return}
+ const lines=LST.rows.map(r=>({t:r.t.slice(0,300),q:r.q,id:r.on?r.p:"",nm:r.on&&M[r.p]?M[r.p].n.slice(0,200):""}));
+ btn.disabled=true;const r=await sb.from("list_requests").insert({name:n.slice(0,100),phone:ph.slice(0,30),comment:c.slice(0,500),lines});btn.disabled=false;
+ if(r.error){toast("Не вдалося надіслати. Напишіть нам у Viber або Telegram.");return}
+ $("lstres").insertAdjacentHTML("afterbegin",'<div class="box" style="background:#eefbf9"><b>Дякуємо! Список отримали.</b> Менеджер зателефонує найближчим часом.</div>');toast("Список надіслано ✓")}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-lstgo],[data-lstadd],[data-lstsend]");if(!b)return;const d=b.dataset;
+ if(d.lstgo){lstGo();return}
+ if(d.lstsend){lstSend(b);return}
+ if(d.lstadd){let n=0;LST.rows.forEach(r=>{const p=M[r.p];if(p&&r.on){cart[p.id]=Math.min(999,stkMax(p),(cart[p.id]||0)+r.q);n++}});if(!n){toast("Нічого не вибрано");return}save();drawCart();toast("Додано в кошик: "+n+" поз.",1)}});
+document.addEventListener("change",e=>{const t=e.target,d=t.dataset||{};if(!LST)return;
+ if(d.lston!==undefined){LST.rows[+d.lston].on=t.checked;lstDraw();return}
+ if(d.lstq!==undefined){LST.rows[+d.lstq].q=Math.max(1,Math.min(9999,Math.floor(+t.value)||1));lstDraw();return}
+ if(d.lstalt!==undefined){const r=LST.rows[+d.lstalt];r.p=t.value;r.on=!!t.value;if(!t.value)r.alts=r.alts;lstDraw()}});
 /* --- кошторис --- */
 let EST=null,ESTPRE=null;
 const dmy=d=>String(d.getDate()).padStart(2,"0")+"."+String(d.getMonth()+1).padStart(2,"0")+"."+d.getFullYear();
