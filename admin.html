@@ -161,6 +161,13 @@ async function tGifts(){
   if(tg){await sb.from("gift_links").update({active:tg.dataset.on!=="1"}).eq("code",tg.dataset.gtog);return tGifts()}};
 }
 /* ---------- пропозиція за запитом зі списку (Сповіщення → «Скласти пропозицію») ---------- */
+
+let lqPRC=null;
+async function lqRate(){if(!lqPRC){const r=await sb.from("settings").select("value").eq("key","pricing").maybeSingle();lqPRC=(r.data&&r.data.value)||{}}return lqPRC}
+function lqSite(p){const P=lqPRC||{},bc=P.by_category||{},gm=+P.markup_percent||0,gd=+P.discount_percent||0,k1=p.category,k2=p.subcategory?k1+" › "+p.subcategory:null,k3=k2&&p.subcategory2?k2+" › "+p.subcategory2:null,g=f=>{for(const k of [k3,k2,k1]){if(k&&bc[k]&&bc[k][f]!=null&&bc[k][f]!=="")return +bc[k][f]}return null},m=g("m"),d=g("d");return Math.round(p.price*(1+(m==null?gm:m)/100)*(1-(d==null?gd:d)/100)*100)/100}
+const lqCols="id,name,price,category,subcategory,subcategory2,in_stock";
+async function lqFind(q,lim){const w=String(q||"").toLowerCase().replace(/[%,()_*]/g," ").split(/\s+/).map(x=>/^автомат/.test(x)?"авт":x).filter(x=>x.length>1||/\d/.test(x)).sort((a,b)=>b.length-a.length).slice(0,4);if(!w.length)return[];
+ for(let n=w.length;n>=1;n--){let qq=sb.from("products").select(lqCols).eq("active",true);w.slice(0,n).forEach(x=>{qq=qq.or("name.ilike.%"+x+"%,id.ilike.%"+x+"%")});const r=await qq.order("in_stock",{ascending:false}).limit(lim||6);if(!r.error&&r.data&&r.data.length)return r.data}return[]}
 function lqText(R,rows,terms){
  const first=(R.name||"").trim().split(" ")[0];let sum=0,anySum=false,ln=[];
  rows.forEach((r,i)=>{const pr=parseFloat(String(r.pr).replace(",","."))||0,qn=parseFloat(String(r.q).replace(",","."))||0,nm=(r.alt||"").trim()||r.nm||r.t;
@@ -173,13 +180,15 @@ async function lqOpen(id){
  const r=await sb.from("list_requests").select("*").eq("id",+id).maybeSingle();
  if(r.error||!r.data)return flash("Не вдалося відкрити запит"+(r.error?": "+r.error.message:""));
  const R=r.data,L=Array.isArray(R.lines)?R.lines:[];
- const rows=L.map(x=>({t:String(x.t||""),nm:String(x.nm||""),q:String(x.q==null?"1":x.q),pr:"",alt:"",note:"",skip:false,found:!!x.id}));
+ const rows=L.map(x=>({t:String(x.t||""),nm:String(x.nm||""),q:String(x.q==null?"1":x.q),pr:"",alt:"",note:"",skip:false,found:!!x.id,sug:[],res:[]}));
  const box=document.createElement("div");box.id="lqbox";box.className="box";box.style.background="#fffdf3";
  $("pane").insertBefore(box,$("pane").firstChild);
- const p=normPhone(R.phone);let terms="";
+ const p=normPhone(R.phone);let terms=""; await lqRate();
  const draw=()=>{const txt=lqText(R,rows,terms),e=encodeURIComponent(txt);
   box.innerHTML=`<h2>📋 Пропозиція за запитом №${R.id}</h2><p class="mut">${esc(R.name||"")} · ${esc(R.phone)}${R.comment?" · "+esc(R.comment):""}</p>
   ${rows.map((x,i)=>`<div class="box" style="padding:10px;margin:6px 0"><div><b>${esc(x.t)}</b>${x.found?' <span class="mut">(знайдено на сайті: '+esc(x.nm)+")</span>":' <span style="color:#b35900">не знайдено — запропонуйте свій варіант</span>'}</div>
+  ${x.sug.length?`<div class="mut" style="margin-top:6px">Схоже на сайті: ${x.sug.map((u,k)=>`<button class="sec" style="margin:2px" data-lqpick="${i}:s:${k}">${esc(u.name.slice(0,60))} · ${lqSite(u).toFixed(2)} грн${u.in_stock===false?" (немає)":""}</button>`).join("")}</div>`:""}
+  <div style="margin-top:6px"><input data-lqs="${i}" placeholder="🔍 Знайти товар на сайті (назва або артикул)" autocomplete="off"><div id="lqres${i}"></div></div>
   <div class="rw" style="gap:6px;flex-wrap:wrap;margin-top:6px"><input data-lqf="alt" data-i="${i}" placeholder="Що пропонуємо (напр. Hager MC116A)" value="${esc(x.alt)}" style="flex:2;min-width:200px"><input data-lqf="q" data-i="${i}" placeholder="К-сть" value="${esc(x.q)}" style="width:90px"><input data-lqf="pr" data-i="${i}" inputmode="decimal" placeholder="Ціна за од., грн" value="${esc(x.pr)}" style="width:130px"><input data-lqf="note" data-i="${i}" placeholder="Примітка (наявність, термін)" value="${esc(x.note)}" style="flex:1;min-width:160px"></div>
   <label class="mut"><input type="checkbox" data-lqf="skip" data-i="${i}"${x.skip?" checked":""}> немає / не можемо запропонувати</label></div>`).join("")}
   <label>Умови (доставка, оплата, термін дії цін)</label><textarea id="lqterms" rows="2" style="width:100%" placeholder="Напр.: Ціни діють до п'ятниці. Доставка Новою поштою.">${esc(terms)}</textarea>
@@ -187,10 +196,17 @@ async function lqOpen(id){
   <div class="rw" style="justify-content:flex-start;flex-wrap:wrap;gap:8px"><button data-lqa="copy">Копіювати текст</button>${p?`<a class="btn2" href="viber://forward?text=${e}">Viber</a><a class="btn2" href="https://wa.me/${p}?text=${e}" target="_blank" rel="noopener">WhatsApp</a><a class="btn2" href="https://t.me/share/url?url=%20&text=${e}" target="_blank" rel="noopener">Telegram</a><a class="btn2" href="sms:+${p}?body=${e}">SMS</a><a class="btn2" href="tel:+${p}">Подзвонити</a>`:'<span class="mut">Номер клієнта не розпізнано, скопіюйте текст.</span>'}<button class="sec" data-lqa="close">Закрити</button></div>
   <p class="mut">Viber і Telegram відкривають вибір чату: знайдіть клієнта за номером ${esc(R.phone)} або вставте скопійований текст у його чат. WhatsApp і SMS відкриваються одразу з текстом для цього номера.</p>`;};
  draw();
- box.oninput=e=>{const t=e.target;if(t.id==="lqterms"){terms=t.value;const x=$("lqtxt");if(x)x.value=lqText(R,rows,terms);return}
+ rows.forEach(async(x,i)=>{try{const u=await lqFind(x.t,3);if(u.length){x.sug=u;if(document.getElementById("lqbox")===box&&!box.contains(document.activeElement))draw()}}catch(e){}});
+ let lqT=0;
+ box.oninput=e=>{const t=e.target;if(t.dataset.lqs!==undefined){const i=+t.dataset.lqs;clearTimeout(lqT);lqT=setTimeout(async()=>{const q=t.value.trim(),out=document.getElementById("lqres"+i);if(!out)return;if(q.length<2){out.innerHTML="";rows[i].res=[];return}
+   try{rows[i].res=await lqFind(q,8)}catch(x){rows[i].res=[]}
+   out.innerHTML=rows[i].res.length?rows[i].res.map((u,k)=>`<button class="sec" style="display:block;width:100%;text-align:left;margin:2px 0" data-lqpick="${i}:r:${k}">${esc(u.name)} <span class="mut">${esc(u.id)}</span> · <b>${lqSite(u).toFixed(2)} грн</b>${u.in_stock===false?" (немає)":""}</button>`).join(""):'<span class="mut">Нічого не знайдено — впишіть свій варіант нижче.</span>'},300);return}
+  if(t.dataset.lqf===undefined&&t.id!=="lqterms")return;
+  if(t.id==="lqterms"){terms=t.value;const x=$("lqtxt");if(x)x.value=lqText(R,rows,terms);return}
   const i=t.dataset.i;if(t.dataset.lqf&&i!==undefined){rows[+i][t.dataset.lqf]=t.type==="checkbox"?t.checked:t.value;const x=$("lqtxt");if(x)x.value=lqText(R,rows,terms)}};
  box.onchange=e=>{if(e.target.dataset.lqf==="skip")draw();else if(e.target.dataset.lqf==="pr"||e.target.dataset.lqf==="alt"||e.target.dataset.lqf==="q")draw()};
- box.onclick=async e=>{const a=e.target.closest("[data-lqa]");if(!a)return;
+ box.onclick=async e=>{const pk=e.target.closest("[data-lqpick]");if(pk){const [i,w,k]=pk.dataset.lqpick.split(":"),row=rows[+i],u=(w==="s"?row.sug:row.res)[+k];if(u){row.alt=u.name+" ("+u.id+")";row.pr=lqSite(u).toFixed(2);row.skip=false;row.note=u.in_stock===false?"під замовлення":row.note;draw()}return}
+  const a=e.target.closest("[data-lqa]");if(!a)return;
   if(a.dataset.lqa==="close"){box.remove();return}
   if(a.dataset.lqa==="copy"){try{await navigator.clipboard.writeText(lqText(R,rows,terms));flash("Скопійовано ✓",true)}catch(x){flash("Не вдалося скопіювати")}}};
  box.scrollIntoView({behavior:"smooth",block:"start"})}
