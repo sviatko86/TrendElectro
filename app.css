@@ -937,3 +937,12 @@ body.lndon:has(.lnd.lfix) .ordbar{display:none}
 .cm-sub .cm-row a.cm-i.l1{gap:10px;padding-top:6px;padding-bottom:6px}.cm-sub .cm-row a.cm-i.l1 .cmt{width:38px;height:38px;border-radius:9px}.cm-sub .cm-sub .cm-row a.cm-i.l2{gap:10px;padding-top:5px;padding-bottom:5px}.cm-sub .cm-sub .cm-row a.cm-i.l2 .cmt{width:32px;height:32px;border-radius:8px}
 .estbtns{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.estbtns .btn,.estbtns .go{margin:0}
 @media screen and (max-width:640px){.estp{padding:14px}.estt{min-width:0;display:block;font-size:14px}.estt thead{display:none}.estt tbody,.estt tfoot{display:block}.estt tbody tr{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px 10px;padding:12px 0;border-bottom:1px solid #dfe3e6;align-items:end}.estt td{display:block;padding:0;border:0;text-align:left}.estt .r{text-align:left}.estt .estn1{display:none}.estt .estnm{grid-column:1/3;font-weight:700;line-height:1.35;word-break:break-word}.estt tbody tr>td.noprint{grid-column:3;grid-row:1;text-align:right;align-self:start}.estt .estar{grid-column:1/-1;color:#5f6870;font-size:13px}.estt .estar::before{content:attr(data-l) " "}.estt td[data-l]:not(.estar)::before{content:attr(data-l);display:block;font-size:12px;color:#5f6870;margin-bottom:2px}.estq{width:100%;max-width:90px;text-align:left}.estt tfoot tr{display:flex;justify-content:space-between;gap:10px;padding-top:12px}.estt tfoot td{display:block}.estt tfoot td[colspan]{flex:1;text-align:left}.estt tfoot td.noprint{display:none}.estbtns .go,.estbtns .btn{flex:1 1 100%;max-width:none}}
+/* мобільні виправлення 19.11: панель порівняння не налазить на кошик/кабінет і на кнопку чату; кнопки в рядку з відступами; більші зони натиску */
+.cmpbar{z-index:25}
+@media (max-width:859px){body.te-cmpon .chat{bottom:calc(140px + var(--bi))}}
+p>.btn,p>.go,.empty>.btn,.empty>.go{margin:5px 8px 5px 0}
+.fv::after{content:"";position:absolute;inset:-7px}
+.cmpbar button{min-width:40px;min-height:40px}
+.estx{min-width:36px;min-height:36px}
+
+@media (max-width:859px){body.pv .cmpbar{bottom:calc(126px + var(--bi))}}

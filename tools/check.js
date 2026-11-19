@@ -24,4 +24,10 @@ ok("ключові маршрути (каталог, товар, обране, �
 // 5. index.html: скрипти існують
 const ix=rd("index.html");for(const m of ix.matchAll(/(?:src|href)="([^"?#:]+\.(?:js|css))(?:\?[^"]*)?"/g)){if(!fs.existsSync(m[1]))err("index.html посилається на неіснуючий файл "+m[1])}
 ok("посилання index.html на файли");
+// 6. якщо змінено app.css/app.js — має змінитись їхня версія в index.html, інакше телефони покажуть стару версію
+try{const ch=require("child_process").execSync("git diff --name-only HEAD",{encoding:"utf8"}).split("\n");
+ const old=require("child_process").execSync("git show HEAD:index.html",{encoding:"utf8"});
+ for(const f of ["app.css","app.js"]){if(!ch.includes(f))continue;const re=new RegExp(f.replace(".","\\.")+"\\?v=(\\d+)");const a=(old.match(re)||[])[1],b=(ix.match(re)||[])[1];if(a===b)err(f+" змінено, але версія ?v= в index.html та сама ("+b+") — підвищте її")}
+ if((ch.includes("app.css")||ch.includes("app.js"))&&!ch.includes("sw.js"))err("app.css/app.js змінено, але не оновлено версію кешу в sw.js (te-shell-N)");
+ ok("версії файлів для кешу телефонів")}catch(e){ok("версії файлів: git недоступний, пропущено")}
 console.log(bad?"\nПЕРЕВІРКА НЕ ПРОЙДЕНА: "+bad+" помилок. Публікувати НЕ МОЖНА.":"\nУсе гаразд.");process.exit(bad?1:0);

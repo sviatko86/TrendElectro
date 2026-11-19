@@ -1314,6 +1314,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-mkacc]");i
 /* ===== Порівняння товарів, банер встановлення, офлайн, анімації ===== */
 const cmpOn=()=>!SHOP.cmp_off;
 function cmpDraw(){document.querySelectorAll("[data-cmp]").forEach(b=>b.classList.toggle("on",CMP.includes(b.dataset.cmp)));let bar=$("cmpbar");const n=CMP.length;
+ document.body.classList.toggle("te-cmpon",!!(cmpOn()&&n&&curH()!=="#/cmp"));
  if(!cmpOn()||!n||curH()==="#/cmp"){if(bar)bar.remove();return}
  if(!bar){bar=document.createElement("div");bar.id="cmpbar";bar.className="cmpbar";document.body.appendChild(bar)}
  bar.innerHTML=`<span>Порівняння: <b>${n}</b> з 4</span><a class="go" href="#/cmp">Порівняти</a><button type="button" data-cmpclr aria-label="Очистити порівняння">✕</button>`}
