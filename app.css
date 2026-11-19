@@ -476,7 +476,7 @@ body.lndon{padding-bottom:84px}
 .lxk{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:99px;padding:5px 14px;font-weight:700;font-size:14px}.lxk2{background:#fff;color:#052b31;border:0}
 .lxh h1{font-size:clamp(26px,4.4vw,42px);line-height:1.12;margin:0;font-weight:800;text-shadow:none}
 .lxsub{margin:0;opacity:.92;font-size:17px;line-height:1.4}
-.lxb{list-style:none;margin:0;padding:0;display:grid;gap:6px;width:100%}.lxb li{display:flex;flex-wrap:wrap;gap:2px 6px;align-items:baseline;font-size:15px}.lxb li:before{content:"✓";color:#9ff3ee;font-weight:800}.lxb span{opacity:.8}.lxb b{font-weight:700}
+.lxb{list-style:none;margin:0;padding:0;display:grid;gap:6px;width:100%}.lxb li{display:flex;flex-wrap:nowrap;gap:6px;align-items:baseline;font-size:15px;white-space:nowrap;min-width:0}.lxb li>*{white-space:nowrap}.lxb li:before{content:"✓";color:#9ff3ee;font-weight:800}.lxb span{opacity:.8}.lxb b{font-weight:700}
 .lxpr{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:4px}.lxo{font-size:22px;opacity:.7;text-decoration:line-through;text-decoration-thickness:2px}.lxn{font-size:clamp(38px,7vw,56px);font-weight:800;line-height:1;color:#fff}.lxp{background:#ffd23f;color:#3a2a00;font-weight:800;border-radius:10px;padding:4px 10px;font-size:18px}
 .lxsv{background:rgba(255,255,255,.16);border-radius:10px;padding:6px 12px;font-weight:700;font-size:15px}
 .lxtl{font-weight:700;opacity:.9;margin-top:6px}
