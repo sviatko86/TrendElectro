@@ -860,7 +860,7 @@ async function accClick(t){
  }
  if(t.id==="rbsave"){const v=bdVal("rb");if(!v){m("Оберіть день, місяць і рік народження.");return}t.disabled=true;const r=await sb.rpc("set_birthday",{p_date:v});t.disabled=false;if(r.error){const e=r.error.message||"";m(/set_birthday|schema cache|function|birthday/i.test(e)&&!/Невірна|Увійдіть/.test(e)?"Не вдалося зберегти дату. Спробуйте пізніше або напишіть нам.":"Не вдалося зберегти дату: "+e);return}if(r.data===false){await loadProf();m(prof&&prof.birthday?"Дата вже збережена раніше.":"Не вдалося знайти ваш профіль. Вийдіть і увійдіть знову.");return}m("Дату збережено ✓",true);setTimeout(loadProf,0);return}
  if(t.id==="rsave"){const u=await sb.from("profiles").update({full_name:$("rn").value.trim(),phone:$("rp").value.trim()}).eq("id",me.id);if(u.error){m("Не вдалося зберегти.");return}m("Збережено ✓",true);setTimeout(loadProf,0)}
- if(t.id==="rout"){await sb.auth.signOut();me=null;prof=null;promoPct=0;promoCode="";$("accL").textContent="Увійти";drawCart();drawAcc()}
+ if(t.id==="rout"){try{await sb.auth.signOut()}catch(e){}me=null;prof=null;promoPct=0;promoCode="";$("accL").textContent="Увійти";drawCart();drawAcc()}
 }
 
 /* ---------- чат і підвал ---------- */
@@ -932,7 +932,7 @@ document.addEventListener("click",e=>{
  if(t.id==="aclose"){panel("acc",false);return}
  if(t.id==="cclose"){panel("catm",false);return}
  if(t.id==="order"){placeOrder(t);return}
- if(t.closest("#abody")){accClick(t);return}
+ if(t.closest("#abody")||t.id==="rout"){accClick(t);return}
 });
 document.addEventListener("input",e=>{
  const i=e.target;
