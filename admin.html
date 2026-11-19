@@ -169,13 +169,13 @@ const lqCols="id,name,price,category,subcategory,subcategory2,in_stock";
 async function lqFind(q,lim){const w=String(q||"").toLowerCase().replace(/[%,()_*]/g," ").split(/\s+/).map(x=>/^автомат/.test(x)?"авт":x).filter(x=>x.length>1||/\d/.test(x)).sort((a,b)=>b.length-a.length).slice(0,4);if(!w.length)return[];
  for(let n=w.length;n>=1;n--){let qq=sb.from("products").select(lqCols).eq("active",true);w.slice(0,n).forEach(x=>{qq=qq.or("name.ilike.%"+x+"%,id.ilike.%"+x+"%")});const r=await qq.order("in_stock",{ascending:false}).limit(lim||6);if(!r.error&&r.data&&r.data.length)return r.data}return[]}
 function lqText(R,rows,terms){
- const first=(R.name||"").trim().split(" ")[0];let sum=0,anySum=false,ln=[];
+ const first=(R.name||"").trim().split(" ")[0];let sum=0,sumOld=0,anySum=false,ln=[];
  rows.forEach((r,i)=>{const pr=parseFloat(String(r.pr).replace(",","."))||0,qn=parseFloat(String(r.q).replace(",","."))||0,nm=(r.alt||"").trim()||r.nm||r.t;
   if(r.skip){ln.push((i+1)+". "+nm+" — на жаль, немає");return}
   const dc=Math.min(100,Math.max(0,parseFloat(String(r.dc||"").replace(",","."))||0)),pe=Math.round(pr*(100-dc))/100;
-  let l=(i+1)+". "+nm+" — "+r.q;if(pr>0){l+=" × "+(dc?pe.toFixed(2)+" грн (знижка "+dc+"%, було "+pr.toFixed(2)+")":pr.toFixed(2)+" грн");if(qn>0){const t=Math.round(pe*qn*100)/100;sum+=t;anySum=true;l+=" = "+t.toFixed(2)+" грн"}}
+  let l=(i+1)+". "+nm+" — "+r.q;if(pr>0){l+=" × "+(dc?pe.toFixed(2)+" грн (знижка "+dc+"%, було "+pr.toFixed(2)+")":pr.toFixed(2)+" грн");if(qn>0){const t=Math.round(pe*qn*100)/100;sum+=t;sumOld+=Math.round(pr*qn*100)/100;anySum=true;l+=" = "+t.toFixed(2)+" грн"}}
   if(r.note)l+=" ("+r.note+")";ln.push(l)});
- return "Вітаю"+(first?", "+first:"")+"! Це Trend Electro 🙂 Пропозиція за вашим списком:\n\n"+ln.join("\n")+(anySum?"\n\nРазом: "+(Math.round(sum*100)/100).toFixed(2)+" грн":"")+(terms?"\n\n"+terms:"")+"\n\nЯкщо влаштовує — підтвердьте, і ми все підготуємо. Дякуємо!"}
+ return "Вітаю"+(first?", "+first:"")+"! Це Trend Electro 🙂 Пропозиція за вашим списком:\n\n"+ln.join("\n")+(anySum?(Math.round(sumOld*100)/100>Math.round(sum*100)/100?"\n\nРазом без знижки: "+(Math.round(sumOld*100)/100).toFixed(2)+" грн\nЗнижка: −"+(Math.round((sumOld-sum)*100)/100).toFixed(2)+" грн\nРазом до сплати: "+(Math.round(sum*100)/100).toFixed(2)+" грн":"\n\nРазом: "+(Math.round(sum*100)/100).toFixed(2)+" грн"):"")+(terms?"\n\n"+terms:"")+"\n\nЯкщо влаштовує — підтвердьте, і ми все підготуємо. Дякуємо!"}
 async function lqOpen(id){
  const old=document.getElementById("lqbox");if(old)old.remove();
  const r=await sb.from("list_requests").select("*").eq("id",+id).maybeSingle();
