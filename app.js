@@ -4,7 +4,7 @@ const $=i=>document.getElementById(i);
 const curH=()=>location.hash||window.__R||"#/";
 const BASE=window.__BASE||new URL(".",location.href).href,safeId=id=>String(id).replace(/[^A-Za-z0-9_-]/g,"_");let IMG=new Set,IMGS=new Set;
 const esc=t=>String(t==null?"":t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const money=n=>{n=+n||0;return n.toLocaleString("uk-UA",{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2})+" ₴"};
+const money=n=>{n=+n||0;return n.toLocaleString("uk-UA",{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2})+"\u00a0₴"};
 const LS=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
 const SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 const ico=(n,c)=>`<svg class="i${c?" "+c:""}"><use href="#i-${n}"/></svg>`;
@@ -449,7 +449,8 @@ function viewPage(key){
 }
 
 /* ---------- сторінка товару ---------- */
-function specRows(sp){return(sp||"").split(";").map(x=>{const k=x.indexOf(":");return k>0?[x.slice(0,k).trim(),x.slice(k+1).trim()]:null}).filter(Boolean)}
+function teNb(s){return String(s==null?"":s).replace(/(\d)[ \t]+(?=[A-Za-zА-Яа-яІіЇїЄєҐґ%°₴Ω"])/g,"$1\u00a0").replace(/[ \t]+([-–—])[ \t]+(?=\d)/g," $1\u00a0")}
+function specRows(sp){return(sp||"").split(";").map(x=>{const k=x.indexOf(":");return k>0?[teNb(x.slice(0,k).trim()),teNb(x.slice(k+1).trim())]:null}).filter(Boolean)}
 
 /* ---------- «Дивіться також»: до 9 сумісних товарів, додати в кошик галочкою ---------- */
 const relOn=()=>!SHOP.rel_off;
