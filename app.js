@@ -199,7 +199,7 @@ function route(){
  else if(h==="#/birthday")viewBday();
  else if(h==="#/help")viewHelp();
  else if(h==="#/list")viewLst();
- else if(h.indexOf("#/l/")===0)viewLanding(decodeURIComponent(h.slice(4)));
+ else if(h.indexOf("#/l/")===0)viewLanding(decodeURIComponent(h.slice(4))).catch(e=>{try{console.error(e);$("view").innerHTML='<div class="empty">Не вдалося відкрити сторінку. <a href="'+esc(BASE)+'">На головну</a> · <a href="'+esc(BASE)+location.hash+'" onclick="location.reload();return false">Спробувати ще раз</a></div>'}catch(_){}});
  else if(h.indexOf("#/gift/")===0)viewGift(decodeURIComponent(h.slice(7)));
  else if(h.indexOf("#/cart/")===0)viewCartLink(decodeURIComponent(h.slice(7)));
  else viewHome();
