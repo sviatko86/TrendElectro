@@ -567,9 +567,9 @@ function relFor(p){
 }
 let XS=[];
 function relHtml(p){
- if(!relOn())return"";let g=[];try{g=relFor(p)}catch(e){}
+ if(!relOn())return"";let g=[];try{g=relFor(p).slice(0,6)}catch(e){}
  XS=g.map(x=>x.x.id);if(!g.length)return"";
- return `<section class="xsell"><div class="xh"><h2>Дивіться також</h2><span>Позначте галочкою — додамо в кошик разом</span></div><div class="xgrid" style="--xc:${g.length<=5?g.length:Math.ceil(g.length/2)}">${g.map(({x,w})=>{const u="#/p/"+encodeURIComponent(x.id);return `<div class="xc"><a class="xi" href="${u}">${img(x.img,240,240,x.n)}</a><span class="xw">${esc(w)}</span><a class="xn" href="${u}">${esc(x.n)}</a><b class="xp">${money(priceInfo(x).pc)}</b><label class="xk"><input type="checkbox" data-xs="${esc(x.id)}" onchange="xsUpd()"> Додати до кошика</label></div>`}).join("")}</div><button class="xadd" id="xadd" onclick="xsAdd()" disabled>Оберіть товари галочкою</button></section>`;
+ return `<section class="xsell"><div class="xh"><h2>Дивіться також</h2><span>Позначте галочкою — додамо в кошик разом</span></div><div class="xgrid" style="--xc:${g.length}">${g.map(({x,w})=>{const u="#/p/"+encodeURIComponent(x.id);return `<div class="xc"><a class="xi" href="${u}">${img(x.img,240,240,x.n)}</a><span class="xw">${esc(w)}</span><a class="xn" href="${u}">${esc(x.n)}</a><b class="xp">${money(priceInfo(x).pc)}</b><label class="xk"><input type="checkbox" data-xs="${esc(x.id)}" onchange="xsUpd()"> Додати до кошика</label></div>`}).join("")}</div><button class="xadd" id="xadd" onclick="xsAdd()" disabled>Оберіть товари галочкою</button></section>`;
 }
 function xsSel(){return [...document.querySelectorAll(".xsell input[data-xs]:checked")].map(i=>i.dataset.xs).filter(id=>M[id])}
 function xsUpd(){const b=$("xadd");if(!b)return;const s=xsSel(),sum=s.reduce((t,id)=>t+priceInfo(M[id]).pc,0);b.disabled=!s.length;b.textContent=s.length?`Додати до кошика: ${s.length} шт. · ${money(sum)}`:"Оберіть товари галочкою";document.querySelectorAll(".xsell .xc").forEach(c=>c.classList.toggle("on",!!c.querySelector("input:checked")))}
@@ -586,8 +586,8 @@ async function viewProduct(id){
 <div class="bigprice${disc>0?" sale":""}">${money(pc)}${pi.base>pc?`<s>${money(pi.base)}</s>`:""}${disc>0?`<span class="bds2">${saleBadges(pi)}</span>`:""}</div>${packHtml(p,1)}${p.ofr?`<div class="spbox"><span class="bd p">Спеціальна пропозиція</span><div>${esc(p.ofr)}</div></div>`:""}
 <div class="buyrow"><div class="qtybox"><button data-q="-1" aria-label="Менше">−</button><input id="pq" type="number" min="1" max="${stkMax(p)}" value="1" inputmode="numeric" aria-label="Кількість"><button data-q="1" aria-label="Більше">+</button></div><button class="buybtn" id="buy" data-id="${esc(p.id)}"${p.st?"":" disabled"}>${p.st?ico("cart")+"Купити":"Немає в наявності"}</button><button class="favbtn${fav[p.id]?" on":""}" data-f="${esc(p.id)}" aria-label="Обране">${ico("heart")}</button></div><p class="ordoff">${esc(ordMsg())}</p>
 <div class="ptrust">${(pk=>`<a href="#/page/delivery">${ico("truck")}<span><b>${esc(pk[0][1])}</b>${esc(pk[0][2])}</span></a><a href="#/page/delivery">${ico("wallet")}<span><b>${esc(pk[1][1])}</b>${esc(pk[1][2])}</span></a>`)((q=>q.length>=2?q:PERKS)((shop().perks||[]).filter(x=>x&&x.t).map((x,i)=>[PERKS[i%4][0],x.t,x.d||""])))}<a href="#/page/exchange">${ico("swap")}<span><b>Обмін та повернення</b>згідно законодавства України</span></a></div></div></div>
-<div id="pwarn"></div>${relHtml(p)}<div class="tabsb"><button data-pt="info" class="on">Опис</button><button data-pt="spec">Усі характеристики</button></div><div class="box" id="pdet"><div class="sku">Завантаження…</div></div>
-${rvHtml(p.id)}<section class="sec" id="btog" hidden></section>`;
+<div id="pwarn"></div><div class="tabsb"><button data-pt="info" class="on">Опис</button><button data-pt="spec">Усі характеристики</button></div><div class="box" id="pdet"><div class="sku">Завантаження…</div></div>
+${relHtml(p)}${rvHtml(p.id)}<section class="sec" id="btog" hidden></section>`;
  if(window.__vy!=null){const y=window.__vy;window.__vy=null;scrollTo(0,y);requestAnimationFrame(()=>scrollTo(0,y))}
  rvPush(p.id);loadBT(p.id);
  const sbx=$("sbuy");sbx.innerHTML=`<div><b>${money(pc)}</b><small>${p.st?"В наявності":""}</small></div><button class="buybtn" data-sb="${esc(p.id)}"${p.st?"":" disabled"}>${p.st?ico("cart")+"Купити":"Немає в наявності"}</button>`;sbx.hidden=false;
