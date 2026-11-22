@@ -946,3 +946,9 @@ p>.btn,p>.go,.empty>.btn,.empty>.go{margin:5px 8px 5px 0}
 .estx{min-width:36px;min-height:36px}
 
 @media (max-width:859px){body.pv .cmpbar{bottom:calc(126px + var(--bi))}}
+
+/* ціни в картках на одному рівні: з рядком «В упаковці» і без нього */
+.card .body .m2{margin-bottom:auto}
+.card .body .pk{order:1;margin:0}
+.card .body .price{order:2;margin-top:0}
+.card .body .add{order:3}
