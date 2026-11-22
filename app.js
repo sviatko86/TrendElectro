@@ -980,8 +980,8 @@ document.addEventListener("DOMContentLoaded",boot);
 
 /* ---------- анімації (легкі) ---------- */
 (function(){
- const RV=".card,.gcard,.sec,.perk,.box.txt,.art,.cats a,.cat",io="IntersectionObserver"in window?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}}),{rootMargin:"0px 0px -6% 0px",threshold:.05}):null;
- function scan(root){if(!io)return;let i=0;const H=innerHeight*1.5,L=[];root.querySelectorAll(RV).forEach(el=>{if(el.dataset.rv||el.closest("#drawer,#acc"))return;L.push([el,el.getBoundingClientRect().top>H])});L.forEach(([el,far])=>{el.dataset.rv=1;if(far){el.classList.add("in");return}el.style.setProperty("--d",Math.min(i++,8)*45+"ms");el.classList.add("rv");io.observe(el)})}
+ const RV=".card,.gcard,.sec,.perk,.cats a,.cat",io="IntersectionObserver"in window?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}}),{rootMargin:"0px 0px -6% 0px",threshold:.05}):null;
+ function scan(root){if(!io)return;let i=0;const H=innerHeight*1.5,L=[];root.querySelectorAll(RV).forEach(el=>{if(el.dataset.rv||el.closest("#drawer,#acc"))return;L.push([el,el.getBoundingClientRect().top>H])});L.forEach(([el,far])=>{el.dataset.rv=1;if(far){el.classList.add("in");return}el.style.setProperty("--d",Math.min(i++,8)*45+"ms");el.classList.add("rv");io.observe(el)});setTimeout(()=>{root.querySelectorAll(".rv:not(.in)").forEach(el=>{const t=el.getBoundingClientRect();if(t.top<innerHeight&&t.bottom>0)el.classList.add("in")})},1200)}
  document.addEventListener("DOMContentLoaded",()=>{const v=document.getElementById("view");if(!v)return;let t=null;new MutationObserver(()=>{clearTimeout(t);t=setTimeout(()=>scan(v),30)}).observe(v,{childList:true,subtree:true});
   const c=document.getElementById("cnt");if(c){let last=0;new MutationObserver(()=>{const n=parseInt(c.textContent)||0;if(n>last){const b=document.getElementById("cartBtn");b.classList.remove("bump");void b.offsetWidth;b.classList.add("bump")}last=n}).observe(c,{childList:true,characterData:true,subtree:true})}});
  /* «летить у кошик» + пульс серця */
