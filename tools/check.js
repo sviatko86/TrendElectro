@@ -30,4 +30,12 @@ try{const ch=require("child_process").execSync("git diff --name-only HEAD",{enco
  for(const f of ["app.css","app.js"]){if(!ch.includes(f))continue;const re=new RegExp(f.replace(".","\\.")+"\\?v=(\\d+)");const a=(old.match(re)||[])[1],b=(ix.match(re)||[])[1];if(a===b)err(f+" змінено, але версія ?v= в index.html та сама ("+b+") — підвищте її")}
  if((ch.includes("app.css")||ch.includes("app.js"))&&!ch.includes("sw.js"))err("app.css/app.js змінено, але не оновлено версію кешу в sw.js (te-shell-N)");
  ok("версії файлів для кешу телефонів")}catch(e){ok("версії файлів: git недоступний, пропущено")}
+// 7. секретні ключі не повинні потрапити в репозиторій (публічний ключ sb_publishable_ — можна)
+try{const tcSkip=new Set([".git","node_modules","img","p","c","poradu","feed"]),tcExt=/\.(js|mjs|ts|html|json|sql|yml|yaml|md|txt|env)$/i;let tcN=0;
+ const tcWalk=d=>{for(const e of fs.readdirSync(d,{withFileTypes:true})){if(tcSkip.has(e.name))continue;const p=d+"/"+e.name;if(e.isDirectory())tcWalk(p);else if(tcExt.test(e.name)||e.name===".env")tcScan(p)}};
+ const tcScan=p=>{tcN++;const t=rd(p);
+  if(/sb_secret_[A-Za-z0-9_-]{10,}/.test(t))err("секретний ключ sb_secret_ у файлі "+p);
+  for(const m of t.matchAll(/eyJ[\w-]{10,}\.(eyJ[\w-]{10,})\.[\w-]{10,}/g)){try{if(/service_role/.test(Buffer.from(m[1],"base64").toString()))err("ключ service_role у файлі "+p)}catch(e){}}
+  if(/gh[pousr]_[A-Za-z0-9]{30,}/.test(t))err("токен GitHub у файлі "+p)};
+ tcWalk(".");ok("секретних ключів немає ("+tcN+" файлів)")}catch(e){ok("пошук секретів пропущено: "+e.message)}
 console.log(bad?"\nПЕРЕВІРКА НЕ ПРОЙДЕНА: "+bad+" помилок. Публікувати НЕ МОЖНА.":"\nУсе гаразд.");process.exit(bad?1:0);
