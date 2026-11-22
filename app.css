@@ -952,11 +952,14 @@ p>.btn,p>.go,.empty>.btn,.empty>.go{margin:5px 8px 5px 0}
 .card .body .pk{order:2;margin:0}
 .card .body .add{order:3;margin-top:auto}
 .xc .price{font-size:15px;margin-top:2px}.xc .price s{font-size:12px}.xc .bds{left:0;top:6px}.xc .bd{font-size:10.5px;padding:3px 7px}
-.frprev{padding:22px}.frsvg{max-width:none;max-height:none;width:100%}
+.frprev{padding:22px;overflow-x:auto;justify-content:flex-start}.frprev .frsvg{max-width:none;max-height:none;flex:none;margin:0 auto}
 @media (min-width:1024px) and (hover:hover) and (pointer:fine){
+ :root{--frk:1.8}
  .frgrid{grid-template-columns:minmax(0,.8fr) minmax(0,1.6fr);gap:0 32px}
- .frgrid .frprev{grid-column:2;grid-row:1;margin:12px 0 0;padding:28px}
- .frgrid .frsum{grid-column:2;grid-row:2;margin:14px 0 0}
- .frgrid .frslots{grid-template-columns:1fr}
- .frsvg{max-height:460px}
+ .frgrid .frprev{grid-column:1/-1;grid-row:1;margin:12px 0 8px;padding:28px}
+ .frgrid .frctl{grid-column:1;grid-row:2}
+ .frgrid .frslots{grid-column:1;grid-row:3;grid-template-columns:1fr 1fr}
+ .frgrid .frsum{grid-column:2;grid-row:2/4;margin:0}
+ .frsvg{max-height:none}
 }
+@media (min-width:1024px){:root{--frk:1.8}}
