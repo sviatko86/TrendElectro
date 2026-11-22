@@ -969,5 +969,5 @@ p>.btn,p>.go,.empty>.btn,.empty>.go{margin:5px 8px 5px 0}
  .slider{aspect-ratio:2.8/1;max-height:none;min-height:0}
  .sl{overflow:hidden}
  .sl:before{display:none}
- .sl img{position:absolute;top:0;left:-42.857%;width:142.857%;height:100%;object-fit:cover}
+ .sl img{position:absolute;top:0;left:-42.857%;width:142.857%;max-width:none;height:100%;object-fit:cover}
 }
