@@ -395,8 +395,9 @@ function renderGrid(){
  const base=baseList(CUR.path);CUR.list=listP(CUR.path,base);const l=CUR.list;drawFacets(base);
  $("found").textContent="Знайдено: "+l.length;
  $("grid").innerHTML=l.length?l.slice(0,F.lim).map(card).join(""):`<div class="empty" style="grid-column:1/-1">Нічого не знайдено${F.q?` за запитом «${esc(F.q)}»`:""}. Спробуйте інше слово, артикул або приберіть фільтри.${F.q?`<p><a class="btn" href="${esc(ytU(F.q+" електрика"))}" target="_blank" rel="noopener">▶ YouTube</a> <a class="btn" href="${esc("https://www.tiktok.com/search?q="+encodeURIComponent(F.q+" електрика"))}" target="_blank" rel="noopener">♪ TikTok</a> <a class="btn" href="#/guide/">Поради</a></p>`:""}</div>`;
- moreBtn();
+ fillRowTE();moreBtn();
 }
+function fillRowTE(){try{const g=$("grid");if(!g||!CUR.list)return;const c=getComputedStyle(g).gridTemplateColumns.split(" ").length,shown=Math.min(F.lim,CUR.list.length),need=c>1?(c-shown%c)%c:0;if(need&&shown<CUR.list.length){const to=Math.min(shown+need,CUR.list.length);g.insertAdjacentHTML("beforeend",CUR.list.slice(shown,to).map(card).join(""));F.lim=to}}catch(e){}}
 function moreBtn(){const rest=CUR.list.length-F.lim,b=$("more");if(!b)return;b.hidden=rest<=0;b.textContent="Показати ще "+Math.min(24,Math.max(rest,0))}
 function viewFav(){
  const l=P.filter(p=>fav[p.id]);
@@ -921,7 +922,7 @@ document.addEventListener("click",e=>{
  if(d.sa){lastTouch=Date.now();showB((bix+ +d.sa+BN.length)%BN.length);return}
  if(d.ht){document.querySelectorAll(".htab").forEach(b=>b.classList.toggle("on",b.dataset.ht===d.ht));document.querySelectorAll(".hpane").forEach(x=>x.hidden=x.dataset.pane!==d.ht);return}
  if(d.tg!==undefined){const s=t.parentNode.nextElementSibling;if(s){s.classList.toggle("open");t.textContent=s.classList.contains("open")?"−":"+"}return}
- if(t.id==="more"){const from=F.lim;F.lim+=24;$("grid").insertAdjacentHTML("beforeend",CUR.list.slice(from,F.lim).map(card).join(""));moreBtn();return}
+ if(t.id==="more"){const from=F.lim;F.lim+=24;$("grid").insertAdjacentHTML("beforeend",CUR.list.slice(from,F.lim).map(card).join(""));fillRowTE();moreBtn();return}
  if(t.id==="toastB"){$("toast").classList.remove("on");openCart();return}
  if(t.id==="chatb"){$("chatp").hidden=!$("chatp").hidden;return}
  if(t.id==="dclose"){panel("drawer",false);return}
