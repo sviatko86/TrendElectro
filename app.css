@@ -964,12 +964,8 @@ body.ndz .hero h1 em{color:inherit}
 body.ndz .card{box-shadow:none}
 @media (hover:hover){body.ndz .card:hover,body.ndz.fxon .card:hover{transform:none;box-shadow:none;border-color:var(--acc)}body.ndz .card:hover .pic img{transform:none}}
 body.ndz .card .body{gap:8px;padding:12px 12px 14px}
-body.ndz .card .name{order:1;font-size:14px;min-height:2.7em;-webkit-line-clamp:2}
-body.ndz .card .price{order:2;margin-top:0;font-size:23px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-body.ndz .card .price s{font-size:13px}
-body.ndz .card .pk{order:3;font-size:12px;line-height:1.35;color:var(--ink);background:var(--line2);border-radius:8px;padding:6px 9px}
-body.ndz .card .m2{order:4;margin-top:auto;justify-content:flex-start;gap:4px 12px}
-body.ndz .card .add{order:5;height:44px;background:transparent;color:var(--accd);border:1.5px solid var(--acc);box-shadow:none}
+body.ndz .card .pk{font-size:12px;line-height:1.35;color:var(--ink);background:var(--line2);border-radius:8px;padding:6px 9px}
+body.ndz .card .add{height:44px;background:transparent;color:var(--accd);border:1.5px solid var(--acc);box-shadow:none}
 body.ndz .card .add:hover{background:var(--acc);color:var(--accink);filter:none}
 body.ndz .card .add:disabled{background:var(--line2);color:var(--mute);border-color:transparent}
 body.ndz .card:has(.stock.no) .pic img{opacity:.45}
