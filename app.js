@@ -1521,14 +1521,15 @@ const COLHEX={"Білий":"#f5f5f2","Чорний":"#1e1e20","Графіт":"#4
 function pCol(n){const s=String(n).toLowerCase().replace(COLEX," ");let b=null;for(const[k,rx]of COLL){const m=rx.exec(s);if(m&&(b===null||m.index<b[0]))b=[m.index,k]}return b?b[1]:""}
 /* --- конструктор рамки (серія RITA) --- */
 const RCOL={"білий":"#f5f5f2","крем":"#efe2bf","чорний":"#1e1e20","графіт":"#4b4e53","антрацит":"#393c40","срібло":"#c5c8cb","титан":"#9ba0a5","золото":"#c9a44f","дуб":"#b98c55","горіх":"#7b5334","вишня":"#8c3d30","сірий":"#9a9ea3"};
-const rcolOf=n=>{const m=String(n).match(/Mutlusan,\s*"?([^",(]+?)"?\s*(?:,|\()/i);return m?m[1].trim().toLowerCase():""};
+const rcolOf=n=>{const m=String(n).match(/Mutlusan,\s*"?([^",(]+?)"?\s*(?:,|\()/i);return m?m[1].trim().toLowerCase().replace(/^біла$/,"білий"):""};
 const capF=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const FNUM=[[/одно/i,1],[/дво/i,2],[/три/i,3],[/чотири/i,4],[/п.ят/i,5],[/шести/i,6]];
 let FR=null,CST={col:"",n:2,ori:"h",slots:[]};
 function frIdx(){const R=P.filter(p=>p.c[0]==="Розетки та вимикачі"&&/RITA/.test(p.n)&&p.st!==false),F=[],Mx=[];
  R.forEach(p=>{const col=rcolOf(p.n);if(!col)return;const sub=p.c.join(" ");
   if(/Рамки/.test(sub)&&/^Рамка/i.test(p.n)){const m=p.n.match(/(одно|дво|три|чотири|п.ят\S*|шести)місн/i);if(!m)return;const n=(FNUM.find(x=>x[0].test(m[1]))||[0,0])[1];if(!n)return;F.push({p,col,n,ori:/горизонтальн/i.test(p.n)?"h":/вертикальн/i.test(p.n)?"v":"a"})}
-  else if(/Механізм|Діммер/i.test(sub+" "+p.n)&&!/горизонтальн|подвійн|2гн/i.test(p.n)&&/^(Механізм|Діммер)/i.test(p.n)){const t=capF(p.n.split(/\s+RITA/)[0].replace(/,\s*$/,"").replace(/^Механізм\s+/i,"").replace(/\s+/g," ").trim());Mx.push({p,col,type:t})}});
+  else if(/Механізм|Діммер/i.test(sub+" "+p.n)&&!/горизонтальн|подвійн|2гн/i.test(p.n)&&/^(Механізм|Діммер)/i.test(p.n)){const t=capF(p.n.split(/\s+RITA/)[0].replace(/,\s*$/,"").replace(/^Механізм\s+/i,"").replace(/\s+/g," ").trim());Mx.push({p,col,type:t})}
+  else if(/^(Розетка|Вимикач)/i.test(p.n)&&/\(2220 /.test(p.n)&&(/hdmi|\btv\b|телевіз|комп.ютер|телефон|rj/i.test(p.n)||/дзвінк|жалюз|картков|перехресн|3 кл|usb/i.test(p.n))&&!/подвійн|в 1 коробку|бризкозахищ/i.test(p.n)&&!(/usb/i.test(p.n)&&/горизонтальн/i.test(p.n))){const t=capF(p.n.split(/\s+RITA/)[0].replace(/,\s*$/,"").replace(/\s+/g," ").trim().replace(/^Вимикач(?=\s)/,"Вимикача").replace(/^Розетка(?=\s)/,"Розетки"));Mx.push({p,col,type:t})}});
  return FR={F,M:Mx}}
 const frRank=t=>/^розетки з\/з, 16А$/i.test(t)?0:/^розетк/i.test(t)?1:/^вимикач/i.test(t)?2:3;
 function frTypes(col){const s=[...new Set(FR.M.filter(m=>m.col===col).map(m=>m.type))];return s.sort((a,b)=>frRank(a)-frRank(b)||a.localeCompare(b,"uk"))}
