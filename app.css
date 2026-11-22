@@ -946,3 +946,32 @@ p>.btn,p>.go,.empty>.btn,.empty>.go{margin:5px 8px 5px 0}
 .estx{min-width:36px;min-height:36px}
 
 @media (max-width:859px){body.pv .cmpbar{bottom:calc(126px + var(--bi))}}
+
+/* ---------- новий дизайн (body.ndz), вмикається в адмінці ---------- */
+body.ndz .hero{background:radial-gradient(760px 500px at 86% -8%,var(--ndz-c,rgba(255,168,80,.5)),transparent 62%),radial-gradient(520px 300px at -6% 112%,rgba(255,255,255,.05),transparent 60%),#101315}
+body.ndz .hero:after{display:none}
+body.ndz .hero .eyebrow{display:none}
+body.ndz .hero h1 em{color:inherit}
+.ndzt{margin:22px 0 0;max-width:520px}
+.ndzt-h{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.ndzt-h b{font-size:30px;line-height:1;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ndz-t,#fff);min-width:3.6ch}
+.ndzt-h span{font-size:14px;color:#c9d2d8;line-height:1.35}
+.ndzt input[type=range]{-webkit-appearance:none;appearance:none;display:block;width:100%;height:10px;margin:16px 0 8px;border-radius:999px;background:linear-gradient(90deg,#ffa850,#ffecce 34%,#b0d4ff);outline:none;cursor:pointer}
+.ndzt input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;background:#fff;border:4px solid var(--ndz-t,#fff);box-shadow:0 2px 10px rgba(0,0,0,.55)}
+.ndzt input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:4px solid var(--ndz-t,#fff);box-shadow:0 2px 10px rgba(0,0,0,.55)}
+.ndzt input[type=range]:focus-visible{box-shadow:0 0 0 3px #101315,0 0 0 5px #fff}
+.ndzt-s{display:flex;justify-content:space-between;font-size:12px;color:#9fb0b8}
+body.ndz .card{box-shadow:none}
+@media (hover:hover){body.ndz .card:hover,body.ndz.fxon .card:hover{transform:none;box-shadow:none;border-color:var(--acc)}body.ndz .card:hover .pic img{transform:none}}
+body.ndz .card .body{gap:8px;padding:12px 12px 14px}
+body.ndz .card .name{order:1;font-size:14px;min-height:2.7em;-webkit-line-clamp:2}
+body.ndz .card .price{order:2;margin-top:0;font-size:23px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+body.ndz .card .price s{font-size:13px}
+body.ndz .card .pk{order:3;font-size:12px;line-height:1.35;color:var(--ink);background:var(--line2);border-radius:8px;padding:6px 9px}
+body.ndz .card .m2{order:4;margin-top:auto;justify-content:flex-start;gap:4px 12px}
+body.ndz .card .add{order:5;height:44px;background:transparent;color:var(--accd);border:1.5px solid var(--acc);box-shadow:none}
+body.ndz .card .add:hover{background:var(--acc);color:var(--accink);filter:none}
+body.ndz .card .add:disabled{background:var(--line2);color:var(--mute);border-color:transparent}
+body.ndz .card:has(.stock.no) .pic img{opacity:.45}
+body.ndz .card .add:focus-visible,body.ndz .card .name:focus-visible,body.ndz .card .pic:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){body.ndz .card,body.ndz .card .pic img{transition:none}}

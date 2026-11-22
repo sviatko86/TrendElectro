@@ -279,6 +279,11 @@ function viewBday(){
  ${on?`<form id="bdForm" class="bdform"><input id="bdn" placeholder="Ваше ім’я" autocomplete="given-name"><input id="bdc" placeholder="Телефон або email" autocomplete="email" required><div class="bdl">Дата народження${bdSel("bdd")}</div><label class="ck"><input type="checkbox" id="bdk"> <span>Погоджуюсь на обробку моїх даних для привітання й подарунка</span></label><div class="msg" id="bdm"></div><button class="go" id="bdgo">Отримати подарунок</button></form><div id="bdres"></div>`:'<div class="empty">Акція зараз не діє. Зазирніть пізніше.</div>'}
  <ul class="bdlist"><li>🎁 Подарунок один раз на рік для кожного</li><li>⏳ Діє ${bdDays()} поспіль</li><li>🔒 Дані використовуємо лише для привітання</li></ul></section>`;
  window.scrollTo(0,0)}
+/* ---------- новий дизайн (перемикач в адмінці: ndz_on) ---------- */
+function ndzRGB(k){const S=[[2700,255,168,80],[4000,255,236,205],[6500,176,212,255]];let a=S[0],b=S[1];if(k>=4000){a=S[1];b=S[2]}const t=Math.min(1,Math.max(0,(k-a[0])/(b[0]-a[0])));return[1,2,3].map(i=>Math.round(a[i]+(b[i]-a[i])*t))}
+function ndzTxt(k){return k<3300?"Тепле світло: спальня, вітальня, ресторан":k<4800?"Нейтральне світло: кухня, ванна, офіс":"Холодне світло: гараж, склад, цех, робоча зона"}
+function ndzT(){if(!SHOP.ndz_on)return"";return`<div class="ndzt"><div class="ndzt-h"><b id="ndzK">3000K</b><span id="ndzD"></span></div><input id="ndzR" type="range" min="2700" max="6500" step="100" value="3000" aria-label="Колір світла в кельвінах"><div class="ndzt-s"><span>2700K тепле</span><span>6500K холодне</span></div></div>`}
+function ndzInit(){const r=$("ndzR"),h=$("home");if(!r||!h)return;const go=()=>{const k=+r.value,c=ndzRGB(k).join(",");h.style.setProperty("--ndz-c","rgba("+c+",.5)");h.style.setProperty("--ndz-t","rgb("+c+")");$("ndzK").textContent=k+"K";$("ndzD").textContent=ndzTxt(k);r.setAttribute("aria-valuetext",k+"K. "+ndzTxt(k))};r.addEventListener("input",go);go()}
 function viewHome(){
  document.title="Trend Electro — електротовари та LED-освітлення";
  const tops=kids(ROOT),s=shop(),perks=(s.perks.filter(x=>x&&x.t).length?s.perks.filter(x=>x&&x.t).map((x,i)=>[PERKS[i%4][0],x.t,x.d||""]):PERKS);
@@ -288,7 +293,7 @@ function viewHome(){
  const pop=sets?"":(P.length?`<section class="sec"><div class="sech"><div><h2>Популярне в каталозі</h2><p>По одному товару з кожного розділу — для натхнення</p></div><a href="#/c/">Весь каталог →</a></div>${hsc("hpop",pick())}</section>`:"");
  const msg=messengers();
  $("view").innerHTML=`<section class="slider" id="slider" hidden></section>
-<section class="hero" id="home"><div><span class="eyebrow">Trend Electro · ${plural(P.length,"товар","товари","товарів")} у каталозі</span><h1>Світло й електрика <em>для дому та бізнесу</em></h1><p>${esc(s.tagline||"Світильники, LED-лампи, розетки, кабель, автоматика та все для монтажу. Допоможемо підібрати й швидко відправимо по Україні.")}</p><div class="cta"><a class="btn" href="#/c/">Перейти до каталогу ${ico("r")}</a><a class="btn ghost" href="#/page/coop">Оптовим клієнтам</a></div></div>
+<section class="hero" id="home"><div><span class="eyebrow">Trend Electro · ${plural(P.length,"товар","товари","товарів")} у каталозі</span><h1>Світло й електрика <em>для дому та бізнесу</em></h1><p>${esc(s.tagline||"Світильники, LED-лампи, розетки, кабель, автоматика та все для монтажу. Допоможемо підібрати й швидко відправимо по Україні.")}</p>${ndzT()}<div class="cta"><a class="btn" href="#/c/">Перейти до каталогу ${ico("r")}</a><a class="btn ghost" href="#/page/coop">Оптовим клієнтам</a></div></div>
 <div class="hcats">${tops.slice(0,4).map(k=>`<a href="${href(k.path)}"><b>${esc(k.name)}</b><small>${plural(k.count,"товар","товари","товарів")}</small></a>`).join("")}</div></section>
 ${bdHome()}${sets}${statsHtml()}<section class="perks">${perks.map(x=>`<div>${pkArt(x[0])}<span><b>${esc(x[1])}</b>${esc(x[2])}</span></div>`).join("")}</section>
 <section class="promos" id="promos"></section>
@@ -296,7 +301,7 @@ ${bdHome()}${sets}${statsHtml()}<section class="perks">${perks.map(x=>`<div>${pk
 ${pop}${rvHtml()}${toolsHtml()}
 ${promoForm()}<section class="sec" id="hguides" hidden><div class="sech"><div><h2>Поради та статті</h2><p>Як вибрати лампу, кабель, розетки й захист</p></div><a href="#/guide/">Усі статті →</a></div><div class="gcards"></div></section>
 <section class="band"><div><h2>Електрикам, монтажникам і дизайнерам</h2><p>Оптові ціни, підбір під об’єкт і консультація з технічних питань. Напишіть — підготуємо пропозицію.</p></div><div class="cta" style="margin:0"><a class="btn" href="#/page/coop">Умови співпраці</a>${msg[0]?`<a class="btn ghost" href="${esc(msg[0][1])}" target="_blank" rel="noopener">${esc(msg[0][0])}</a>`:s.phone?`<a class="btn ghost" href="${esc(tel(s.phone))}">${esc(s.phone)}</a>`:""}</div></section>`;
- drawSlider();drawPromos();runCounters();
+ drawSlider();drawPromos();runCounters();ndzInit();
  arts().then(L=>{const e=$("hguides");if(e&&L.length){e.hidden=false;const g=e.querySelector(".gcards");if(hsOn()){g.classList.add("hs","pcg");g.innerHTML=L.map(gcard).join("");g.insertAdjacentHTML("afterend",hsBtn("усі статті"))}else g.innerHTML=L.slice(0,3).map(gcard).join("")}});
 }
 const tile=k=>{const kk=kids(k),sub=kk.slice(0,3).map(x=>esc(x.name)).join(" · "),subl=kk.length?`<span class="subl">${kk.slice(0,5).map(x=>`<i>${esc(x.name)}</i>`).join("")}${kk.length>5?`<i class="mr">+ ще ${kk.length-5}</i>`:""}</span>`:"";return `<a class="ctile" href="${href(k.path)}"><span class="th${cmeta(k.path).image_url?" ph":""}">${img(nodeImg(k),360,270,k.name)}</span><span class="cb"><b>${esc(k.name)}</b><small>${plural(k.count,"товар","товари","товарів")}</small>${sub?`<span class="subs">${sub}</span>`:""}${subl}</span></a>`};
@@ -964,7 +969,7 @@ async function boot(){
  loadBanners();loadPromos();
  const pf=(async()=>{try{const g=await sb.auth.getSession();me=g.data.session?g.data.session.user:null;await loadProf()}catch(e){}})();
  try{await Promise.all([loadProducts(),loadSettings(),loadCats(),fetch(BASE+"img/map.json").then(r=>r.ok?r.json():[]).then(a=>{IMG=new Set(a)}).catch(()=>{}),fetch(BASE+"img/smap.json").then(r=>r.ok?r.json():[]).then(a=>{IMGS=new Set(a)}).catch(()=>{})]);imgMap()}catch(e){$("view").innerHTML='<div class="empty">Не вдалося завантажити каталог. Перевірте інтернет і оновіть сторінку.</div>';return}
- applyOrders();regBar();document.body.classList.toggle("fxon",!SHOP.anim_off);applyLayout();build();ALLN=[];collectN(ROOT);initChat();drawFooter();
+ applyOrders();regBar();document.body.classList.toggle("fxon",!SHOP.anim_off);document.body.classList.toggle("ndz",!!SHOP.ndz_on);applyLayout();build();ALLN=[];collectN(ROOT);initChat();drawFooter();
  await pf;
  route();idxWarm();
  if(CATBG)setTimeout(catRefresh,1500);
