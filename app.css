@@ -966,7 +966,7 @@ p>.btn,p>.go,.empty>.btn,.empty>.go{margin:5px 8px 5px 0}
 
 /* v117: банери на телефоні показуються повністю (без обрізання), фон — розмите те саме фото */
 @media (max-width:640px){
- .slider{aspect-ratio:var(--bar,16/9);max-height:none;min-height:0}
+ .slider{aspect-ratio:4/3;max-height:none;min-height:0}
  .sl{overflow:hidden}
  .sl:before{content:"";position:absolute;inset:-30px;background:var(--bg) center/cover no-repeat;filter:blur(24px) brightness(.55) saturate(1.1)}
  .sl img{position:relative;object-fit:contain}
