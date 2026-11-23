@@ -136,7 +136,12 @@ async function loadSettings(){
  });
 }
 async function loadCats(){try{const r=await sb.from("categories").select("path,sort,hidden,image_url,description");if(!r.error)(r.data||[]).forEach(x=>CM[x.path]=x)}catch(e){}}
-async function loadBanners(){try{const r=await sb.from("banners").select("*").eq("active",true).order("sort");const n=new Date();BN=(r.data||[]).filter(b=>(!b.starts_at||new Date(b.starts_at)<=n)&&(!b.ends_at||new Date(b.ends_at)>=n));drawSlider()}catch(e){}}
+async function loadBanners(){try{const n=new Date(),fl=a=>(a||[]).filter(b=>(!b.starts_at||new Date(b.starts_at)<=n)&&(!b.ends_at||new Date(b.ends_at)>=n)),sg=a=>JSON.stringify(a.map(b=>[b.id,b.image_url,b.title,b.subtitle,b.link,b.sort]));
+ let c=null;try{c=JSON.parse(localStorage.getItem("te_ban")||"null")}catch(e){}
+ if(c&&Array.isArray(c.rows)&&c.rows.length){BN=fl(c.rows);drawSlider()}
+ let rows=null;if(window.__BAN){try{rows=await window.__BAN}catch(e){}window.__BAN=null}
+ if(!Array.isArray(rows)){const r=await sb.from("banners").select("*").eq("active",true).order("sort");rows=r.data||[];try{localStorage.setItem("te_ban",JSON.stringify({t:Date.now(),rows}))}catch(e){}}
+ const nb=fl(rows);if(sg(nb)!==sg(BN)||!c){BN=nb;drawSlider()}}catch(e){}}
 async function loadPromos(){try{const r=await sb.from("promos").select("*").eq("active",true).order("created_at",{ascending:false});PROMOS=(r.data||[]).filter(x=>!x.ends_at||new Date(x.ends_at)>new Date());drawPromos()}catch(e){}}
 
 /* ---------- контакти магазину ---------- */
@@ -172,7 +177,7 @@ function drawSlider(){
  clearInterval(btm);const s=$("slider"),h=$("home");if(!s)return;
  if(!BN.length){s.hidden=true;if(h)h.hidden=false;return}
  if(h)h.hidden=true;s.hidden=false;
- s.innerHTML='<div class="strack" id="strack">'+BN.map((b,i)=>{const t=(b.title||b.subtitle)?`<div class="slt">${b.title?`<b>${esc(b.title)}</b>`:""}${esc(b.subtitle||"")}</div>`:"";const im=`<img src="${esc(b.image_url)}" alt="${esc(b.title||"")}"${i?' loading="lazy"':""}>`;return b.link?`<a class="sl" href="${esc(b.link)}" draggable="false">${im}${t}</a>`:`<div class="sl">${im}${t}</div>`}).join("")+'</div>'+(BN.length>1?`<button type="button" class="sarr l" data-sa="-1" aria-label="Попередній банер">‹</button><button type="button" class="sarr r" data-sa="1" aria-label="Наступний банер">›</button><div class="dots">${BN.map((_,i)=>`<button data-b="${i}" aria-label="Банер ${i+1}"></button>`).join("")}</div>`:"");
+ s.innerHTML='<div class="strack" id="strack">'+BN.map((b,i)=>{const t=(b.title||b.subtitle)?`<div class="slt">${b.title?`<b>${esc(b.title)}</b>`:""}${esc(b.subtitle||"")}</div>`:"";const im=`<img src="${esc(b.image_url)}" alt="${esc(b.title||"")}"${i?' loading="lazy"':' fetchpriority="high"'}>`;return b.link?`<a class="sl" href="${esc(b.link)}" draggable="false">${im}${t}</a>`:`<div class="sl">${im}${t}</div>`}).join("")+'</div>'+(BN.length>1?`<button type="button" class="sarr l" data-sa="-1" aria-label="Попередній банер">‹</button><button type="button" class="sarr r" data-sa="1" aria-label="Наступний банер">›</button><div class="dots">${BN.map((_,i)=>`<button data-b="${i}" aria-label="Банер ${i+1}"></button>`).join("")}</div>`:"");
  s.querySelectorAll(".sl").forEach((e,i)=>e.style.setProperty("--bg",`url("${String(BN[i].image_url||"").replace(/["\\\n]/g,encodeURIComponent)}")`));{const fi=s.querySelector(".sl img"),ar=()=>{if(fi&&fi.naturalWidth)s.style.setProperty("--bar",(fi.naturalWidth/fi.naturalHeight).toFixed(3))};if(fi)fi.complete?ar():fi.addEventListener("load",ar,{once:true})}
  showB(0,false);const tr=$("strack");
  if(BN.length>1&&tr){let st=null;tr.addEventListener("scroll",()=>{clearTimeout(st);st=setTimeout(()=>{const k=Math.round(tr.scrollLeft/Math.max(1,tr.clientWidth));if(k!==bix)setBcls(k)},80)},{passive:true});["touchstart","pointerdown","wheel"].forEach(ev=>tr.addEventListener(ev,()=>{lastTouch=Date.now()},{passive:true}));
