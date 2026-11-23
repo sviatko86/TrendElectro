@@ -1167,7 +1167,7 @@ function lEv(k,val){try{const L=lCur();if(!((L.theme||{}).px||{}).on)return;
  if(window.gtag)gtag("event",k==="add"?"add_to_cart":"generate_lead",val?{value:val,currency:"UAH"}:{})}catch(e){}}
 
 /* ---------- калькулятори (лендінги та сторінка «Помічник підбору») ---------- */
-const CN={garland:"Гірлянда: скільки потрібно",light:"Освітлення: лампи, світильники, трек, стрічка",strip:"LED-стрічка і блок живлення",furn:"Розетки, вимикачі, прохідні й перехресні",cable:"Кабель і автомат за потужністю",panel:"Щиток: автомати, захист від ураження струмом, реле, таймери"};
+const CN={garland:"Гірлянда: скільки потрібно",light:"Освітлення: лампи, світильники, трек, стрічка",strip:"LED-стрічка і блок живлення",furn:"Розетки, вимикачі, прохідні й перехресні",panel:"Щиток: автомати, захист від ураження струмом, реле, таймери"};
 const cSel=(n,l,o,d)=>`<label>${l}<select data-cin="${n}">${o.map(x=>`<option value="${x[0]}"${String(x[0])===String(d)?" selected":""}>${x[1]}</option>`).join("")}</select></label>`;
 const cNum=(n,l,d,mn,st)=>`<label>${l}<input data-cin="${n}" type="number" min="${mn}" step="${st||1}" value="${d}" inputmode="decimal"></label>`;
 const cRooms=[[150,"Спальня"],[150,"Вітальня"],[200,"Кухня"],[200,"Дитяча"],[100,"Коридор, хол"],[200,"Ванна, санвузол"],[300,"Кабінет, робоче місце"],[100,"Гараж, комора"]];
@@ -1194,9 +1194,6 @@ const CALC={
    if(n===1)h+=`<b>Вимикач: 1 шт., ${G}-клавішний.</b>`;
    else{const cr=n-2;h+=`<b>Прохідних перемикачів: 2 шт.</b> (по краях)${cr>0?`, <b>перехресних: ${cr} шт.</b> (посередині)`:""}${G>1?`. Беріть ${G}-клавішні: кожна клавіша керує своєю групою світла за такою самою схемою`:""}.`;h+=lSch(n)+`<small>Між перемикачами прокладають кабель 3×1,5 мм². Роботи з електрикою виконує електрик, на час роботи вимкніть автомат.</small>`}
    return{h}}},
- cable:{f:()=>cNum("w","Потужність навантаження, Вт",3000,100,100)+cSel("ph","Мережа",[[1,"Однофазна 220 В"],[3,"Трифазна 380 В"]],1),
-  run:(g,gs)=>{const W=g("w"),I=gs("ph")==="3"?W/(1.732*380*.95):W/220,S=[[16,1.5],[25,2.5],[32,4],[40,6],[50,10],[63,16]],need=I*1.25,B=BRK.find(x=>x>=need),c=S.find(x=>x[0]>=need);
-   return{h:c&&B?`Струм приблизно <b>${nf(I)} А</b>. Кабель мідний від <b>${nf(c[1])} мм²</b>, автомат на <b>${B} А</b>.`:`Струм приблизно <b>${nf(I)} А</b>. Для такої потужності потрібен індивідуальний розрахунок, зверніться до електрика.`}}},
  panel:null
 };
 const PL=[["light","Освітлення",2,10,1.5,0],["sock","Розетки в кімнатах",3,16,2.5,1],["bath","Розетки у ванній",1,16,2.5,1],["boil","Бойлер",0,16,2.5,1],["wash","Пральна машина",0,16,2.5,1],["dish","Посудомийна машина",0,16,2.5,1],["ac","Кондиціонер",0,16,2.5,0],["floor","Тепла підлога",0,16,2.5,1],["oven","Електроплита / духова шафа",0,32,6,0]];
@@ -1212,6 +1209,18 @@ CALC.panel={f:()=>cSel("ph","Мережа",[[1,"Однофазна 220 В"],[3,"
   if(ck("x_stab")){const va=Math.ceil(g("sw")*gs("mot")/100)*100;ex+=`<li><b>Стабілізатор від ${va} ВА</b> (потужність техніки ×${nf(+gs("mot"))})</li>`}
   mod=Math.ceil(mod*1.2);const sz=[4,6,8,12,18,24,36,48,72].find(x=>x>=mod)||72;
   return{h:`<table class="lpt"><tr><th>Лінія</th><th>Захист</th><th>Кабель</th></tr>${rows||'<tr><td colspan=3>Оберіть кількість ліній</td></tr>'}</table><small>Диф. автомат (диференційний) = автомат + захист людей від ураження струмом в одному корпусі.</small><ul class="lpu">${ex}</ul>Щиток приблизно на <b>${sz} ${sz%10>=2&&sz%10<=4&&(sz%100<10||sz%100>=20)?"модулі":"модулів"}</b> (місць для автоматів), із запасом 20%.<small>Це типова схема захисту. Номінали автоматів і перерізи кабелів остаточно підтвердить електрик за проєктом.</small>`}}};
+/* --- калькулятор перерізу кабелю (довжина лінії, падіння напруги) --- */
+CN.cabs="Кабель і автомат: переріз за потужністю і довжиною лінії";
+const CBS_SEC=[1.5,2.5,4,6,10,16,25];
+const CBS_IZ={wall:{1:[19,27,38,46,70,90,115],3:[17,25,35,42,60,80,100]},air:{1:[23,30,41,50,80,100,140],3:[21,27,37,45,70,90,125]}};
+CALC.cabs={f:()=>cNum("w","Потужність навантаження, Вт",3000,100,100)+cNum("len","Довжина лінії від щитка до споживача, м",20,1,1)+cSel("ph","Мережа",[[1,"Однофазна 220 В"],[3,"Трифазна 380 В"]],1)+cSel("pur","Куди прокладаєте",[[2.5,"Розетки, техніка"],[1.5,"Освітлення"]],2.5)+cSel("lay","Спосіб прокладання",[["wall","У стіні, у трубі, у гофрі"],["air","Відкрито, у відкритому кабель-каналі"]],"wall"),
+ run:(g,gs)=>{const W=g("w"),L=g("len"),ph=gs("ph")==="3"?3:1,lay=gs("lay")==="air"?"air":"wall",min=g("pur")||2.5,U=ph===3?380:220,I=ph===3?W/(1.732*380*.95):W/220,B=BRK.find(x=>x>=I),iz=CBS_IZ[lay][ph],rho=.0225,
+  dU=S=>(ph===3?1.732:2)*I*L*rho/S/U*100;
+  if(!B||W<=0)return{h:`Струм приблизно <b>${nf(I)} А</b>. Для такої потужності потрібен індивідуальний розрахунок, зверніться до електрика.`};
+  let i=CBS_SEC.findIndex(x=>x>=min);if(i<0)i=0;while(i<CBS_SEC.length&&(iz[i]<B||dU(CBS_SEC[i])>5))i++;
+  if(i>=CBS_SEC.length)return{h:`Струм приблизно <b>${nf(I)} А</b>, довжина ${nf(L)} м. Для такої лінії потрібен індивідуальний розрахунок, зверніться до електрика.`};
+  const S=CBS_SEC[i],d=dU(S),cores=ph===3?5:3;
+  return{h:`Струм приблизно <b>${nf(I)} А</b>. Автомат на <b>${B} А</b>. Кабель мідний <b>${cores}×${nf(S)} мм²</b> (наприклад ВВГнг-LS ${cores}×${nf(S)}). Падіння напруги на лінії приблизно ${nf(d)}% (норма до 5%).<small>Розрахунок для мідного кабелю, ${ph===3?"3 фази + нуль + земля":"фаза + нуль + земля"}. Якщо лінія довга, переріз збільшено, щоб техніка не «просідала». Номінали уточнює електрик за проєктом.</small>`}}};
 const nf=x=>String(Math.round(x*10)/10).replace(".",",");
 function lSch(n){const names=["Коробка","Перемикач 1"].concat(Array.from({length:n-2},(_,i)=>"Перехресний "+(i+1))).concat(["Перемикач "+n,"Лампа"]),w=86,W=names.length*w+10;
  let s=`<svg class="lsch" viewBox="0 0 ${W} 120" role="img" aria-label="Схема підключення">`;
@@ -1226,7 +1235,7 @@ function lCalc(sec){const c=CALC[sec.dataset.ck];if(!c)return;const g=n=>{const 
  const r=c.run(g,gs,sec),pid=sec.dataset.pid,out=sec.querySelector(".lcres");let h=r.h;
  if(r.q&&pid&&!SHOP.orders_off&&document.body.classList.contains("lndon"))h+=`<button class="lbtn lsm" data-lcadd="${esc(pid)}|${r.q}">Додати ${r.q} шт. у кошик</button>`;
  else if(document.body.classList.contains("lndon")&&$("lprods"))h+=`<button class="lbtn lsm" data-lgo="prods">Підібрати товари</button>`;
- else if(!document.body.classList.contains("lndon"))h+=`<button class="lbtn lsm" data-lfind="${esc(({garland:"гірлянда",light:"світильник",strip:"led стрічка",furn:"розетка",cable:"кабель",panel:"автомат"})[sec.dataset.ck]||"")}">Знайти в каталозі</button>`;
+ else if(!document.body.classList.contains("lndon"))h+=`<button class="lbtn lsm" data-lfind="${esc(({garland:"гірлянда",light:"світильник",strip:"led стрічка",furn:"розетка",cabs:"кабель",panel:"автомат"})[sec.dataset.ck]||"")}">Знайти в каталозі</button>`;
  out.innerHTML=h}
 function lCalcAll(){document.querySelectorAll(".lcalc").forEach(lCalc)}
 function viewHelp(){const on=SHOP.help_on,ks=(Array.isArray(SHOP.help_k)&&SHOP.help_k.length?SHOP.help_k:Object.keys(CN)).filter(k=>CALC[k]);document.title="Помічник підбору — Trend Electro";
