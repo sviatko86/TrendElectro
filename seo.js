@@ -152,6 +152,8 @@ function faqOf(p, pr) {
 const tov = n => { const a = n % 100, b = n % 10; return n + (a > 10 && a < 20 ? " товарів" : b === 1 ? " товар" : b > 1 && b < 5 ? " товари" : " товарів") };
 const weakDesc = d => { d = String(d || "").replace(/\s+/g, " ").trim(); return d.length < 25 || (d.length < 160 && / - [^-]+$/.test(d)) };
 const fmtSpec = r => { const m = r[0].match(/^(.*?),\s*([^,]+)$/); let k = m ? m[1] : r[0], v = r[1]; if (!v) return ""; if (m && /^[\d.,\s\u0445x\u00d7/-]+$/i.test(v)) v += " " + m[2]; return k + ": " + v };
+const teProdTitle = n => { const a = `${n} — купити в Trend Electro`; if (a.length <= 60) return a; const b = `${n} | Trend Electro`; return b.length <= 60 ? b : n };
+const teMetaCut = d => { d = String(d || ""); if (d.length <= 160) return d; const c = d.slice(0, 157), i = c.lastIndexOf(" "); return (i > 100 ? c.slice(0, i) : c).replace(/[\s,;:.\-–—]+$/, "") + "…" };
 function genDesc(p, pr) {
   const rows = specRows(p.sp).filter(r => !/^\u0431\u0440\u0435\u043d\u0434/i.test(r[0])).map(fmtSpec).filter(Boolean);
   if (!rows.length) return null;
@@ -169,7 +171,7 @@ for (const p of P) {
   const crumbs = p.c.map((n, i) => `<a href="${SITE}/c/${p.c.slice(0, i + 1).map(x => slug(x)).join("/")}/">${esc(n)}</a>`).join(" › ");
   const body = `<nav class="crumbs">${crumbs}</nav><h1>${esc(p.name)}</h1>${im ? `<p><img src="${esc(im)}" alt="${esc(p.name)}" width="400" style="max-width:100%;height:auto"></p>` : ""}<p><b>${money(pr)}</b> · ${p.st ? "В наявності" : "Немає в наявності"} · Артикул: ${esc(p.id)}${p.brand ? " · Бренд: " + esc(p.brand) : ""}</p>${G ? `<p>${esc(G.body)}</p>` : p.d ? `<p>${esc(p.d)}</p>` : ""}${specRows(p.sp).length ? `<table>${specRows(p.sp).map(r => `<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join("")}</table>` : ""}${FQ.length ? `<h2>Питання та відповіді</h2><dl>${FQ.map(x => `<dt>${esc(x[0])}</dt><dd>${esc(x[1])}</dd>`).join("")}</dl>` : ""}`;
   fs.mkdirSync(rel, { recursive: true });
-  fs.writeFileSync(rel + "index.html", page({ title: p.seo_t || `${p.name} — купити в Trend Electro`, desc, url, hash: "#/p/" + encodeURIComponent(p.id), body, ld, image: im }));
+  fs.writeFileSync(rel + "index.html", page({ title: p.seo_t || teProdTitle(p.name), desc: p.seo_d ? desc : teMetaCut(desc), url, hash: "#/p/" + encodeURIComponent(p.id), body, ld, image: im }));
   urls.push([url, 0.7]);
 }
 /* категорії */
