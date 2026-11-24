@@ -975,6 +975,6 @@ p>.btn,p>.go,.empty>.btn,.empty>.go{margin:5px 8px 5px 0}
 .tegr{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 18px 8px;box-shadow:var(--sh1)}
 .tegrh{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
 .tegrh h2{margin:0;font-size:20px}.tegrh p{margin:4px 0 0;color:var(--mute);font-size:14px}.tegrh p b{color:var(--accd)}
-.tegr .tegrb{padding:10px 16px;background:var(--accl);color:var(--accd);border:1px solid rgba(10,186,181,.35);box-shadow:none}.tegr .tegrb:hover{background:var(--acc);color:var(--accink)}.tegrt{margin:6px 0 10px;font-size:15px}
+.tegrt{margin:6px 0 10px;font-size:15px}
 /* підсвітка карток під курсором (вимикач в адмінці) */
 @media (hover:hover) and (pointer:fine){body.teglow .card:hover{background-image:radial-gradient(320px circle at var(--tgx,50%) var(--tgy,-40%),rgba(10,186,181,.14),transparent 65%)}}

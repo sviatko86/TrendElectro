@@ -198,7 +198,7 @@ function teGreetHtml(){teGreetRv=false;if(!SHOP.greet_on)return"";
  const line=nm?`${hi}, ${esc(nm)}! 👋`:`${hi}! Раді бачити вас знову 👋`;
  const sub=nm&&k&&pct?`Ваша картка <b>${esc(TN[k]||k)}</b> −${pct}% уже діє на всі ціни. Вдалих покупок!`:nm?"Раді бачити вас знову. Вдалих покупок!":"Ось що ви дивились минулого разу";
  teGreetRv=seen.length>0;
- return `<section class="sec tegr"><div class="tegrh"><div><h2>${line}</h2><p>${sub}</p></div>${nm?`<button type="button" class="btn ghost tegrb" data-nav="acc">Мій кабінет</button>`:""}</div>${seen.length?`<h3 class="tegrt">Ви нещодавно переглядали</h3>${hsc("hseen",seen)}`:""}</section>`}
+ return `<section class="sec tegr"><div class="tegrh"><div><h2>${line}</h2><p>${sub}</p></div></div>${seen.length?`<h3 class="tegrt">Ви нещодавно переглядали</h3>${hsc("hseen",seen)}`:""}</section>`}
 /* ---------- підсвітка карток під курсором (вимикач glow_on в адмінці) ---------- */
 let teGlowRaf=0,teGlowEv=null;
 document.addEventListener("pointermove",e=>{if(e.pointerType!=="mouse"||!document.body.classList.contains("teglow"))return;teGlowEv=e;if(teGlowRaf)return;teGlowRaf=requestAnimationFrame(()=>{teGlowRaf=0;const ev=teGlowEv,c=ev&&ev.target&&ev.target.closest?ev.target.closest(".card"):null;if(!c)return;const r=c.getBoundingClientRect();c.style.setProperty("--tgx",Math.round(ev.clientX-r.left)+"px");c.style.setProperty("--tgy",Math.round(ev.clientY-r.top)+"px")})},{passive:true});
