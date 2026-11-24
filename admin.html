@@ -869,7 +869,7 @@ document.addEventListener("click",async e=>{const t=e.target.closest("[data-cm]"
 
 /* ---------- картки клієнтів ---------- */
 const LDEF={on:true,one:true,tiers:[{k:"silver",p:5,f:0},{k:"gold",p:10,f:5000},{k:"platinum",p:15,f:15000},{k:"vip",p:20,f:0}]};
-const LTN={silver:"Silver",gold:"Gold",platinum:"Platinum",vip:"VIP (діамантова)"};
+const LTN={silver:"Silver",gold:"Gold",platinum:"Platinum",vip:"VIP"};
 async function tLoy(){const r=await sb.from("settings").select("value").eq("key","loyalty").maybeSingle();if(r.error)return fail(r.error);const v=(r.data&&r.data.value)||{},C={on:v.on!==false,one:v.one!==false,tiers:Array.isArray(v.tiers)&&v.tiers.length===4?v.tiers:LDEF.tiers};
  $("pane").innerHTML=`<div class="box"><h2>Картки клієнтів</h2><p class="mut">Кожен зареєстрований клієнт отримує картку Silver. Рівень росте автоматично від суми <b>виконаних</b> замовлень (статус «Виконано»). Знижка застосовується до всіх товарів сайту.</p><label><input type="checkbox" id="lyon" ${C.on?"checked":""} style="width:auto"> <b>Картки й знижки за ними увімкнені</b></label><label><input type="checkbox" id="lyone" ${C.one?"checked":""} style="width:auto"> <b>Разова знижка за велике замовлення</b> (замовлення на суму порогу дає знижку цього рівня одразу, навіть без картки)</label>
  <table style="width:100%;border-collapse:collapse"><tr><th align=left>Картка</th><th>Знижка, %</th><th>Від суми, ₴</th></tr>${C.tiers.map((t,i)=>t.k==="vip"?"":`<tr><td>${LTN[t.k]}</td><td><input type="number" min="0" max="90" data-ly="p${i}" value="${t.p}"></td><td><input type="number" min="0" data-ly="f${i}" value="${t.f}" ${i===0?"disabled":""}></td></tr>`).join("")}</table>
