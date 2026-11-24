@@ -186,6 +186,22 @@ function drawSlider(){
 function drawPromos(){const e=$("promos");if(e)e.innerHTML=PROMOS.map(x=>`<div class="promo"><div><b>${x.badge?esc(x.badge)+" · ":""}${esc(x.title)}${x.percent?" −"+x.percent+"%":""}</b><small>${esc(x.description||"")}</small></div></div>`).join("")}
 
 /* ---------- маршрутизація ---------- */
+/* ---------- персональне привітання й «Ви нещодавно переглядали» (вимикач greet_on в адмінці) ---------- */
+let teGreetRv=false;
+function teGreetHtml(){teGreetRv=false;if(!SHOP.greet_on)return"";
+ let hr=12;try{hr=+new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/Kyiv",hour:"2-digit",hourCycle:"h23"}).format(new Date())}catch(e){}
+ const hi=hr<5?"Доброї ночі":hr<12?"Доброго ранку":hr<18?"Доброго дня":"Доброго вечора";
+ let seen=[];try{seen=LS("te_rv",[]).filter(i=>M[i]).map(i=>M[i]).slice(0,12)}catch(e){}
+ const nm=prof&&prof.full_name?String(prof.full_name).trim().split(/\s+/)[0]:"";
+ if(!nm&&!seen.length)return"";
+ const k=prof&&LOY.on!==false?(prof.card_tier||"silver"):"",pct=cardPct();
+ const line=nm?`${hi}, ${esc(nm)}! 👋`:`${hi}! Раді бачити вас знову 👋`;
+ const sub=nm&&k&&pct?`Ваша картка <b>${esc(TN[k]||k)}</b> −${pct}% уже діє на всі ціни. Вдалих покупок!`:nm?"Раді бачити вас знову. Вдалих покупок!":"Ось що ви дивились минулого разу";
+ teGreetRv=seen.length>0;
+ return `<section class="sec tegr"><div class="tegrh"><div><h2>${line}</h2><p>${sub}</p></div>${nm?`<button type="button" class="btn ghost tegrb" data-nav="acc">Мій кабінет</button>`:""}</div>${seen.length?`<h3 class="tegrt">Ви нещодавно переглядали</h3>${hsc("hseen",seen)}`:""}</section>`}
+/* ---------- підсвітка карток під курсором (вимикач glow_on в адмінці) ---------- */
+let teGlowRaf=0,teGlowEv=null;
+document.addEventListener("pointermove",e=>{if(e.pointerType!=="mouse"||!document.body.classList.contains("teglow"))return;teGlowEv=e;if(teGlowRaf)return;teGlowRaf=requestAnimationFrame(()=>{teGlowRaf=0;const ev=teGlowEv,c=ev&&ev.target&&ev.target.closest?ev.target.closest(".card"):null;if(!c)return;const r=c.getBoundingClientRect();c.style.setProperty("--tgx",Math.round(ev.clientX-r.left)+"px");c.style.setProperty("--tgy",Math.round(ev.clientY-r.top)+"px")})},{passive:true});
 function route(){
  if(!/^#\/l\//.test(curH())&&Object.keys(LCART).length){Object.keys(LCART).forEach(id=>{if(M[id])cart[id]=Math.min(999,(cart[id]||0)+LCART[id])});LCART={};save();drawCart()}
  closeAll();lStop();{const v=$("view");v.classList.remove("pg");void v.offsetWidth;v.classList.add("pg")}$("sbuy").hidden=true;const h=curH();
@@ -295,10 +311,10 @@ function viewHome(){
  $("view").innerHTML=`<section class="slider" id="slider" hidden></section>
 <section class="hero" id="home"><div><span class="eyebrow">Trend Electro · ${plural(P.length,"товар","товари","товарів")} у каталозі</span><h1>Світло й електрика <em>для дому та бізнесу</em></h1><p>${esc(s.tagline||"Світильники, LED-лампи, розетки, кабель, автоматика та все для монтажу. Допоможемо підібрати й швидко відправимо по Україні.")}</p><div class="cta"><a class="btn" href="#/c/">Перейти до каталогу ${ico("r")}</a><a class="btn ghost" href="#/page/coop">Оптовим клієнтам</a></div></div>
 <div class="hcats">${tops.slice(0,4).map(k=>`<a href="${href(k.path)}"><b>${esc(k.name)}</b><small>${plural(k.count,"товар","товари","товарів")}</small></a>`).join("")}</div></section>
-${bdHome()}${sets}${statsHtml()}<section class="perks">${perks.map(x=>`<div>${pkArt(x[0])}<span><b>${esc(x[1])}</b>${esc(x[2])}</span></div>`).join("")}</section>
+${bdHome()}${teGreetHtml()}${sets}${statsHtml()}<section class="perks">${perks.map(x=>`<div>${pkArt(x[0])}<span><b>${esc(x[1])}</b>${esc(x[2])}</span></div>`).join("")}</section>
 <section class="promos" id="promos"></section>
 <section class="sec"><div class="sech"><div><h2>Каталог</h2></div><a href="#/c/">Усі товари →</a></div><div class="ctiles">${tops.map(tile).join("")||'<div class="empty">Каталог порожній.</div>'}</div></section>
-${pop}${rvHtml()}${toolsHtml()}
+${pop}${teGreetRv?"":rvHtml()}${toolsHtml()}
 ${promoForm()}<section class="sec" id="hguides" hidden><div class="sech"><div><h2>Поради та статті</h2><p>Як вибрати лампу, кабель, розетки й захист</p></div><a href="#/guide/">Усі статті →</a></div><div class="gcards"></div></section>
 <section class="band"><div><h2>Електрикам, монтажникам і дизайнерам</h2><p>Оптові ціни, підбір під об’єкт і консультація з технічних питань. Напишіть — підготуємо пропозицію.</p></div><div class="cta" style="margin:0"><a class="btn" href="#/page/coop">Умови співпраці</a>${msg[0]?`<a class="btn ghost" href="${esc(msg[0][1])}" target="_blank" rel="noopener">${esc(msg[0][0])}</a>`:s.phone?`<a class="btn ghost" href="${esc(tel(s.phone))}">${esc(s.phone)}</a>`:""}</div></section>`;
  drawSlider();drawPromos();runCounters();
@@ -970,7 +986,7 @@ async function boot(){
  loadBanners();loadPromos();
  const pf=(async()=>{try{const g=await sb.auth.getSession();me=g.data.session?g.data.session.user:null;await loadProf()}catch(e){}})();
  try{await Promise.all([loadProducts(),loadSettings(),loadCats(),fetch(BASE+"img/map.json").then(r=>r.ok?r.json():[]).then(a=>{IMG=new Set(a)}).catch(()=>{}),fetch(BASE+"img/smap.json").then(r=>r.ok?r.json():[]).then(a=>{IMGS=new Set(a)}).catch(()=>{})]);imgMap()}catch(e){$("view").innerHTML='<div class="empty">Не вдалося завантажити каталог. Перевірте інтернет і оновіть сторінку.</div>';return}
- applyOrders();regBar();document.body.classList.toggle("fxon",!SHOP.anim_off);applyLayout();build();ALLN=[];collectN(ROOT);initChat();drawFooter();
+ applyOrders();regBar();document.body.classList.toggle("fxon",!SHOP.anim_off);document.body.classList.toggle("teglow",!!SHOP.glow_on);applyLayout();build();ALLN=[];collectN(ROOT);initChat();drawFooter();
  await pf;
  route();idxWarm();
  if(CATBG)setTimeout(catRefresh,1500);
