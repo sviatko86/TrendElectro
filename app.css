@@ -538,7 +538,7 @@ html{background:var(--nav)}body{min-height:100vh;min-height:100dvh}
 @media (min-width:860px){.backbtn{grid-column:auto;grid-row:auto}}
 
 .bnav #backBtn{color:var(--ink)}.bnav #backBtn[hidden]{display:none}
-/* інструменти, кошторис, чек-лист, симулятор */
+/* інструменти, кошторис, симулятор */
 .tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.tools a{display:flex;flex-direction:column;gap:4px;padding:16px;border:1px solid var(--line);border-radius:var(--r);background:var(--card);color:inherit;text-decoration:none;transition:transform .2s,box-shadow .2s}.tools a b{font-size:16px}.tools a span{color:var(--mute);font-size:13px}.tools a:hover{border-color:var(--acc)}
 .estl{display:block;text-align:center;margin:0 0 8px;color:var(--accd);font-weight:700}
 .estp{background:#fff;color:#15191c;border:1px solid var(--line);border-radius:var(--r);padding:20px;margin:12px 0}.esth{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:2px solid #0ABAB5;padding-bottom:10px;margin-bottom:12px}.esth h1{margin:0;font-size:24px}.esth img{background:#15191c;border-radius:8px;padding:4px}
@@ -548,9 +548,6 @@ html{background:var(--nav)}body{min-height:100vh;min-height:100dvh}
 .estc{margin-top:14px;font-size:14px}.estn{font-size:12px;color:#5f6870;margin:10px 0 0}.estgo{max-width:320px}
 @media print{header,footer,.bnav,.chat,#toast,.cmpbar,.instb,.netb,#ordbar,.sbuy,.drawer,.noprint,.crumbs{display:none!important}body{background:#fff!important}.estp{border:0;padding:0;margin:0}.estq{border:0;width:auto;text-align:right;-moz-appearance:textfield;appearance:textfield}.estq::-webkit-inner-spin-button{display:none}.estf input{border:0;padding:0}.cmpw{overflow:visible}.estt{min-width:0}}
 .chkt{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.chkt button{border:1px solid var(--line);background:var(--card);color:inherit;border-radius:999px;padding:8px 14px;font:700 14px Manrope,system-ui,sans-serif;cursor:pointer}.chkt button.on{background:#0ABAB5;border-color:#0ABAB5;color:#062826}
-.chkp{font-weight:700;margin:6px 0}.chkl{display:grid;gap:8px}.chki{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;border:1px solid var(--line);border-radius:var(--rs);background:var(--card)}.chki:not(.on){border-color:#e8b84a;background:rgba(232,184,74,.1)}.chki.on{opacity:.75}
-.chki label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;flex:1}.chki input{width:22px;height:22px;margin-top:2px;accent-color:#0ABAB5;flex:none}.chki small{display:block;color:var(--mute);font-size:13px;font-weight:400}.chkb{flex:none;white-space:nowrap;border:1.5px solid #0ABAB5;background:transparent;color:var(--accd);border-radius:10px;padding:9px 14px;font:700 14px Manrope,system-ui,sans-serif;cursor:pointer}
-@media(max-width:560px){.chki{flex-direction:column;align-items:stretch}}
 .simw{border-radius:var(--r);overflow:hidden;border:1px solid var(--line);background:#ddd}.simw canvas{display:block;width:100%;height:auto}
 .simc{margin:12px 0}.simh{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.simh b{font-size:28px}.simh span{color:var(--mute)}
 #simr{width:100%;margin:12px 0;height:34px;accent-color:#0ABAB5;background:linear-gradient(90deg,#ffa94d,#ffe9c9 45%,#fff 60%,#cfe3ff);border-radius:8px;-webkit-appearance:none;appearance:none}#simr::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:#fff;border:3px solid #0ABAB5;box-shadow:0 2px 6px rgba(0,0,0,.3)}#simr::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid #0ABAB5}
@@ -806,7 +803,6 @@ html{background:var(--nav)}body{min-height:100vh;min-height:100dvh}
 @media (max-width:1023px){.regbar{padding:6px 12px;font-size:12px}.regbar b{display:none}}
 
 /* v87: компактні інструменти, шапка як підвал, дрібніший напис про реєстрацію (комп'ютер) */
-a.chkb{text-decoration:none;display:inline-block}
 .regbar span{font-size:11px;opacity:.92}.regbar b{font-size:14px}
 @media (max-width:1023px){.regbar span{font-size:10.5px}}
 .frgrid{display:block}
