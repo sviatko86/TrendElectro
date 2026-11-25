@@ -1566,10 +1566,11 @@ const capF=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const FNUM=[[/одно/i,1],[/дво/i,2],[/три/i,3],[/чотири/i,4],[/п.ят/i,5],[/шести/i,6]];
 let FR=null,CST={col:"",n:2,ori:"h",slots:[],want:[]};
 function frIdx(){const R=P.filter(p=>p.c[0]==="Розетки та вимикачі"&&/RITA/.test(p.n)&&p.st!==false),F=[],Mx=[];
+ /* USB-розетки в зборі (2220) завеликі й не стають у рамку блока, тому в конструктор не беруться */
  R.forEach(p=>{const col=rcolOf(p.n);if(!col)return;const sub=p.c.join(" ");
   if(/Рамки/.test(sub)&&/^Рамка/i.test(p.n)){const m=p.n.match(/(одно|дво|три|чотири|п.ят\S*|шести)місн/i);if(!m)return;const n=(FNUM.find(x=>x[0].test(m[1]))||[0,0])[1];if(!n)return;F.push({p,col,n,ori:/горизонтальн/i.test(p.n)?"h":/вертикальн/i.test(p.n)?"v":"a"})}
   else if(/Механізм|Діммер/i.test(sub+" "+p.n)&&!/горизонтальн|подвійн|2гн/i.test(p.n)&&/^(Механізм|Діммер)/i.test(p.n)){const t=capF(p.n.split(/\s+RITA/)[0].replace(/,\s*$/,"").replace(/^Механізм\s+/i,"").replace(/\s+/g," ").trim());Mx.push({p,col,type:t})}
-  else if(/^(Розетка|Вимикач)/i.test(p.n)&&/\(2220 /.test(p.n)&&(/hdmi|\btv\b|телевіз|комп.ютер|телефон|rj/i.test(p.n)||/дзвінк|жалюз|картков|перехресн|3 кл|usb/i.test(p.n))&&!/подвійн|в 1 коробку|бризкозахищ/i.test(p.n)&&!(/usb/i.test(p.n)&&/горизонтальн/i.test(p.n))){const t=capF(p.n.split(/\s+RITA/)[0].replace(/,\s*$/,"").replace(/\s+/g," ").trim().replace(/^Вимикач(?=\s)/,"Вимикача").replace(/^Розетка(?=\s)/,"Розетки"));Mx.push({p,col,type:t})}});
+  else if(/^(Розетка|Вимикач)/i.test(p.n)&&/\(2220 /.test(p.n)&&(/hdmi|\btv\b|телевіз|комп.ютер|телефон|rj/i.test(p.n)||/дзвінк|жалюз|картков|перехресн|3 кл/i.test(p.n))&&!/подвійн|в 1 коробку|бризкозахищ|usb/i.test(p.n)){const t=capF(p.n.split(/\s+RITA/)[0].replace(/,\s*$/,"").replace(/\s+/g," ").trim().replace(/^Вимикач(?=\s)/,"Вимикача").replace(/^Розетка(?=\s)/,"Розетки"));Mx.push({p,col,type:t})}});
  return FR={F,M:Mx}}
 const frRank=t=>/^розетки з\/з, 16А$/i.test(t)?0:/^розетк/i.test(t)?1:/^вимикач/i.test(t)?2:3;
 function frTypes(col){const s=[...new Set(FR.M.filter(m=>m.col===col).map(m=>m.type))];return s.sort((a,b)=>frRank(a)-frRank(b)||a.localeCompare(b,"uk"))}
