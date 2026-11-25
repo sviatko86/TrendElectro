@@ -211,6 +211,9 @@ footer b{color:#fff;display:block;margin-bottom:10px;font-size:15px}footer a{dis
 .ctile b,.ctile small,.stile b,.stile small,.hcats b,.hcats small,.perks b,.perks span,.gcard b,.gcard span,.chip,.name,.crumbs a,.sech h2,.ptitle,.cdesc,.fnote,.empty{overflow-wrap:anywhere;word-break:normal;hyphens:none;min-width:0}
 .ctile b,.stile b,.hcats b{overflow-wrap:normal;hyphens:none}
 .ctile,.stile,.card,.gcard,.hcats a{min-width:0}
+/* великі фото розділів на телефоні (вимикається в адмінці: cat_big_off) */
+@media (max-width:699px){.ctile .th.catbig{aspect-ratio:4/5}.ctile .th.catbig img{object-fit:cover;padding:0}}
+@media (max-width:699px){html.tcm3 .ctiles{gap:8px}html.tcm3 .ctile .cb{padding:8px 8px 10px}html.tcm3 .ctile b{font-size:11.5px}html.tcm3 .ctile small{font-size:10.5px}}
 @media (max-width:699px){.ctile .cb{padding:10px 10px 12px}.ctile b{font-size:13px;line-height:1.25}.ctile small{font-size:11.5px}.stile b{font-size:12.5px}.stile{padding:6px 6px 10px}.hcats b{font-size:14px}.perks b{font-size:13.5px}.ptitle{font-size:clamp(22px,6.4vw,28px)}}
 @media (max-width:380px){.ctile b{font-size:12px}.stile b{font-size:12px}}
 
