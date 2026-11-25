@@ -29,12 +29,12 @@ function kitchen(){
  const WIN=any([mask([[75,72],[205,152],[205,449],[178,453],[160,458],[146,464],[119,470],[119,620],[75,646]],1.5),mask([[142,492],[152,492],[156,520],[158,590],[151,601],[142,606]],1.5)]),CEIL=mask([[115,0],[962,0],[822,120],[254,120],[208,86]],4),TABLE=mask([[119,466],[150,451],[376,452],[346,468]],2);
  const SP=[[348,24,690],[872,24,668],[408,98,622],[500,108,615],[702,108,615],[794,98,622]],MX=602,MY=58,PX=247,PY=268;
  return{w:1064,h:712,win:WIN,lamps:[
- {n:"Головний світильник",l(x,y){const c=y<130?CEIL(x,y):0,dy=y-MY;
-   let s=.42*G(x-MX,y-MY-4,210,52)*c;
+ {n:"Головний світильник",p:2.5,l(x,y){const c=y<130?CEIL(x,y):0,dy=y-MY;
+   let s=.2*G(x-MX,y-MY-4,210,52)*c;
    if(dy>0)s+=(1-c*.8)*(.40*G(x-MX,0,360+dy*.35,1)*sm(0,90,dy)+.28*G(x-MX,y-610,330,150));
    return s+.09},
   d(g,col,on){cord(g,MX-62,2,MY-6,1.5);cord(g,MX+62,2,MY-6,1.5);g.lineWidth=11;g.strokeStyle="#2b2e33";ell(g,MX,MY,104,19);g.stroke();
-   g.lineWidth=5.5;g.strokeStyle=on?"#fff":"#6b7076";ell(g,MX,MY+2,104,19);g.stroke();if(on){g.strokeStyle=col(.38);g.stroke();g.lineWidth=14;g.strokeStyle=col(.16);g.stroke()}}},
+   g.lineWidth=5.5;g.strokeStyle=on?"#fff":"#6b7076";ell(g,MX,MY+2,104,19);g.stroke();if(on){g.strokeStyle=col(.38);g.stroke();g.lineWidth=17;g.strokeStyle=col(.22);g.stroke();g.lineWidth=30;g.strokeStyle=col(.1);g.stroke()}}},
  {n:"Точкові",l(x,y){const c=y<135?CEIL(x,y):0;let s=0;for(const[sx,sy,fy]of SP){const dx=x-sx,dy=y-sy;
     s+=.15*G(dx,dy,52,15)*c;
     if(dy>0){const hw=20+dy*.34;s+=.48*ex(-1.7*dx*dx/(hw*hw))*sm(0,70,dy-dx*dx/150)/(1+dy*dy/140000)*(1-c)}
@@ -62,12 +62,12 @@ function bedroom(){
   SH=[mask([[420,444],[445,444],[450,475],[415,475]],1.5),mask([[814,444],[840,444],[845,475],[809,475]],1.5)],
   MX=640,MY=70,LX=[432,827],SX=[462,795],SY=352,FLOOR=mask([[0,800],[338,590],[932,590],[1264,800],[1264,848],[0,848]],3);
  return{w:1264,h:848,win:WIN,lamps:[
- {n:"Головний світильник",l(x,y){const c=y<192?CEIL(x,y):0,dy=y-MY;
-    let s=.55*G(x-MX,y-MY,300,85)*c+.07;
+ {n:"Головний світильник",p:2.5,l(x,y){const c=y<192?CEIL(x,y):0,dy=y-MY;
+    let s=.26*G(x-MX,y-MY,300,85)*c+.07;
     if(dy>0)s+=(1-c*.7)*(.34*G(x-MX,0,470+dy*.3,1)*sm(0,150,dy)+.26*G(x-MX,y-640,430,190));
     return s},
   d(g,col,on){g.fillStyle="rgba(0,0,0,.28)";ell(g,MX,MY+5,98,20);g.fill();g.fillStyle="#b9bcc0";ell(g,MX,MY,96,18);g.fill();
-   g.fillStyle="#d9dbde";ell(g,MX,MY+6,86,17);g.fill();ell(g,MX,MY+8,78,15);lit(g,col,on,"#a8abaf");if(on)glow(g,col,MX,MY+10,170,52,.38)}},
+   g.fillStyle="#d9dbde";ell(g,MX,MY+6,86,17);g.fill();ell(g,MX,MY+8,78,15);lit(g,col,on,"#a8abaf");if(on)glow(g,col,MX,MY+10,190,58,.42);ell(g,MX,MY+8,78,15);lit(g,col,on,"#a8abaf");ell(g,MX,MY+5,97,19);g.lineWidth=2;g.strokeStyle="rgba(90,94,100,.55)";g.stroke()}},
  {n:"Бра",l(x,y){let s=0;const bed=BED(x,y);for(const sx of SX){const dx=x-sx;
      const up=SY-28-y,dn=y-SY-28;
      if(up>0){const hw=10+up*.46;s+=1.0*ex(-1.8*Math.pow(dx*dx/(hw*hw),1.5))*sm(0,16,up)/(1+up*up/20000)}
@@ -108,10 +108,10 @@ function office(){
  const BARS=[[890,1130,388,130],[42,232,396,130],[352,452,420,262],[778,882,420,262]];
  const DL=[[1172,566,1128,505,1.05],[272,562,252,512,.95],[462,490,442,462,.55],[766,490,787,462,.55]];
  return{w:1264,h:848,win:WIN,lamps:[
- {n:"Панелі 60×60",l(x,y){const c=y<315?CEIL(x,y):0;let s=.2;
-    for(const p of PAN){if(c>0)s+=.13*c*G(x-p.c[0],y-p.c[1],p.s*.62,p.s*.2);if(y>470)s+=.12*G(x-p.fx,y-p.fy,p.s*1.15,p.s*.34)*sm(470,530,y)}
+ {n:"Панелі 60×60",p:2.4,l(x,y){const c=y<315?CEIL(x,y):0;let s=.2;
+    for(const p of PAN){if(c>0)s+=.075*c*G(x-p.c[0],y-p.c[1],p.s*.62,p.s*.2);if(y>470)s+=.12*G(x-p.fx,y-p.fy,p.s*1.15,p.s*.34)*sm(470,530,y)}
     if(y>285)s+=(1-c)*(.2*sm(285,360,y)+.12*G(x-660,y-420,520,150));return s},
-  d(g,col,on){for(const p of PAN){const q=p.q;shape(g,q);g.lineWidth=Math.max(2,p.s*.022);g.strokeStyle="#9a9ea3";g.stroke();lit(g,col,on,"#b4b7ba");if(on)glow(g,col,p.c[0],p.c[1],p.s*.75,p.s*.24,.3)}}},
+  d(g,col,on){for(const p of PAN){const q=p.q;shape(g,q);g.lineWidth=Math.max(2,p.s*.022);g.strokeStyle="#9a9ea3";g.stroke();lit(g,col,on,"#b4b7ba");if(on){glow(g,col,p.c[0],p.c[1],p.s*.85,p.s*.28,.32);shape(g,q);g.lineWidth=Math.max(1.5,p.s*.014);g.strokeStyle="rgba(110,114,120,.6)";g.stroke()}}}},
  {n:"Підвіси над столами",l(x,y){let s=0;for(let i=0;i<4;i++){const[a,b,by]=BARS[i],cx=(a+b)/2,half=(b-a)/2,dy=y-by;
      if(dy>-4){const dx=Math.max(0,Math.abs(x-cx)-half*.75),hw=16+dy*(i<2?.62:.55);s+=.62*ex(-1.6*dx*dx/(hw*hw))*sm(-4,30,dy)/(1+dy*dy/(i<2?26000:11000))}
      s+=.1*G(x-cx,y-by,half*1.1,32)}
@@ -142,7 +142,9 @@ function build(R,w){const D=R.def,h=Math.round(w*D.h/D.w),N=w*h,k=D.w/w,c=docume
  return{w,h,base,L,W,sum:new Float32Array(N),key:""}}
 function render(R,M,cv,K,on){const D=R.def,key=on.join("");
  if(M.key!==key){const cnt=on.reduce((a,b)=>a+b,0),expo=cnt>1?1/(1+.2*(cnt-1)):1,bounce=.05*cnt,S=M.sum;
-  for(let i=0;i<S.length;i++){let l=bounce;for(let j=0;j<on.length;j++)if(on[j])l+=M.L[j][i];S[i]=l*expo*(1-.82*M.W[i])}M.key=key}
+  /* p — потужність головного світильника; коли він увімкнений, яскраві місця мʼяко стискаються, щоб не вигорали */
+  const P=D.lamps.map(l=>l.p||1),big=on.some((v,j)=>v&&P[j]>1),KN=.7,TOP=1.08-KN;
+  for(let i=0;i<S.length;i++){let l=bounce,h=0;for(let j=0;j<on.length;j++)if(on[j]){if(P[j]>1)h+=M.L[j][i]*P[j];else l+=M.L[j][i]}l=l*expo+h;if(big&&l>KN)l=KN+TOP*(1-ex(-(l-KN)/TOP));S[i]=l*(1-.82*M.W[i])}M.key=key}
  if(cv.width!==M.w||cv.height!==M.h){cv.width=M.w;cv.height=M.h}
  const g=cv.getContext("2d"),out=g.createImageData(M.w,M.h),d=out.data,s=M.base,S=M.sum,W=M.W,a=kelvin(K),n=kelvin(5300),c=a.map((v,i)=>v/n[i]),lum=.21*c[0]+.72*c[1]+.07*c[2];
  for(let j=0;j<3;j++)c[j]/=Math.pow(lum,.65);

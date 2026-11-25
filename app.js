@@ -1520,7 +1520,7 @@ function simPaint(base,cv,K){const g=simGains(K),ctx=cv.getContext("2d"),o=base.
 /* світло зі світильників (simlight.js); якщо вимкнено в адмінці або не завантажилось — простий симулятор */
 const simLampsOn=()=>!SHOP.sim_lamps_off;
 let simlRoom="",simlQ=null,simlTm=0,simlSeq=0;
-function simlScript(){if(!simlQ)simlQ=new Promise((ok,bad)=>{const s=document.createElement("script");s.src=BASE+"simlight.js?v=1";let t=0;const no=()=>{clearTimeout(t);simlQ=null;s.remove();bad()};t=setTimeout(no,8000);s.onload=()=>{clearTimeout(t);window.TeLight?ok():no()};s.onerror=no;document.head.appendChild(s)});return simlQ}
+function simlScript(){if(!simlQ)simlQ=new Promise((ok,bad)=>{const s=document.createElement("script");s.src=BASE+"simlight.js?v=2";let t=0;const no=()=>{clearTimeout(t);simlQ=null;s.remove();bad()};t=setTimeout(no,8000);s.onload=()=>{clearTimeout(t);window.TeLight?ok():no()};s.onerror=no;document.head.appendChild(s)});return simlQ}
 function simlThumbs(){if(simlRoom!==SIMRM)return;document.querySelectorAll("[data-simt]").forEach(cv=>window.TeLight.thumb(SIMRM,cv,+cv.dataset.simt))}
 function simlButtons(){const e=$("simlmp");if(e)e.innerHTML=`<div class="simlh">Увімкнути або вимкнути:</div>${window.TeLight.lamps(SIMRM).map((l,i)=>`<button type="button" class="${l.on?"on":""}" aria-pressed="${l.on}" data-slamp="${i}">${esc(l.n)}</button>`).join("")}`}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-slamp]");if(!b||simlRoom!==SIMRM)return;const i=+b.dataset.slamp,on=window.TeLight.toggle(SIMRM,i);b.classList.toggle("on",on);b.setAttribute("aria-pressed",on);simSoon();clearTimeout(simlTm);simlTm=setTimeout(simlThumbs,150)});
