@@ -1,7 +1,9 @@
 /* Trend Electro: service worker. Сторінка й основні файли — з мережі (якщо мережа повільна понад 3 с — з памʼяті); фото товарів — одразу з памʼяті телефону, оновлюються у фоні. */
-const V="te-shell-77",IMG="te-img-2",MAXIMG=1200,S=self.registration.scope,CORE=["","index.html","app.js","app.css","config.js","articles.json","logo1.webp","logo2.webp","manifest.webmanifest"].map(x=>S+x);
+const V="te-shell-78",IMG="te-img-2",MAXIMG=1200,S=self.registration.scope,CORE=["","index.html","app.js","app.css","config.js","articles.json","logo1.webp","logo2.webp","manifest.webmanifest"].map(x=>S+x);
 self.addEventListener("install",e=>{e.waitUntil(caches.open(V).then(c=>Promise.allSettled(CORE.map(u=>c.add(u)))).then(()=>self.skipWaiting()))});
-self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V&&x!==IMG).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
+/* фото, замінені під тією самою назвою: телефон має забути стару копію */
+const STALEIMG=/\/img\/(?:s\/)?(?:25-31-28|25-24-38)\.webp$/;
+self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V&&x!==IMG).map(x=>caches.delete(x)))).then(()=>caches.open(IMG).then(c=>c.keys().then(ks=>Promise.all(ks.filter(q=>STALEIMG.test(q.url)).map(q=>c.delete(q))))).catch(()=>{})).then(()=>self.clients.claim()))});
 let trimming=0;
 function trim(c){if(trimming)return;trimming=1;c.keys().then(ks=>ks.length>MAXIMG?Promise.all(ks.slice(0,ks.length-MAXIMG+100).map(k=>c.delete(k))):0).catch(()=>{}).then(()=>{trimming=0})}
 function old(res){const d=Date.parse(res.headers.get("date")||"");return !d||Date.now()-d>2592e5}
