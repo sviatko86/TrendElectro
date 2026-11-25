@@ -418,7 +418,7 @@ body.lndon{padding-bottom:84px}
 
 .lcalc .lcf{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}.lcalc label{display:grid;gap:4px;font-size:14px;color:var(--mute)}
 .lcalc input,.lcalc select{font:inherit;font-size:16px;padding:10px;border:1px solid var(--line);border-radius:var(--rs);background:var(--bg);color:var(--ink);width:100%;box-sizing:border-box}
-.lcres{background:var(--accl);border-radius:var(--rs);padding:14px;text-align:center;font-size:17px;display:grid;gap:10px;justify-items:center;color:var(--ink)}.lcres b{color:var(--accd);font-size:20px}
+.lcres{grid-template-columns:minmax(0,1fr);background:var(--accl);border-radius:var(--rs);padding:14px;text-align:center;font-size:17px;display:grid;gap:10px;justify-items:center;color:var(--ink)}.lcres b{color:var(--accd);font-size:20px}
 .lcalc [hidden]{display:none!important}
 /* стилі лендінгу */
 .lst-minimal{--lc:#222}.lst-minimal .lsec,.lst-minimal .ltop,.lst-minimal .lcard{box-shadow:none;border-radius:6px}.lst-minimal .lhero{background:#f1f1ef!important;color:#111;border-radius:6px;min-height:240px}.lst-minimal .lhero .lbtn{background:#111;color:#fff}.lst-minimal .lbadge{background:#111;color:#fff}.lst-minimal .lfx,.lst-minimal .llights{display:none}.lst-minimal .lhero h1{text-shadow:none}.lst-minimal .lbtn{background:#111;border-radius:6px}.lst-minimal .lqty{border-color:#111}.lst-minimal .lqty button{background:#111}.lst-minimal .ltd div{background:#111}.lst-minimal .lstp li::before{background:#111}
@@ -428,7 +428,8 @@ body.lndon{padding-bottom:84px}
 .lcalc .lcf>span{display:contents}.lcres small{display:block;font-size:13px;color:var(--mute);margin-top:6px;font-weight:400}
 .lcres{text-align:left!important;justify-items:start!important}.lcres .lbtn{justify-self:center}
 .lpt{width:100%;border-collapse:collapse;font-size:14px}.lpt th,.lpt td{border:1px solid var(--line);padding:6px 8px;text-align:left}.lpt th{background:var(--line2)}.lpu{margin:8px 0;padding-left:20px;display:grid;gap:4px;font-size:15px}
-.lschw{overflow-x:auto;margin:8px 0;background:#fff;border-radius:var(--rs);padding:6px;color:#111}.lsch{min-width:420px;width:100%;height:auto}.lleg{font-size:12px;text-align:center}
+.lschw{overflow:hidden;margin:8px 0;background:#fff;border-radius:var(--rs);padding:6px;color:#111;justify-self:stretch;min-width:0}.lsch{display:block;width:100%;max-width:760px;height:auto;margin:0 auto}.lschv{display:none;width:100%;max-width:280px;height:auto;margin:4px auto 8px}.llegn{display:none}
+@media (max-width:767px){.lsch{display:none}.lschv,.llegn{display:block}}.lleg{font-size:12px;text-align:center}
 .accoffer{display:grid;gap:6px;justify-items:center;text-align:center;margin-top:10px}
 /* картки клієнта */
 .loy{display:grid;gap:12px;margin-top:12px}
