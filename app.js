@@ -1627,20 +1627,21 @@ function viewFrame(){document.title="Конструктор рамки — Trend
 /* --- живі картинки конструктора (frlive.js) --- */
 const frLiveOn=()=>!SHOP.frame_live_off;
 let frlQ=null,frlSel=0,frlGrp="";
-function frlScript(){if(!frlQ)frlQ=new Promise((ok,bad)=>{const s=document.createElement("script");s.src=BASE+"frlive.js?v=1";let t=0;const no=()=>{clearTimeout(t);frlQ=null;s.remove();bad()};t=setTimeout(no,8000);s.onload=()=>{clearTimeout(t);window.TeFrame?ok():no()};s.onerror=no;document.head.appendChild(s)});return frlQ}
+function frlScript(){if(!frlQ)frlQ=new Promise((ok,bad)=>{const s=document.createElement("script");s.src=BASE+"frlive.js?v=2";let t=0;const no=()=>{clearTimeout(t);frlQ=null;s.remove();bad()};t=setTimeout(no,8000);s.onload=()=>{clearTimeout(t);window.TeFrame?ok():no()};s.onerror=no;document.head.appendChild(s)});return frlQ}
 const frlLabel=t=>t.replace(/^Вимикача/,"Вимикач").replace(/^Перемикача/,"Перемикач").replace(/^Діммера/,"Діммер").replace(/^Розетки/,"Розетка").replace(/^Заглушки розетки/,"Заглушка").replace(/кнопкового/,"кнопковий").replace(/^Аудіо розетки/,"Аудіо розетка").replace(/комп.ютерної/,"комп’ютерна").replace(/телефонної/,"телефонна").replace(/телевізійної/,"телевізійна").replace(/бризкозахищеної/,"бризкозахищена").replace(/,?\s*\d+(?:,\d+)?\s*А(?![а-яіїєґ])/g,"").replace(/USB\+TYPE-C/i,"USB + Type\u2011C").trim();
 const frlGroup=t=>{const k=window.TeFrame.kind(t).k;return/^(key|blinds|dim|card)$/.test(k)?"k":/^(rj|hdmi|tv|sat|tvsat|audio)$/.test(k)?"t":"s"};
 function frlPick(k){const T=window.TeFrame,cur=CST.slots[frlSel],gs=[["s","Розетки"],["k","Вимикачі"],["t","ТВ та інтернет"]].filter(g=>k.ty.some(t=>frlGroup(t)===g[0]));
  if(!gs.some(g=>g[0]===frlGrp))frlGrp=frlGroup(cur);
- return`<div class="frpick">${CST.n>1?`<div class="frltabs">${CST.slots.map((t,i)=>`<button type="button" class="${i===frlSel?"on":""}" aria-pressed="${i===frlSel}" data-ftab="${i}">${T.tile(t,CST.col)}<span><em>Місце </em>${i+1}</span></button>`).join("")}</div>`:""}
-<div class="frlname"><b>${CST.n>1?"Місце "+(frlSel+1)+":":"Обрано:"}</b> ${esc(frlLabel(cur))}</div>
+ return`<div class="frpick"><div class="frlname"><b>${CST.n>1?"Місце "+(frlSel+1)+":":"Обрано:"}</b> ${esc(frlLabel(cur))}${CST.n>1?"<small>Щоб змінити інше місце, натисніть на нього в рамці</small>":""}</div>
 <div class="frcols frlgrp">${gs.map(g=>`<button type="button" class="fcol${g[0]===frlGrp?" on":""}" aria-pressed="${g[0]===frlGrp}" data-fgrp="${g[0]}">${g[1]}</button>`).join("")}</div>
 <div class="frltiles">${k.ty.map((t,i)=>frlGroup(t)!==frlGrp?"":`<button type="button" class="${t===cur?"on":""}" aria-pressed="${t===cur}" title="${esc(frlLabel(t))}" data-fpick="${i}">${T.tile(t,CST.col)}<span>${esc(frlLabel(t))}</span></button>`).join("")}</div></div>`}
 function frlRedraw(sel){frDraw();const el=sel&&document.querySelector(sel);if(el)el.focus({preventScroll:true})}
 document.addEventListener("click",e=>{let x;if(!window.TeFrame||!$("frm"))return;
- if(x=e.target.closest("[data-ftab],[data-fpos]")){frlSel=+(x.dataset.ftab!==undefined?x.dataset.ftab:x.dataset.fpos);frlGrp="";frlRedraw(`[data-ftab="${frlSel}"]`);return}
+ if(x=e.target.closest("[data-fpos]")){frlSel=+x.dataset.fpos;frlGrp="";frlRedraw(`[data-fpos="${frlSel}"]`);return}
  if(x=e.target.closest("[data-fgrp]")){frlGrp=x.dataset.fgrp;frlRedraw(`[data-fgrp="${frlGrp}"]`);return}
  if(x=e.target.closest("[data-fpick]")){const k=frFix(),i=+x.dataset.fpick;if(k&&k.ty[i]){CST.slots[frlSel]=CST.want[frlSel]=k.ty[i];frlRedraw(`[data-fpick="${i}"]`)}return}});
+/* місце в рамці вибирається і з клавіатури */
+document.addEventListener("keydown",e=>{if(e.key!=="Enter"&&e.key!==" ")return;const x=e.target.closest&&e.target.closest(".frlm[tabindex]");if(!x)return;e.preventDefault();x.dispatchEvent(new MouseEvent("click",{bubbles:true}))});
 function frDraw(){const e=$("frm");if(!e)return;const k=frFix();if(!k)return;
  const fp=FR.F.find(f=>f.col===CST.col&&f.n===CST.n&&(f.ori===CST.ori||f.ori==="a")),fh=RCOL[CST.col]||"#d9d9d9";
  const cells=CST.slots.map(t=>{const m=FR.M.find(x=>x.col===CST.col&&x.type===t);return{type:t,hex:RCOL[CST.col]||"#d9d9d9",m}});

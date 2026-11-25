@@ -972,15 +972,12 @@ p>.btn,p>.go,.empty>.btn,.empty>.go{margin:5px 8px 5px 0}
 @media (min-width:1024px){:root{--frk:1.8}}
 /* живі картинки конструктора рамки */
 .frlon .frprev{background:radial-gradient(120% 140% at 18% 0,#f0ede6 0,#d8d3ca 46%,#b9b3a9 100%);padding:10px;justify-content:center;overflow:hidden}
-.frlsvg{display:block;width:100%;height:auto;max-height:min(58vh,460px);margin:0 auto}.frlm{cursor:pointer}
+.frlsvg{display:block;width:100%;height:auto;max-height:min(58vh,460px);margin:0 auto}.frlm{cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}.frlm:focus{outline:none}.frlm:focus-visible{outline:2px dashed #0ABAB5;outline-offset:2px}
 .frpick{min-width:0}
-.frltabs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:0 0 10px}
-.frltabs button,.frltiles button{display:flex;flex-direction:column;align-items:stretch;min-width:0;padding:4px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:inherit;font:700 11px/1.25 Manrope,system-ui,sans-serif;cursor:pointer;touch-action:manipulation}
-.frltabs button.on,.frltiles button.on{border-color:#0ABAB5;box-shadow:0 0 0 1px #0ABAB5}
+.frltiles button{display:flex;flex-direction:column;align-items:stretch;min-width:0;padding:4px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:inherit;font:700 11px/1.25 Manrope,system-ui,sans-serif;cursor:pointer;touch-action:manipulation}
+.frltiles button.on{border-color:#0ABAB5;box-shadow:0 0 0 1px #0ABAB5}
 .frltsv{display:block;width:100%;height:auto;background:#cfcbc3;border-radius:6px}
-.frltabs span{padding-top:3px;white-space:nowrap;overflow:hidden;text-align:center}.frltabs em{font-style:normal}
-@media (max-width:419px){.frltabs em{display:none}}
-.frlname{font-size:14px;margin:0 0 8px}
+.frlname{font-size:14px;margin:0 0 8px}.frlname small{display:block;font-size:12px;opacity:.7;margin-top:2px}
 .frlgrp{margin-bottom:10px}
 .frltiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px}
 .frltiles span{display:block;padding:4px 1px 1px;overflow-wrap:anywhere;hyphens:auto}

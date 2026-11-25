@@ -124,10 +124,10 @@ function block(n,ori,col,names,sel){const D=defs("frl"+(++N)+"-",col),u=D.u,v=or
   +`<g filter="url(#${u}sh)">${R(0,0,W,H,8,`fill="${D.c}"`)}</g>`+skin(D,a=>R(0,0,W,H,8,a))+`<clipPath id="${u}cl">${R(0,0,W,H,8,"")}</clipPath><g clip-path="url(#${u}cl)">${bevel(D,0,0,W,H,7)}</g>`
   +R(.6,.6,W-1.2,H-1.2,7.5,`fill="none" stroke="url(#${u}edge)" stroke-width="1"`)+R(7,7,W-14,H-14,3,`fill="none" stroke="url(#${u}edge)" stroke-width=".7" opacity=".4"`);
  pos.forEach((p,i)=>{const x=p[0],y=p[1];
-  o+=`<g class="frlm" data-fpos="${i}"><title>${esq("Місце "+(i+1)+": "+names[i])}</title>`+skin(D,a=>R(x-6,y-6,S+12,S+12,4,a))+bevel(D,x-6,y-6,S+12,S+12,4.5,true)+R(x-1.6,y-1.6,S+3.2,S+3.2,4.5,`fill="#000" opacity="${D.dark?.55:.3}"`)+R(x+1,y+2.2,S,S,3.5,`fill="#000" opacity=".2"`)+mod(D,names[i],x,y)
+  o+=`<g class="frlm" data-fpos="${i}"${n>1?` tabindex="0" role="button" aria-pressed="${i===sel}" aria-label="${esq("Місце "+(i+1)+": "+names[i])}"`:""}><title>${esq("Місце "+(i+1)+": "+names[i])}</title>`+skin(D,a=>R(x-6,y-6,S+12,S+12,4,a))+bevel(D,x-6,y-6,S+12,S+12,4.5,true)+R(x-1.6,y-1.6,S+3.2,S+3.2,4.5,`fill="#000" opacity="${D.dark?.55:.3}"`)+R(x+1,y+2.2,S,S,3.5,`fill="#000" opacity=".2"`)+mod(D,names[i],x,y)
   +(i===sel&&n>1?R(x-9,y-9,S+18,S+18,9,`fill="none" stroke="#0ABAB5" stroke-width="4.5"`):"")+`</g>`});
  o+=R(0,0,W,H,8,`fill="url(#${u}shine)" pointer-events="none"`);
  const vw=W+48,vh=H+56;
- return`<svg viewBox="-20 -16 ${vw} ${vh}" class="frlsvg" style="max-width:${Math.round(Math.min(vw*1.75,v?330:900))}px" role="img" aria-label="Блок із ${n} місць">${D.d}${o}</svg>`}
+ return`<svg viewBox="-20 -16 ${vw} ${vh}" class="frlsvg" style="max-width:${Math.round(Math.min(vw*1.75,v?330:900))}px" role="${n>1?"group":"img"}" aria-label="Блок із ${n} місць">${D.d}${o}</svg>`}
 window.TeFrame={kind,tile,block,dot:col=>(PAL[col]||["#cccccc"])[0]};
 })();
