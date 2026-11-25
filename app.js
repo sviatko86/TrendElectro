@@ -1564,7 +1564,7 @@ const RCOL={"білий":"#f5f5f2","крем":"#efe2bf","чорний":"#1e1e20"
 const rcolOf=n=>{const m=String(n).match(/Mutlusan,\s*"?([^",(]+?)"?\s*(?:,|\()/i);return m?m[1].trim().toLowerCase().replace(/^біла$/,"білий"):""};
 const capF=s=>s.charAt(0).toUpperCase()+s.slice(1);
 const FNUM=[[/одно/i,1],[/дво/i,2],[/три/i,3],[/чотири/i,4],[/п.ят/i,5],[/шести/i,6]];
-let FR=null,CST={col:"",n:2,ori:"h",slots:[]};
+let FR=null,CST={col:"",n:2,ori:"h",slots:[],want:[]};
 function frIdx(){const R=P.filter(p=>p.c[0]==="Розетки та вимикачі"&&/RITA/.test(p.n)&&p.st!==false),F=[],Mx=[];
  R.forEach(p=>{const col=rcolOf(p.n);if(!col)return;const sub=p.c.join(" ");
   if(/Рамки/.test(sub)&&/^Рамка/i.test(p.n)){const m=p.n.match(/(одно|дво|три|чотири|п.ят\S*|шести)місн/i);if(!m)return;const n=(FNUM.find(x=>x[0].test(m[1]))||[0,0])[1];if(!n)return;F.push({p,col,n,ori:/горизонтальн/i.test(p.n)?"h":/вертикальн/i.test(p.n)?"v":"a"})}
@@ -1610,30 +1610,59 @@ function frSvg(n,ori,fh,cells){const S=80,B=12,G=14,v=ori==="v"&&n>1,len=n*S+(n-
  let o=`<g filter="url(#frsh)"><path d="${d}" fill-rule="evenodd" fill="url(#frf)"/></g><rect x=".6" y=".6" width="${W-1.2}" height="${H-1.2}" rx="6.5" fill="none" stroke="url(#fre)" stroke-width="1.2"/>`;
  hs.forEach((h,i)=>{o+=frIns(frKind(cells[i].type),h[0],h[1],S,c)+`<rect x="${h[0]}" y="${h[1]}" width="${S}" height="${S}" rx="2" fill="none" stroke="url(#frei)" stroke-width="1.2"/>`});
  return`<svg viewBox="-14 -12 ${W+30} ${H+34}" class="frsvg" style="width:min(calc(var(--frk,1.1)*${W+30}px),${(640*(W+30)/(H+34)).toFixed(1)}px)" role="img" aria-label="Блок із ${n} місць">${defs}${o}</svg>`}
+/* той самий механізм в іншому кольорі: назви в каталозі трохи різні («гв.мех.», «Діммер/Діммера») */
+const frKey=t=>String(t).toLowerCase().replace(/,?\s*гв\.\s*мех\.?/,"").replace(/\d+(?:,\d+)?\s*а(?![а-яіїєґ])/g,"").replace(/перемикача?|вимикача/,"вимикач").replace(/діммера/,"діммер").replace(/горизонтальн\S*/,"").replace(/комп.ютерн\S*/,"комп").replace(/телефонн\S*/,"телеф").replace(/телевізійн\S*/,"телевіз").replace(/бризкозахищен\S*/,"бризк").replace(/кнопков\S*/,"кнопк").replace(/[^a-zа-яіїєґ0-9\/]/g,"");
+const frSame=(ty,t)=>ty.indexOf(t)>-1?t:(t&&ty.find(x=>frKey(x)===frKey(t)))||ty[0];
 function frFix(){const cs=frCols();if(!cs.length)return false;if(cs.indexOf(CST.col)<0)CST.col=cs.indexOf("білий")>-1?"білий":cs[0];
  const ns=[...new Set(FR.F.filter(f=>f.col===CST.col).map(f=>f.n))].sort((a,b)=>a-b);if(!ns.length)return false;if(ns.indexOf(CST.n)<0)CST.n=ns.filter(x=>x<=CST.n).pop()||ns[0];
  const os=[...new Set(FR.F.filter(f=>f.col===CST.col&&f.n===CST.n).map(f=>f.ori))];const opts=os.indexOf("a")>-1?["a"]:os;if(opts.indexOf(CST.ori)<0)CST.ori=opts[0]||"h";
- const ty=frTypes(CST.col);CST.slots=Array.from({length:CST.n},(_,i)=>ty.indexOf(CST.slots[i])>-1?CST.slots[i]:ty[0]);return{cs,ns,opts,ty}}
+ const ty=frTypes(CST.col);/* want — те, що обрав клієнт; slots — що є в цьому кольорі, тож повернення кольору відновлює вибір */
+ CST.slots=Array.from({length:CST.n},(_,i)=>frSame(ty,CST.want[i]=CST.want[i]||CST.slots[i]||ty[0]));return{cs,ns,opts,ty}}
 function viewFrame(){document.title="Конструктор рамки — Trend Electro";if(!frameOn()){$("view").innerHTML=NF;return}
  frIdx();const k=frFix();const cr='<nav class="crumbs"><a href="#/">Головна</a><span>›</span>Конструктор рамки</nav><h1 class="ptitle">Конструктор рамки</h1>';
  if(!k){$("view").innerHTML=cr+'<div class="empty">Для конструктора поки немає потрібних товарів у каталозі. <a href="#/c/">До каталогу</a></div>';return}
- $("view").innerHTML='<div class="tpg">'+cr+'<p class="lead">Серія RITA (Mutlusan): оберіть колір, кількість місць і що поставити в кожне гніздо. Нижче побачите список товарів і суму.</p><div id="frm"></div><p class="sku">Це ілюстрація: вигляд і колір орієнтовні, точний вигляд дивіться на сторінках товарів.</p></div>';frDraw()}
+ $("view").innerHTML='<div class="tpg">'+cr+'<p class="lead">Серія RITA (Mutlusan): оберіть колір, кількість місць і що поставити в кожне гніздо. Нижче побачите список товарів і суму.</p><div id="frm"></div><p class="sku">Це ілюстрація: вигляд і колір орієнтовні, точний вигляд дивіться на сторінках товарів.</p></div>';
+ if(frLiveOn()&&!window.TeFrame){$("frm").innerHTML='<div class="empty">Завантажуємо конструктор…</div>';frlScript().then(frDraw,frDraw)}else frDraw()}
+/* --- живі картинки конструктора (frlive.js) --- */
+const frLiveOn=()=>!SHOP.frame_live_off;
+let frlQ=null,frlSel=0,frlGrp="";
+function frlScript(){if(!frlQ)frlQ=new Promise((ok,bad)=>{const s=document.createElement("script");s.src=BASE+"frlive.js?v=1";let t=0;const no=()=>{clearTimeout(t);frlQ=null;s.remove();bad()};t=setTimeout(no,8000);s.onload=()=>{clearTimeout(t);window.TeFrame?ok():no()};s.onerror=no;document.head.appendChild(s)});return frlQ}
+const frlLabel=t=>t.replace(/^Вимикача/,"Вимикач").replace(/^Перемикача/,"Перемикач").replace(/^Діммера/,"Діммер").replace(/^Розетки/,"Розетка").replace(/^Заглушки розетки/,"Заглушка").replace(/кнопкового/,"кнопковий").replace(/^Аудіо розетки/,"Аудіо розетка").replace(/комп.ютерної/,"комп’ютерна").replace(/телефонної/,"телефонна").replace(/телевізійної/,"телевізійна").replace(/бризкозахищеної/,"бризкозахищена").replace(/,?\s*\d+(?:,\d+)?\s*А(?![а-яіїєґ])/g,"").replace(/USB\+TYPE-C/i,"USB + Type\u2011C").trim();
+const frlGroup=t=>{const k=window.TeFrame.kind(t).k;return/^(key|blinds|dim|card)$/.test(k)?"k":/^(rj|hdmi|tv|sat|tvsat|audio)$/.test(k)?"t":"s"};
+function frlPick(k){const T=window.TeFrame,cur=CST.slots[frlSel],gs=[["s","Розетки"],["k","Вимикачі"],["t","ТВ та інтернет"]].filter(g=>k.ty.some(t=>frlGroup(t)===g[0]));
+ if(!gs.some(g=>g[0]===frlGrp))frlGrp=frlGroup(cur);
+ return`<div class="frpick">${CST.n>1?`<div class="frltabs">${CST.slots.map((t,i)=>`<button type="button" class="${i===frlSel?"on":""}" aria-pressed="${i===frlSel}" data-ftab="${i}">${T.tile(t,CST.col)}<span><em>Місце </em>${i+1}</span></button>`).join("")}</div>`:""}
+<div class="frlname"><b>${CST.n>1?"Місце "+(frlSel+1)+":":"Обрано:"}</b> ${esc(frlLabel(cur))}</div>
+<div class="frcols frlgrp">${gs.map(g=>`<button type="button" class="fcol${g[0]===frlGrp?" on":""}" aria-pressed="${g[0]===frlGrp}" data-fgrp="${g[0]}">${g[1]}</button>`).join("")}</div>
+<div class="frltiles">${k.ty.map((t,i)=>frlGroup(t)!==frlGrp?"":`<button type="button" class="${t===cur?"on":""}" aria-pressed="${t===cur}" title="${esc(frlLabel(t))}" data-fpick="${i}">${T.tile(t,CST.col)}<span>${esc(frlLabel(t))}</span></button>`).join("")}</div></div>`}
+function frlRedraw(sel){frDraw();const el=sel&&document.querySelector(sel);if(el)el.focus({preventScroll:true})}
+document.addEventListener("click",e=>{let x;if(!window.TeFrame||!$("frm"))return;
+ if(x=e.target.closest("[data-ftab],[data-fpos]")){frlSel=+(x.dataset.ftab!==undefined?x.dataset.ftab:x.dataset.fpos);frlGrp="";frlRedraw(`[data-ftab="${frlSel}"]`);return}
+ if(x=e.target.closest("[data-fgrp]")){frlGrp=x.dataset.fgrp;frlRedraw(`[data-fgrp="${frlGrp}"]`);return}
+ if(x=e.target.closest("[data-fpick]")){const k=frFix(),i=+x.dataset.fpick;if(k&&k.ty[i]){CST.slots[frlSel]=CST.want[frlSel]=k.ty[i];frlRedraw(`[data-fpick="${i}"]`)}return}});
 function frDraw(){const e=$("frm");if(!e)return;const k=frFix();if(!k)return;
  const fp=FR.F.find(f=>f.col===CST.col&&f.n===CST.n&&(f.ori===CST.ori||f.ori==="a")),fh=RCOL[CST.col]||"#d9d9d9";
  const cells=CST.slots.map(t=>{const m=FR.M.find(x=>x.col===CST.col&&x.type===t);return{type:t,hex:RCOL[CST.col]||"#d9d9d9",m}});
  const lines=[];if(fp)lines.push({p:fp.p,q:1,l:"Рамка"});const g={};cells.forEach(c=>{if(c.m)g[c.m.p.id]=(g[c.m.p.id]||0)+1});Object.keys(g).forEach(id=>lines.push({p:M[id]||FR.M.find(x=>x.p.id===id).p,q:g[id],l:""}));
  const tot=Math.round(lines.reduce((s,x)=>s+priceInfo(x.p).pc*x.q,0)*100)/100;
- e.innerHTML=`<div class="frgrid"><div class="frctl"><b>Колір</b><div class="frcols">${k.cs.map(c=>`<button type="button" class="fcol${c===CST.col?" on":""}" data-fcol="${esc(c)}"><i style="background:${RCOL[c]||"#ccc"}"></i>${esc(capF(c))}</button>`).join("")}</div>
+ let live=frLiveOn()&&!!window.TeFrame,prev="",pick="";
+ if(live){try{frlSel=Math.max(0,Math.min(frlSel,CST.n-1));prev=window.TeFrame.block(CST.n,CST.ori,CST.col,CST.slots,frlSel);pick=frlPick(k)}catch(x){live=false}}
+ if(!live){prev=frSvg(CST.n,CST.ori,fh,cells);pick=`<div class="frslots">${CST.slots.map((t,i)=>`<label>Місце ${i+1}<select data-fslot="${i}">${k.ty.map(x=>`<option value="${esc(x)}"${x===t?" selected":""}>${esc(x)}</option>`).join("")}</select></label>`).join("")}</div>`}
+ e.innerHTML=`<div class="frgrid${live?" frlon":""}"><div class="frctl"><b>Колір</b><div class="frcols">${k.cs.map(c=>`<button type="button" class="fcol${c===CST.col?" on":""}" data-fcol="${esc(c)}"><i style="background:${live?window.TeFrame.dot(c):RCOL[c]||"#ccc"}"></i>${esc(capF(c))}</button>`).join("")}</div>
 <b>Кількість місць</b><div class="frcols">${k.ns.map(n=>`<button type="button" class="fcol${n===CST.n?" on":""}" data-fn="${n}">${n}</button>`).join("")}</div>
 ${CST.n>1&&k.opts.length>1?`<b>Положення</b><div class="frcols">${k.opts.map(o=>`<button type="button" class="fcol${o===CST.ori?" on":""}" data-fori="${o}">${o==="h"?"Горизонтально":"Вертикально"}</button>`).join("")}</div>`:""}</div>
-<div class="frprev">${frSvg(CST.n,CST.ori,fh,cells)}</div>
-<div class="frslots">${CST.slots.map((t,i)=>`<label>Місце ${i+1}<select data-fslot="${i}">${k.ty.map(x=>`<option value="${esc(x)}"${x===t?" selected":""}>${esc(x)}</option>`).join("")}</select></label>`).join("")}</div>
+${live?'<div class="frlstage">':""}<div class="frprev${live&&!(CST.ori==="v"&&CST.n>1)?" frlstick":""}">${prev}</div>
+${pick}${live?"</div>":""}
 <div class="frsum"><h3>Що потрібно купити</h3>${fp?"":'<div class="msg">Для такого кольору й положення рамки немає в наявності. Змініть вибір.</div>'}<table class="estt"><tbody>${lines.map(x=>`<tr><td>${x.l?"<b>"+x.l+"</b>: ":""}<a href="#/p/${encodeURIComponent(x.p.id)}">${esc(x.p.n)}</a></td><td class="r">${x.q} × ${money(priceInfo(x.p).pc)}</td></tr>`).join("")}</tbody><tfoot><tr><td class="r"><b>Разом</b></td><td class="r"><b>${money(tot)}</b></td></tr></tfoot></table>
 <p>${SHOP.orders_off?"":'<button type="button" class="go" data-fadd>Додати все в кошик</button> '}${estOn()?'<button type="button" class="btn" data-fest>Кошторис у PDF</button>':""}</p></div></div>`;
+ frlTop();
  e._lines=lines}
+/* відступ прилиплої рамки = висота шапки (змінюється після повороту екрана) */
+function frlTop(){const e=$("frm"),hd=document.querySelector("header");if(e&&hd)e.style.setProperty("--frltop",hd.offsetHeight+"px")}
+addEventListener("resize",frlTop);
 function frAdd(est){const e=$("frm");if(!e||!e._lines)return;e._lines.forEach(x=>{cart[x.p.id]=Math.min(999,(cart[x.p.id]||0)+x.q)});save();drawCart();if(est)location.hash="#/est";else toast("Додано в кошик",1)}
 document.addEventListener("click",e=>{let x;
- if(x=e.target.closest("[data-fcol]")){CST.col=x.dataset.fcol;frDraw();return}
+ if(x=e.target.closest("[data-fcol]")){CST.col=x.dataset.fcol;frlGrp="";frDraw();return}
  if(x=e.target.closest("[data-fn]")){CST.n=+x.dataset.fn;frDraw();return}
  if(x=e.target.closest("[data-fori]")){CST.ori=x.dataset.fori;frDraw();return}
  if(e.target.closest("[data-fadd]")){frAdd(false);return}
@@ -1642,7 +1671,7 @@ document.addEventListener("click",e=>{let x;
  if(x=e.target.closest("[data-objo]")){objOpen(+x.dataset.objo);return}
  if(x=e.target.closest("[data-objc]")){objCart(+x.dataset.objc);return}
  if(x=e.target.closest("[data-objd]")){objDel(+x.dataset.objd);return}});
-document.addEventListener("change",e=>{const t=e.target;if(t.dataset&&t.dataset.fslot!==undefined){CST.slots[+t.dataset.fslot]=t.value;frDraw()}});
+document.addEventListener("change",e=>{const t=e.target;if(t.dataset&&t.dataset.fslot!==undefined){CST.slots[+t.dataset.fslot]=CST.want[+t.dataset.fslot]=t.value;frDraw()}});
 /* --- Мої об'єкти --- */
 let OBJS=[];
 async function objLoad(){const e=$("objs");if(!e||!objOn()||!me||!sb)return;const r=await sb.from("user_objects").select("id,name,items,updated_at").order("updated_at",{ascending:false});if(r.error){e.innerHTML="";return}

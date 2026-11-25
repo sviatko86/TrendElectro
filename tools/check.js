@@ -5,7 +5,7 @@ const fs=require("fs"),vm=require("vm");
 let bad=0;const err=m=>{bad++;console.log("✗ "+m)},ok=m=>console.log("✓ "+m);
 const rd=f=>fs.readFileSync(f,"utf8");
 // 1. синтаксис
-for(const f of ["app.js","sw.js","config.js","simlight.js"]){if(!fs.existsSync(f))continue;try{new vm.Script(rd(f),{filename:f});ok("синтаксис "+f)}catch(e){err("синтаксична помилка в "+f+": "+e.message)}}
+for(const f of ["app.js","sw.js","config.js","simlight.js","frlive.js"]){if(!fs.existsSync(f))continue;try{new vm.Script(rd(f),{filename:f});ok("синтаксис "+f)}catch(e){err("синтаксична помилка в "+f+": "+e.message)}}
 try{const h=rd("admin.html"),bl=h.match(/<script(?![^>]*src)[^>]*>[\s\S]*?<\/script>/g)||[];bl.forEach((b,i)=>new vm.Script(b.replace(/<\/?script[^>]*>/g,""),{filename:"admin.html#"+i}));ok("синтаксис admin.html ("+bl.length+" скриптів)")}catch(e){err("синтаксична помилка в admin.html: "+e.message)}
 // 2. дублікати імен верхнього рівня в app.js
 const app=rd("app.js"),names={};
@@ -30,6 +30,7 @@ try{const ch=require("child_process").execSync("git diff --name-only HEAD",{enco
  for(const f of ["app.css","app.js"]){if(!ch.includes(f))continue;const re=new RegExp(f.replace(".","\\.")+"\\?v=(\\d+)");const a=(old.match(re)||[])[1],b=(ix.match(re)||[])[1];if(a===b)err(f+" змінено, але версія ?v= в index.html та сама ("+b+") — підвищте її")}
  if((ch.includes("app.css")||ch.includes("app.js"))&&!ch.includes("sw.js"))err("app.css/app.js змінено, але не оновлено версію кешу в sw.js (te-shell-N)");
  if(ch.includes("simlight.js")){const re=/simlight\.js\?v=(\d+)/,a=(require("child_process").execSync("git show HEAD:app.js",{encoding:"utf8"}).match(re)||[])[1],b=(rd("app.js").match(re)||[])[1];if(a===b)err("simlight.js змінено, але версія simlight.js?v= в app.js та сама ("+b+") — підвищте її")}
+ if(ch.includes("frlive.js")){const re=/frlive\.js\?v=(\d+)/;let old2="";try{old2=require("child_process").execSync("git show HEAD:app.js",{encoding:"utf8"})}catch(e){}const a=(old2.match(re)||[])[1],b=(rd("app.js").match(re)||[])[1];if(a&&a===b)err("frlive.js змінено, але версія frlive.js?v= в app.js та сама ("+b+") — підвищте її")}
  ok("версії файлів для кешу телефонів")}catch(e){ok("версії файлів: git недоступний, пропущено")}
 // 7. секретні ключі не повинні потрапити в репозиторій (публічний ключ sb_publishable_ — можна)
 try{const tcSkip=new Set([".git","node_modules","img","p","c","poradu","feed"]),tcExt=/\.(js|mjs|ts|html|json|sql|yml|yaml|md|txt|env)$/i;let tcN=0;
