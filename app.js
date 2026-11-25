@@ -211,6 +211,7 @@ function route(){
  else if(h.indexOf("#/est")===0)viewEst(h==="#/est/fav");
  else if(h==="#/frame")viewFrame();
  else if(h==="#/light")viewLight();
+ else if(h.indexOf("#/cart/")===0)viewCartLink(decodeURIComponent(h.slice(7)));
  else if(h.indexOf("#/c")===0&&h!=="#/check")viewList(h.slice(4).split("/").filter(Boolean).map(decodeURIComponent));
  else if(h==="#/fav")viewFav();
  else if(h.indexOf("#/sel/")===0)viewSel(h.slice(6));
@@ -221,7 +222,6 @@ function route(){
  else if(h==="#/list")viewLst();
  else if(h.indexOf("#/l/")===0)viewLanding(decodeURIComponent(h.slice(4))).catch(e=>{try{console.error(e);$("view").innerHTML='<div class="empty">Не вдалося відкрити сторінку. <a href="'+esc(BASE)+'">На головну</a> · <a href="'+esc(BASE)+location.hash+'" onclick="location.reload();return false">Спробувати ще раз</a></div>'}catch(_){}});
  else if(h.indexOf("#/gift/")===0)viewGift(decodeURIComponent(h.slice(7)));
- else if(h.indexOf("#/cart/")===0)viewCartLink(decodeURIComponent(h.slice(7)));
  else viewHome();
  requestAnimationFrame(hbInit);setTimeout(bdPopup,500);cmpDraw();backDraw();
  document.querySelectorAll(".bnav button").forEach(b=>b.classList.toggle("on",(b.dataset.nav==="home"&&(h==="#/"||h===""))||(b.dataset.nav==="fav"&&h==="#/fav")||(b.dataset.nav==="cat"&&h.indexOf("#/c")===0&&h!=="#/cmp")));
@@ -794,8 +794,10 @@ async function viewCartLink(code){document.title="Ваш кошик — Trend El
  if(g.done)return bad("За цим посиланням замовлення вже оформлено. Дякуємо! Потрібен новий кошик — напишіть нам.");
  const ok=[],miss=[];
  (Array.isArray(g.items)?g.items:[]).forEach(x=>{const p=x&&M[x.id],q=Math.max(1,Math.min(999,Math.floor(+(x&&x.qty))||1));if(p&&p.st!==false)ok.push([p,Math.min(q,stkMax(p))]);else miss.push(x&&M[x.id]?M[x.id].n:(x&&x.id)||"")});
- ok.forEach(a=>{cart[a[0].id]=Math.min(999,(cart[a[0].id]||0)+a[1])});
- save();SV("te_cartlink",{c:String(code).toUpperCase(),t:Date.now()});drawCart();
+ /* повторне відкриття того самого посилання не збільшує кількість і не скасовує правки клієнта */
+ const cc=String(code).toUpperCase(),again=(LS("te_cartlink",null)||{}).c===cc&&ok.some(a=>cart[a[0].id]);
+ if(!again)ok.forEach(a=>{cart[a[0].id]=Math.min(999,Math.max(cart[a[0].id]||0,a[1]))});
+ save();SV("te_cartlink",{c:cc,t:Date.now()});drawCart();
  if(g.promo)await applyPromo(g.promo);
  const sum=ok.reduce((s,a)=>s+price(a[0])*a[1],0);
  v.innerHTML=`<section class="gift"><div class="box" style="max-width:560px;margin:0 auto"><h1 class="ptitle">🛒 Ваш кошик від Trend Electro</h1>${g.note?`<p class="cdesc">${esc(g.note)}</p>`:""}${ok.length?`<div>${ok.map(a=>`<div class="rw" style="gap:10px;padding:6px 0"><span>${esc(a[0].n)}</span><b style="white-space:nowrap">${a[1]} × ${money(price(a[0]))}</b></div>`).join("")}</div><p><b>Разом: ${money(sum)}</b>${g.promo?" (знижку за промокодом буде враховано при оформленні)":""}</p>`:'<p class="mut">На жаль, товарів із цього кошика зараз немає в наявності. Напишіть нам, підберемо заміну.</p>'}${miss.length?`<p class="mut">Немає в наявності: ${miss.map(esc).join("; ")}</p>`:""}${ok.length?(SHOP.orders_off?'<p class="mut">Замовлення тимчасово не приймаємо.</p>':'<button class="btn" id="cartgo">Оформити замовлення</button>'):""}</div></section>`;
