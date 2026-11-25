@@ -1645,7 +1645,8 @@ document.addEventListener("keydown",e=>{if(e.key!=="Enter"&&e.key!==" ")return;c
 function frDraw(){const e=$("frm");if(!e)return;const k=frFix();if(!k)return;
  const fp=FR.F.find(f=>f.col===CST.col&&f.n===CST.n&&(f.ori===CST.ori||f.ori==="a")),fh=RCOL[CST.col]||"#d9d9d9";
  const cells=CST.slots.map(t=>{const m=FR.M.find(x=>x.col===CST.col&&x.type===t);return{type:t,hex:RCOL[CST.col]||"#d9d9d9",m}});
- const lines=[];if(fp)lines.push({p:fp.p,q:1,l:"Рамка"});const g={};cells.forEach(c=>{if(c.m)g[c.m.p.id]=(g[c.m.p.id]||0)+1});Object.keys(g).forEach(id=>lines.push({p:M[id]||FR.M.find(x=>x.p.id===id).p,q:g[id],l:""}));
+ const solo=CST.n===1&&!!cells[0].m&&frFull(cells[0].m.p);
+ const lines=[];if(fp&&!solo)lines.push({p:fp.p,q:1,l:"Рамка"});const g={};cells.forEach(c=>{if(c.m)g[c.m.p.id]=(g[c.m.p.id]||0)+1});Object.keys(g).forEach(id=>lines.push({p:M[id]||FR.M.find(x=>x.p.id===id).p,q:g[id],l:""}));
  const tot=Math.round(lines.reduce((s,x)=>s+priceInfo(x.p).pc*x.q,0)*100)/100;
  let live=frLiveOn()&&!!window.TeFrame,prev="",pick="";
  if(live){try{frlSel=Math.max(0,Math.min(frlSel,CST.n-1));prev=window.TeFrame.block(CST.n,CST.ori,CST.col,CST.slots,frlSel);pick=frlPick(k)}catch(x){live=false}}
@@ -1655,13 +1656,15 @@ function frDraw(){const e=$("frm");if(!e)return;const k=frFix();if(!k)return;
 ${CST.n>1&&k.opts.length>1?`<b>Положення</b><div class="frcols">${k.opts.map(o=>`<button type="button" class="fcol${o===CST.ori?" on":""}" data-fori="${o}">${o==="h"?"Горизонтально":"Вертикально"}</button>`).join("")}</div>`:""}</div>
 ${live?'<div class="frlstage">':""}<div class="frprev${live&&!(CST.ori==="v"&&CST.n>1)?" frlstick":""}">${prev}</div>
 ${pick}${live?"</div>":""}
-<div class="frsum"><h3>Що потрібно купити</h3>${fp?"":'<div class="msg">Для такого кольору й положення рамки немає в наявності. Змініть вибір.</div>'}<table class="estt"><tbody>${lines.map(x=>`<tr><td>${x.l?"<b>"+x.l+"</b>: ":""}<a href="#/p/${encodeURIComponent(x.p.id)}">${esc(x.p.n)}</a></td><td class="r">${x.q} × ${money(priceInfo(x.p).pc)}</td></tr>`).join("")}</tbody><tfoot><tr><td class="r"><b>Разом</b></td><td class="r"><b>${money(tot)}</b></td></tr></tfoot></table>
+<div class="frsum"><h3>Що потрібно купити</h3>${solo?'<p class="sku">Цей виріб уже має свою одинарну рамку, окрему купувати не потрібно.</p>':fp?"":'<div class="msg">Для такого кольору й положення рамки немає в наявності. Змініть вибір.</div>'}<table class="estt"><tbody>${lines.map(x=>`<tr><td>${x.l?"<b>"+x.l+"</b>: ":""}<a href="#/p/${encodeURIComponent(x.p.id)}">${esc(x.p.n)}</a></td><td class="r">${x.q} × ${money(priceInfo(x.p).pc)}</td></tr>`).join("")}</tbody><tfoot><tr><td class="r"><b>Разом</b></td><td class="r"><b>${money(tot)}</b></td></tr></tfoot></table>
 <p>${SHOP.orders_off?"":'<button type="button" class="go" data-fadd>Додати все в кошик</button> '}${estOn()?'<button type="button" class="btn" data-fest>Кошторис у PDF</button>':""}</p></div></div>`;
  frlTop();
  e._lines=lines}
 /* відступ прилиплої рамки = висота шапки (змінюється після повороту екрана) */
 function frlTop(){const e=$("frm"),hd=document.querySelector("header");if(e&&hd)e.style.setProperty("--frltop",hd.offsetHeight+"px")}
 addEventListener("resize",frlTop);
+/* виріб у зборі (код 2220, не «Механізм») уже має свою одинарну рамку */
+function frFull(p){return!/^Механізм/i.test(p.n)&&/\(2220 /.test(p.n)}
 function frAdd(est){const e=$("frm");if(!e||!e._lines)return;e._lines.forEach(x=>{cart[x.p.id]=Math.min(999,(cart[x.p.id]||0)+x.q)});save();drawCart();if(est)location.hash="#/est";else toast("Додано в кошик",1)}
 document.addEventListener("click",e=>{let x;
  if(x=e.target.closest("[data-fcol]")){CST.col=x.dataset.fcol;frlGrp="";frDraw();return}
