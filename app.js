@@ -1654,15 +1654,11 @@ function frDraw(){const e=$("frm");if(!e)return;const k=frFix();if(!k)return;
  e.innerHTML=`<div class="frgrid${live?" frlon":""}"><div class="frctl"><b>Колір</b><div class="frcols">${k.cs.map(c=>`<button type="button" class="fcol${c===CST.col?" on":""}" data-fcol="${esc(c)}"><i style="background:${live?window.TeFrame.dot(c):RCOL[c]||"#ccc"}"></i>${esc(capF(c))}</button>`).join("")}</div>
 <b>Кількість місць</b><div class="frcols">${k.ns.map(n=>`<button type="button" class="fcol${n===CST.n?" on":""}" data-fn="${n}">${n}</button>`).join("")}</div>
 ${CST.n>1&&k.opts.length>1?`<b>Положення</b><div class="frcols">${k.opts.map(o=>`<button type="button" class="fcol${o===CST.ori?" on":""}" data-fori="${o}">${o==="h"?"Горизонтально":"Вертикально"}</button>`).join("")}</div>`:""}</div>
-${live?'<div class="frlstage">':""}<div class="frprev${live&&!(CST.ori==="v"&&CST.n>1)?" frlstick":""}">${prev}</div>
+${live?'<div class="frlstage">':""}<div class="frprev${live&&!(CST.ori==="v"&&CST.n>1)?" frlwide":""}">${prev}</div>
 ${pick}${live?"</div>":""}
 <div class="frsum"><h3>Що потрібно купити</h3>${solo?'<p class="sku">Цей виріб уже має свою одинарну рамку, окрему купувати не потрібно.</p>':fp?"":'<div class="msg">Для такого кольору й положення рамки немає в наявності. Змініть вибір.</div>'}<table class="estt"><tbody>${lines.map(x=>`<tr><td>${x.l?"<b>"+x.l+"</b>: ":""}<a href="#/p/${encodeURIComponent(x.p.id)}">${esc(x.p.n)}</a></td><td class="r">${x.q} × ${money(priceInfo(x.p).pc)}</td></tr>`).join("")}</tbody><tfoot><tr><td class="r"><b>Разом</b></td><td class="r"><b>${money(tot)}</b></td></tr></tfoot></table>
 <p>${SHOP.orders_off?"":'<button type="button" class="go" data-fadd>Додати все в кошик</button> '}${estOn()?'<button type="button" class="btn" data-fest>Кошторис у PDF</button>':""}</p></div></div>`;
- frlTop();
  e._lines=lines}
-/* відступ прилиплої рамки = висота шапки (змінюється після повороту екрана) */
-function frlTop(){const e=$("frm"),hd=document.querySelector("header");if(e&&hd)e.style.setProperty("--frltop",hd.offsetHeight+"px")}
-addEventListener("resize",frlTop);
 /* виріб у зборі (код 2220, не «Механізм») уже має свою одинарну рамку */
 function frFull(p){return!/^Механізм/i.test(p.n)&&/\(2220 /.test(p.n)}
 function frAdd(est){const e=$("frm");if(!e||!e._lines)return;e._lines.forEach(x=>{cart[x.p.id]=Math.min(999,(cart[x.p.id]||0)+x.q)});save();drawCart();if(est)location.hash="#/est";else toast("Додано в кошик",1)}

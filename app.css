@@ -981,17 +981,14 @@ p>.btn,p>.go,.empty>.btn,.empty>.go{margin:5px 8px 5px 0}
 .frlgrp{margin-bottom:10px}
 .frltiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:8px}
 .frltiles span{display:block;padding:4px 1px 1px;overflow-wrap:anywhere;hyphens:auto}
-@media (min-height:560px){
- .frlon .frprev.frlstick{position:sticky;top:var(--frltop,110px);z-index:5;box-shadow:0 8px 16px rgba(0,0,0,.22)}
- .frlstick .frlsvg{max-height:min(26vh,230px)}
-}
+@media (min-height:560px){.frlwide .frlsvg{max-height:min(26vh,230px)}}
 @media (min-width:1024px) and (hover:hover) and (pointer:fine){
  .frgrid.frlon{grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);grid-template-rows:auto 1fr;gap:0 32px}
  .frgrid.frlon .frctl{grid-column:1;grid-row:1}
  .frgrid.frlon .frsum{grid-column:1;grid-row:2;margin-top:18px}
  .frgrid.frlon .frlstage{grid-column:2;grid-row:1/span 2;margin-top:12px;align-self:stretch;min-width:0}
  .frgrid.frlon .frprev{margin:0 0 12px;padding:18px}
- .frlstick .frlsvg{max-height:min(34vh,300px)}
+ .frlwide .frlsvg{max-height:min(34vh,300px)}
  .frltiles{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
 }
 
