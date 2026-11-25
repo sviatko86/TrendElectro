@@ -525,8 +525,9 @@ function relFor(p){
  if(top==="Розетки та вимикачі"){
   const ser=x=>((x.n.match(/\b(RITA|CANDELA|BRON|NORA|Lara|Julia|Juli|Aqua)\b/i)||[])[1]||"").toLowerCase(),cl=x=>((x.n.match(/Mutlusan,\s*([^,(]+)/i)||x.n.match(/"[^"]+"\s*,\s*([^,(]+)/)||[])[1]||"").trim().toLowerCase(),s0=ser(p),fr=/^рамка/.test(n),mech=x=>/^механізм|^розетка|^вимикач/.test(N(x))&&!/^рамка/.test(N(x));
   if(s0&&(fr||mech(p))){
-   if(fr)add(uq(ch(L(x=>ser(x)===s0&&cl(x)===cl(p)&&mech(x))),x=>N(x).replace(/,.*/,"").replace(/механізм /,"")),100,"Механізм у рамку",8);
-   else{add(uq(ch(L(x=>ser(x)===s0&&cl(x)===cl(p)&&/^рамка/.test(N(x)))),x=>N(x).replace(/,.*/,"")).sort((a,b)=>a.pr0-b.pr0),100,"Рамка",4);
+   /* виріб у зборі вже має свою рамку, тому в рекомендаціях його з рамками не поєднуємо */
+   if(fr)add(uq(ch(L(x=>ser(x)===s0&&cl(x)===cl(p)&&mech(x)&&!frFull(x))),x=>N(x).replace(/,.*/,"").replace(/механізм /,"")),100,"Механізм у рамку",8);
+   else{add(uq(ch(L(x=>ser(x)===s0&&cl(x)===cl(p)&&/^рамка/.test(N(x))&&!frFull(p))),x=>N(x).replace(/,.*/,"")).sort((a,b)=>a.pr0-b.pr0),100,"Рамка",4);
     const sw=/вимикач/.test(n);add(uq(ch(L(x=>ser(x)===s0&&cl(x)===cl(p)&&mech(x)&&(sw?/розетк/:/вимикач/).test(N(x)))),x=>N(x).replace(/,.*/,"")),70,sw?"Розетка серії":"Вимикач серії",3)}
   }
  }
