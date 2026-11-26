@@ -1039,10 +1039,12 @@ p>.btn,p>.go,.empty>.btn,.empty>.go{margin:5px 8px 5px 0}
 .tsq-art .tsq-b,.tsq-art svg{position:absolute;top:0;left:0;right:0;bottom:0;width:44px;height:44px;border-radius:12px}
 .tsq-art .tsq-ic{overflow:visible}
 .tsq-d .tsq-b{background:linear-gradient(222deg,#191b1d 4%,#25282b 38%,#373b3f 78%);box-shadow:-3.5px 4.7px 8.8px -1.8px rgba(0,0,0,.6)}
-.tsq-t .tsq-b{background:linear-gradient(222deg,#0e1011 4%,#1a1d1f 40%,#2b3033 82%);box-shadow:0 0 6px 1px rgba(10,186,181,.8),0 0 16px 3px rgba(10,186,181,.38),inset 0 0 5px rgba(10,186,181,.18)}
-.tsq-r .tsq-b{background:linear-gradient(222deg,#0e1011 4%,#1a1d1f 40%,#2b3033 82%);box-shadow:0 0 6px 1px rgba(230,0,35,.68),0 0 16px 3px rgba(230,0,35,.3),inset 0 0 5px rgba(230,0,35,.14)}
-.tsq-t .tsq-ic{filter:drop-shadow(0 0 .9px #45f0e8) drop-shadow(0 0 2.6px #0abab5) drop-shadow(0 0 4.7px #0abab5)}
-.tsq-r .tsq-ic{filter:drop-shadow(0 0 .9px #ff3a52) drop-shadow(0 0 2.6px rgba(230,0,35,.85)) drop-shadow(0 0 4.7px rgba(230,0,35,.6))}
+.tsq-t .tsq-b{background:linear-gradient(222deg,#0e1011 4%,#1a1d1f 40%,#2b3033 82%);box-shadow:0 0 5px 0 rgba(10,186,181,.22)}
+.tsq-r .tsq-b{background:linear-gradient(222deg,#0e1011 4%,#1a1d1f 40%,#2b3033 82%);box-shadow:0 0 5px 0 rgba(230,0,35,.2)}
+.tsq-t .tsq-ic{filter:drop-shadow(0 0 2px rgba(10,186,181,.35))}
+.tsq-r .tsq-ic{filter:drop-shadow(0 0 2px rgba(230,0,35,.3))}
+.tsq-t .tsq-ic path{stroke:#4fd1cc}.tsq-r .tsq-ic{stroke:#e8495b}
+:is(.tsq-t,.tsq-r)>svg:not(.tsq-ic){opacity:.4}
 .tsq-art .tmoon-n,.tsq-art .tcart-n{opacity:0}
 :root[data-theme="dark"].tmoon-on #thBtn .tmoon-d{opacity:0}
 :root[data-theme="dark"].tmoon-on #thBtn .tmoon-n{opacity:1}
