@@ -744,7 +744,7 @@ function totals(ids){let s=0;ids.forEach(i=>s+=price(M[i])*cart[i]);const d=Math
 function drawCart(){stkClamp();
  const ids=Object.keys(cart).filter(i=>M[i]);let n=0;
  $("lines").innerHTML=ids.length?ids.map(i=>{const p=M[i],q=cart[i];n+=q;const u="#/p/"+encodeURIComponent(i);return `<div class="row"><a class="rth" href="${u}" aria-label="${esc(p.n)}">${img(p.img,120,120)}</a><a href="${u}">${esc(p.n)}</a><b>${money(price(p)*q)}</b><div class="qty"><button data-m="${esc(i)}" aria-label="Менше">−</button>${q}<button data-p="${esc(i)}" aria-label="Більше">+</button></div><span class="sku">${money(price(p))} / шт.</span></div>`}).join(""):'<div class="empty">Кошик поки порожній.<br>Додайте товари з каталогу — і оформлення займе хвилину.<br><br><a class="btn" href="#/c/">До каталогу</a></div>';
- const t=totals(ids);$("sum").textContent=money(t.t);$("cnt").textContent=n||"";$("bcnt").textContent=n||"";$("form").hidden=!ids.length;
+ const t=totals(ids);$("sum").textContent=money(t.t);$("cnt").textContent=n||"";$("cartBtn").classList.toggle("tcart-full",n>0);$("bcnt").textContent=n||"";$("form").hidden=!ids.length;
  $("dinfo").textContent=t.d>0?"Знижка "+t.d+"%: −"+money(Math.round((t.s-t.t)*100)/100):"";if(SHOP.parts_on)payOpts();
  const f=Object.keys(fav).length;$("fcnt").textContent=f||"";$("bfcnt").textContent=f||"";
 }
@@ -988,9 +988,9 @@ async function boot(){
  loadBanners();loadPromos();
  const pf=(async()=>{try{const g=await sb.auth.getSession();me=g.data.session?g.data.session.user:null;await loadProf()}catch(e){}})();
  try{await Promise.all([loadProducts(),loadSettings(),loadCats(),fetch(BASE+"img/map.json").then(r=>r.ok?r.json():[]).then(a=>{IMG=new Set(a)}).catch(()=>{}),fetch(BASE+"img/smap.json").then(r=>r.ok?r.json():[]).then(a=>{IMGS=new Set(a)}).catch(()=>{})]);imgMap()}catch(e){$("view").innerHTML='<div class="empty">Не вдалося завантажити каталог. Перевірте інтернет і оновіть сторінку.</div>';return}
- applyOrders();regBar();document.body.classList.toggle("fxon",!SHOP.anim_off);document.body.classList.toggle("teglow",!!SHOP.glow_on);applyLayout();build();ALLN=[];collectN(ROOT);initChat();drawFooter();
+ applyOrders();regBar();document.body.classList.toggle("fxon",!SHOP.anim_off);document.body.classList.toggle("teglow",!!SHOP.glow_on);document.documentElement.classList.toggle("tmoon-on",!SHOP.tmoon_off&&!!document.querySelector("#thBtn .tsq-art")&&!!document.querySelector("#cartBtn .tsq-art"));try{localStorage.setItem("te_tmoon",SHOP.tmoon_off?"0":"1")}catch(e){}applyLayout();build();ALLN=[];collectN(ROOT);initChat();drawFooter();
  await pf;
- route();idxWarm();
+ route();drawCart();idxWarm();
  if(CATBG)setTimeout(catRefresh,1500);
 }
 function imgMap(){PALL.forEach(p=>{const k=safeId(p.id);if(IMG.has(k)&&!/^https?:\/\/(www\.)?trendelectro\.com\.ua\//i.test(p.img||""))p.img=BASE+"img/"+k+".webp"})}
